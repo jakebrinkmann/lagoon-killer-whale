@@ -1,10 +1,13 @@
-Author: David V. Hill, SGT
-        Ron Dilley, Innovate!
+## espa-web
+This project serves up the espa website and provides all the job ordering &
+scheduling functions.
 
-License: NASA Open Source Agreement 1.3
-USGS Designation: EROS Science Processing Architecture (ESPA)
+## Change Notes
+Version 2.8.5a (July 2015)
+        - removed items unrelated to the webapp
+        - retagged as 2.8.5a to allow deployment to differentiate between
+          it and the previous version
 
-Change Notes
 Version 2.8.5 (July 2015)
         Added additional error condition to network errors 
             - retry on socket timeouts
