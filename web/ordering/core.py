@@ -380,7 +380,7 @@ def handle_submitted_landsat_products():
             print(msg)
 
 
-@transaction.atomic
+#@transaction.atomic
 def handle_submitted_modis_products():
     ''' Moves all submitted modis products to oncache if true '''
 
@@ -391,19 +391,26 @@ def handle_submitted_modis_products():
 
     if len(modis_products) > 0:
 
-        oncache_list = list()
+#        oncache_list = list()
 
         for product in modis_products:
-            if lpdaac.input_exists(product.name):
-                oncache_list.append(product.name)
+            if lpdaac.input_exists(product.name) is True:
+                product.status = 'oncache'
+                product.save()
+            else:
+                product.status = 'unavailable'
+                product.note = 'not found in modis data pool'
+                product.save()
 
-        filter_args = {'status': 'submitted',
-                       'name__in': oncache_list,
-                       'sensor_type': 'modis'}
+#                oncache_list.append(product.name)
 
-        update_args = {'status': 'oncache'}
+#        filter_args = {'status': 'submitted',
+#                       'name__in': oncache_list,
+#                       'sensor_type': 'modis'}
 
-        Scene.objects.filter(**filter_args).update(**update_args)
+#        update_args = {'status': 'oncache'}
+
+#        Scene.objects.filter(**filter_args).update(**update_args)
 
 
 @transaction.atomic
