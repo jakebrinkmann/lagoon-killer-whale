@@ -4,7 +4,8 @@ from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.views.decorators.csrf import csrf_exempt
 from ordering import core
 from ordering.models import Configuration
-from ordering.models import DataPoint
+from django.core.cache import cache
+from espa_common import settings as common_settings
 
 __author__ = "David V. Hill"
 
@@ -101,7 +102,17 @@ def _mark_product_complete(name,
 
 
 def _handle_orders():
-    return core.handle_orders()
+    key = common_settings.CACHE_KEYS['handle_orders_lock']['key']
+    timeout = common_settings.CACHE_KEYS['handle_orders_lock']['timeout']
+
+    results = ''
+
+    if cache.get(key) is None:
+        cache.set(key, '', timeout)
+        results = core.handle_orders()
+        cache.delete(key)
+        
+    return results
 
 
 #method to expose master configuration repository to the system

@@ -181,8 +181,8 @@ DEFAULT_PIXEL_SIZE = {
 ''' Constant dictionary to hold the cache keys used in Django
  caching/memcached'''
 CACHE_KEYS = {
-
-
+    'handle_orders_lock': {'key': 'handle_orders_lock',
+                           'timeout': 60 * 21},
 }
 
 ''' SOAP client configuration parameters '''
