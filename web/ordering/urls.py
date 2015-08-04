@@ -7,6 +7,7 @@ from ordering.views import NewOrder
 from ordering.views import ListOrders
 from ordering.views import OrderDetails
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 
 from ordering.views import TestAjax
 from ordering.views import AjaxForm
@@ -36,7 +37,7 @@ urlpatterns = patterns('',
         name='list_orders'),
 
     url(r'^status/(?P<email>[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4})/rss/$',
-        StatusFeed(),
+        cache_page(60 * 30) (StatusFeed()),
         name='status_feed'),
 
     url(r'^status/(?P<orderid>[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}-[0-9]{6,8}-[0-9]{3,6})/$',
