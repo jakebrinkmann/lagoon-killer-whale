@@ -3,6 +3,9 @@ This project serves up the espa website and provides all the job ordering &
 scheduling functions.
 
 ## Change Notes
+Version 2.8.6 (August 2015)
+        - added caching to rss feed via urls.py in ordering
+
 Version 2.8.5a (July 2015)
         - removed items unrelated to the webapp
         - retagged as 2.8.5a to allow deployment to differentiate between
