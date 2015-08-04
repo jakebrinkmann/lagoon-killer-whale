@@ -3,6 +3,12 @@ This project serves up the espa website and provides all the job ordering &
 scheduling functions.
 
 ## Change Notes
+Version 2.8.7 (August 2015)
+        - altered queries for checking modis to operate product by product
+          rather than in bulk.  The service calls to lpdaac were taking 
+          way too long and causing long running transactions to lock 
+          rows.
+
 Version 2.8.6 (August 2015)
         - added caching to rss feed via urls.py in ordering
 
