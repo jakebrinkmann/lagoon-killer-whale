@@ -168,7 +168,7 @@ class Emails(object):
         m = list()
         m.append("%s is now complete and can be downloaded " % order.orderid)
         m.append("from %s.\n\n" % url)
-        m.append("This order will remain available for 14 days.  ")
+        m.append("This order will remain available for 10 days.  ")
         m.append("Any data not downloaded will need to be reordered ")
         m.append("after this time.\n\n")
         m.append("Please contact Customer Services at 1-800-252-4547 or ")

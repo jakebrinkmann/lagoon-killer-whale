@@ -234,7 +234,7 @@ LOGIN_REDIRECT_URL = 'index'
 # *************************
 URL_FOR = lambda service_name: SERVICE_LOCATOR[ESPA_ENV][service_name]
 
-# Set up caching for Django.  Everything is pointed to our single memcache 
+# Set up caching for Django.  Everything is pointed to our single memcache
 # cluster but each environment is going to separated out with the environment
 # value as a key prefix.
 if ESPA_ENV is 'dev':
@@ -247,7 +247,7 @@ if ESPA_ENV is 'dev':
         ]
     }
 }
-else:    
+else:
     CACHES = {
         'default': {
             'KEY_PREFIX' : ESPA_ENV,
@@ -284,22 +284,39 @@ LOGGING = {
     'handlers': {
         'standard': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
+            'class': 'logging.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 30,
             'formatter': 'espa.standard',
             'filename': os.path.join(LOGDIR, 'espa-web.log'),
             'mode': 'a'
         },
         'requests': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
+            'class': 'logging.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 30,
             'formatter': 'espa.standard',
             'filename': os.path.join(LOGDIR, 'espa-web-requests.log'),
+            
             'mode': 'a'
         },
     },
     'loggers': {
+       'django.request': {
+            # To be used by django
+            'level': 'ERROR',
+            'propagate': False,
+            'handlers': ['requests'],
+        },
         'ordering.auth_backends': {
             'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.core': {
+            # To be used by the web system
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
@@ -312,22 +329,14 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
             'handlers': ['standard']
-        },
-        'ordering.views': {
-            # To be used by the web system
-            'level': 'INFO',
+        },        
+        'ordering.lpdaac': {
+            'level': 'DEBUG',
             'propagate': False,
             'handlers': ['standard']
         },
-        'ordering.rpc': {
-            # To be used by the web system
-            'level': 'INFO',
-            'propagate': False,
-            'handlers': ['standard']
-        },
-        'ordering.core': {
-            # To be used by the web system
-            'level': 'INFO',
+        'ordering.lta': {
+            'level': 'DEBUG',
             'propagate': False,
             'handlers': ['standard']
         },
@@ -337,12 +346,7 @@ LOGGING = {
             'propagate': False,
             'handlers': ['standard']
         },
-        'ordering.lta': {
-            'level': 'DEBUG',
-            'propagate': False,
-            'handlers': ['standard']
-        },
-        'ordering.lpdaac': {
+        'ordering.nlaps': {
             'level': 'DEBUG',
             'propagate': False,
             'handlers': ['standard']
@@ -351,12 +355,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
             'handlers': ['standard']
-        },
-        'ordering.nlaps': {
-            'level': 'DEBUG',
-            'propagate': False,
-            'handlers': ['standard']
-        },
+        },        
         'ordering.sensor': {
             'level': 'DEBUG',
             'propagate': False,
@@ -377,17 +376,17 @@ LOGGING = {
             'propagate':False,
             'handlers': ['standard']
         },
+        'ordering.views': {
+            # To be used by the web system
+            'level': 'INFO',
+            'propagate': False,
+            'handlers': ['standard']
+        },
         'ordering.utilities': {
             'level': 'DEBUG',
             'propagate':False,
             'handlers': ['standard']
-        }, 
-        'django.request': {
-            # To be used by django
-            'level': 'ERROR',
-            'propagate': False,
-            'handlers': ['requests'],
-        }
+        },
     }
 }
 
