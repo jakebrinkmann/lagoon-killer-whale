@@ -27,8 +27,8 @@ from . import emails
 from . import sensor
 from . import utilities
 from . import validators
-from .ordering.models import Order
-from .ordering.models import Configuration as Config
+from .models import Order
+from .models import Configuration as Config
 
 logger = logging.getLogger(__name__)
 

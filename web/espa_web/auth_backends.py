@@ -8,8 +8,8 @@ import traceback
 
 from django.contrib.auth.models import User
 
-from ..ordering.models import UserProfile
-from ..ordering import lta
+from ordering.models import UserProfile
+from ordering import lta
 
 
 logger = logging.getLogger(__name__)
