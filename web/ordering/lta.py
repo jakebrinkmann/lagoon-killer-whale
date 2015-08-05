@@ -1,15 +1,21 @@
-from cStringIO import StringIO
-from django.conf import settings
-from suds.client import Client as SoapClient
-from suds.cache import ObjectCache
-from espa_common import sensor
-from espa_common import settings as common_settings
+'''
+Purpose: lta services client module
+Author: David V. Hill
+'''
 
+import logging
 import requests
 import collections
 import xml.etree.ElementTree as xml
+from cStringIO import StringIO
 
-__author__ = "David V. Hill"
+from django.conf import settings
+from suds.client import Client as SoapClient
+from suds.cache import ObjectCache
+
+from . import sensor
+
+logger = logging.getLogger(__name__)
 
 
 class LTAService(object):
@@ -22,7 +28,7 @@ class LTAService(object):
         self.url = self.get_url(self.service_name)
 
     def __repr__(self):
-        return "LTAService:%s" % self.__dict__
+        return "LTAService:{0}".format(self.__dict__)
 
     def get_url(self, service_name):
         ''' Service locator pattern.  Retrieves proper url from settings.py
@@ -47,8 +53,8 @@ class LTASoapService(LTAService):
 
     def build_object_cache(self):
         cache = ObjectCache()
-        cache.setduration(seconds=common_settings.SOAP_CLIENT_TIMEOUT)
-        cache.setlocation(common_settings.SOAP_CACHE_LOCATION)
+        cache.setduration(seconds=settings.SOAP_CLIENT_TIMEOUT)
+        cache.setlocation(settings.SOAP_CACHE_LOCATION)
         return cache
 
 
@@ -150,7 +156,7 @@ class OrderWrapperServiceClient(LTAService):
         '''
 
         #build the service + operation url
-        request_url = "%s/%s" % (self.url, 'verifyScenes')
+        request_url = '{0}/verifyScenes'.format(self.url)
 
         #build the request body
         sb = StringIO()
@@ -167,8 +173,8 @@ class OrderWrapperServiceClient(LTAService):
 
         for s in scene_list:
             product = sensor.instance(s)
-            sb.write("<sceneId sensor='%s'>%s</sceneId>"
-                     % (product.lta_name, s))
+            sb.write("<sceneId sensor='{0}'>{1}</sceneId>"
+                     .format(product.lta_name, s))
 
         sb.write("</sceneList>")
 
@@ -193,8 +199,8 @@ class OrderWrapperServiceClient(LTAService):
             msg = StringIO()
             msg.write("Error in lta.OrderWrapperServiceClient.verify_scenes\n")
             msg.write("Non 200 response code from service\n")
-            msg.write("Response code was:%s" % __response.status_code)
-            msg.write("Reason:%s" % __response.reason)
+            msg.write("Response code was:{0}".format( __response.status_code))
+            msg.write("Reason:{0}".format(__response.reason))
             # Return the code and reason as an exception
             raise Exception(msg.getvalue())
 
@@ -258,7 +264,7 @@ class OrderWrapperServiceClient(LTAService):
         '''
 
         # build service url
-        request_url = "%s/%s" % (self.url, 'submitOrder')
+        request_url = '{0}/submitOrder'.format(self.url)
 
         def build_request(contact_id, priority, product_list):
             # build the request body
@@ -274,13 +280,14 @@ class OrderWrapperServiceClient(LTAService):
                     "http://earthexplorer.usgs.gov/EE/orderParameters.xsd'>")
 
             sb.write(head)
-            sb.write("<contactId>%s</contactId>" % contact_id)
-            sb.write("<requestor>ESPA</requestor>")
+            sb.write("<contactId>{0}</contactId>".format(contact_id))
+            sb.write("requestor>ESPA</requestor>")
 
             # 1111111 is a dummy value.
-            sb.write("<externalReferenceNumber>%s</externalReferenceNumber>"
-                     % 1111111)
-            sb.write("<priority>%i</priority>" % priority)
+            sb.write("<externalReferenceNumber>{0}</externalReferenceNumber>"
+                     .format(1111111))
+                     
+            sb.write("<priority>{0}</priority>".format(priority))
 
             product_info = self.get_download_urls(product_list, contact_id)
 
@@ -292,10 +299,11 @@ class OrderWrapperServiceClient(LTAService):
                     raise pne
                 else:
                     sb.write("<scene>")
-                    sb.write("<sceneId>%s</sceneId>" % p)
-                    sb.write("<prodCode>%s</prodCode>"
-                             % product_info[p]['lta_code'])
-                    sb.write("<sensor>%s</sensor>" % product_info[p]['sensor'])
+                    sb.write("<sceneId>{0}</sceneId>".format(p))
+                    sb.write("<prodCode>{0}</prodCode>"
+                             .format(product_info[p]['lta_code']))
+                    sb.write("<sensor>{0}</sensor>"
+                             .format(product_info[p]['sensor']))
                     sb.write("</scene>")
 
             sb.write("</orderParameters>")
@@ -320,8 +328,8 @@ class OrderWrapperServiceClient(LTAService):
             msg = StringIO()
             msg.write("Error in lta.OrderWrapperServiceClient.order_scenes\n")
             msg.write("Non 200 response code from service\n")
-            msg.write("Response code was:%s" % __response.status_code)
-            msg.write("Reason:%s" % __response.reason)
+            msg.write("Response code was:{0}".format(__response.status_code))
+            msg.write("Reason:{0}".format(__response.reason))
             # Return the code and reason as an exception
             raise Exception(msg.getvalue())
 
@@ -362,9 +370,8 @@ class OrderWrapperServiceClient(LTAService):
 
         </orderStatus>
         '''
-
-        if settings.DEBUG:
-            print(response)
+        
+        logger.debug('Ordering scenes SOAP response:{0}'.format(response))
 
         # since the xml is namespaced there is a namespace prefix for every
         # element we are looking for.  Build those values to make the code
@@ -452,17 +459,19 @@ class OrderWrapperServiceClient(LTAService):
 
             sb.write(head)
 
-            sb.write("<contactId>%s</contactId>" % contact_id)
+            sb.write("<contactId>{0}</contactId>".format(contact_id))
 
             for p in products:
                 try:
                     product = sensor.instance(p)
                 except sensor.ProductNotImplemented:
-                    print("%s not implemented, skipping" % p)
+                    logger.warn("{0} not implemented, skipping".format(p))
                 else:
                     sb.write("<scene>")
-                    sb.write("<sceneId>%s</sceneId>" % product.product_id)
-                    sb.write("<sensor>%s</sensor>" % product.lta_name)
+                    sb.write("<sceneId>{0}</sceneId>"
+                             .format(product.product_id))
+                             
+                    sb.write("<sensor>{0}</sensor>".format(product.lta_name))
                     sb.write("</scene>")
 
             sb.write("</downloadSceneList>")
@@ -505,9 +514,9 @@ class OrderWrapperServiceClient(LTAService):
 
             retval = {}
 
-            ehost = common_settings.EXTERNAL_CACHE_HOST
-            ihosts = common_settings.ESPA_CACHE_HOST_LIST
-            
+            ehost = settings.EXTERNAL_CACHE_HOST
+            ihosts = settings.ESPA_CACHE_HOST_LIST
+
             for index, scene in enumerate(list(scene_elements)):
                 name = scene.find(sceneid_elem).text
                 prod_code = scene.find(prod_code_elem).text
@@ -525,28 +534,28 @@ class OrderWrapperServiceClient(LTAService):
 
                 if __dload_url is not None:
                     dload_url = __dload_url.text
-                    
+
                     if dload_url.find(ehost) != -1:
                         dload_url = dload_url.replace(ehost,
                                                       ihosts[index % 2])
                     retval[name]['download_url'] = dload_url
-                   
+
             return retval
 
         # build service url
-        request_url = "%s/%s" % (self.url, 'getDownloadURL')
+        request_url = "{0}/{1}".format(self.url, 'getDownloadURL')
         payload = build_request(contact_id, product_list)
         response = requests.post(request_url, data=payload)
 
         if response.ok:
             return parse_response(response.text)
         else:
-            msg = "Error retrieving download urls.  Reason:%s Response Text:%s"
-            msg = msg % (response.reason, response.text)
-            msg = msg + "\nContact ID:%s" % contact_id
-            #msg = msg + "\nProduct list:%s" % product_list
-            #msg = msg + "\nPayload:%s" % payload
-            print(msg)
+            msg = ('Error retrieving download urls.  Reason:{0} Response:{1}\n'
+                   'Contact id:{3}'.format(response.reason,
+                                           response.text,
+                                           contact_id))
+            
+            logger.error(msg)
             raise RuntimeError(msg)
 
     def input_exists(self, product, contact_id):
@@ -679,9 +688,10 @@ class OrderDeliveryServiceClient(LTASoapService):
             #ignore anything that is not for us
             if str(u.productCode).lower() not in ('sr01', 'sr02', 'sr03'):
 
-                print ("%s is not an ESPA product.  \
-                       Order[%s] Unit[%s] Product code[%s]: ignoring"
-                       % (u.orderingId, u.orderNbr, u.unitNbr, u.productCode))
+                logger.warn('{0} is not an ESPA product. Order[{1}] Unit[{2}]'
+                            'Product code[{3}]... ignoring'
+                             .format(u.orderingId, u.orderNbr,
+                                     u.unitNbr, u.productCode))
                 continue
 
             # get the processing parameters
@@ -690,8 +700,9 @@ class OrderDeliveryServiceClient(LTASoapService):
             try:
                 email = pp[pp.index("<email>") + 7:pp.index("</email>")]
             except:
-                print ("Could not find an email address for \
-                order[%s] unit[%s]: rejecting" % (u.orderNbr, u.unitNbr))
+                logger.warn('Could not find an email address for '
+                            'unit {0} in order {1] : rejecting'
+                            .format(u.unitNbr,u.orderNbr))
 
                 # we didn't get an email... fail the order
                 resp = OrderUpdateServiceClient().update_order(u.orderNbr,
@@ -699,12 +710,13 @@ class OrderDeliveryServiceClient(LTASoapService):
                                                                "R")
                 # we didn't get a response from the service
                 if not resp.success:
-                    raise Exception("Could not update order[%s] unit[%s] \
-                    to status:'F'. Error message:%s Error status code:%s"
-                                    % (u.orderNbr,
-                                       u.unitNbr,
-                                       resp.message,
-                                       resp.status))
+                    raise Exception('Could not update order[{0}] unit[{1}] '
+                                    'to status:F. Error message:{2} '
+                                    'Error status code:{3}'
+                                    .format(u.orderNbr,
+                                            u.unitNbr,
+                                            resp.message,
+                                            resp.status))
                 else:
                     continue
 
@@ -712,8 +724,9 @@ class OrderDeliveryServiceClient(LTASoapService):
                 # get the contact id
                 cid = pp[pp.index("<contactid>") + 11:pp.index("</contactid>")]
             except:
-                print ("Could not find a contactid for \
-                order[%s] unit[%s]: rejecting" % (u.orderNbr, u.unitNbr))
+                logger.warn('Could not find a contactid for unit {0} in '
+                            'order {1}... rejecting'
+                            .format(u.unitNbr, u.orderNbr))
 
                 # didn't get an email... fail the order
                 resp = OrderUpdateServiceClient().update_order(u.orderNbr,
@@ -721,12 +734,13 @@ class OrderDeliveryServiceClient(LTASoapService):
                                                                "R")
                 # didn't get a response from the service
                 if not resp.success:
-                    raise Exception("Could not update order[%s] unit[%s] \
-                    to status:'F'. Error message:%s Error status code:%s"
-                                    % (u.orderNbr,
-                                       u.unitNbr,
-                                       resp.message,
-                                       resp.status))
+                    raise Exception('Could not update unit {0} in order {1} '
+                                    'to status:F. Error message:{2} '
+                                    'Error status code:{3}'
+                                    .format(u.orderNbr,
+                                            u.unitNbr,
+                                            resp.message,
+                                            resp.status))
                 else:
                     continue
 

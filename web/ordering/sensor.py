@@ -1,10 +1,17 @@
-'''module to extract embedded information from product names and supply
+'''
+Purpose: module to extract embedded information from product names and supply
 configured values for each product
+Author: David V. Hill
 '''
 
-import settings
-import utilities
 import re
+import logging
+
+from django.conf import settings
+
+from . import utilities
+
+logger = logging.getLogger(__name__)
 
 
 class ProductNotImplemented(NotImplementedError):

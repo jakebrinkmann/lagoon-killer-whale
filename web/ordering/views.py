@@ -1,18 +1,11 @@
+'''
+Purpose: Define the espa-web ordering view logic
+Author: David V. Hill
+'''
+
 import json
 import collections
-from espa_common import sensor
-import emails
-
-import django.contrib.auth
-
-from espa_common import utilities
-
-from ordering import validators
-from ordering.models import Scene
-from ordering.models import Order
-from ordering.models import Configuration as Config
-from ordering.models import Download
-from ordering.models import DownloadSection
+import logging
 
 from django import forms
 from django.db import connection
@@ -20,7 +13,6 @@ from django.conf import settings
 from django.contrib.syndication.views import Feed
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
-from django.db.models import Q
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import Http404
@@ -28,30 +20,19 @@ from django.template import loader
 from django.template import RequestContext
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.views.generic import View
-
+import django.contrib.auth
 from django.contrib.auth.models import User
 
+from . import emails
+from . import sensor
+from . import utilities
+from . import validators
+from .ordering.models import Order
+from .ordering.models import Configuration as Config
+
+logger = logging.getLogger(__name__)
 
 class AbstractView(View):
-
-    
-    #def _get_option_style(self, request):
-    #    '''Utility method to determine which options to display in the
-    #    templates based on the user.
-    #
-    #    Keyword args:
-    #    request -- An HTTP request object
-    #
-    #    Return:
-    #    str('display:none') if the user is not admin or internal
-    #    str('') otherwise
-    #    '''
-    #    if hasattr(request, 'user'):
-    #        
-    #        if request.user.username not in ('espa_admin', 'espa_internal'):
-    #            return "display:none"
-    #        else:
-    #            return ""
 
     def _display_system_message(self, ctx):
         '''Utility method to populate the context with systems messages if
@@ -330,7 +311,7 @@ class NewOrder(AbstractView):
 
             c['errors'] = sorted(error_list)
             c['user'] = request.user
-            
+
             t = loader.get_template(self.template)
 
             return HttpResponse(t.render(c))
@@ -370,7 +351,7 @@ class NewOrder(AbstractView):
 
 class ListOrders(AbstractView):
     template = "ordering/listorders.html"
-    
+
     def get(self, request, email=None, output_format=None):
         '''Request handler for displaying all user orders
 
@@ -382,7 +363,7 @@ class ListOrders(AbstractView):
         Return:
         HttpResponse
         '''
-       
+
         if email is None or not emails.Emails().validate_email(email):
             user = User.objects.get(username=request.user.username)
             email = user.email
@@ -390,37 +371,13 @@ class ListOrders(AbstractView):
         orders = Order.list_all_orders(email)
 
         form = ListOrdersForm(initial={'email': email})
-        
-        c = self._get_request_context(request, {'form': form, 
+
+        c = self._get_request_context(request, {'form': form,
                                                 'email': email,
                                                 'orders': orders
                                                 })
-                                                
-        t = loader.get_template(self.template)
-
-        return HttpResponse(t.render(c))
-        
-
-
-class Downloads(AbstractView):
-    template = 'ordering/downloads.html'
-
-    def get(self, request):
-        '''Request handler to display the downloads template
-
-        Keyword args:
-        request -- HTTP request object
-
-        Return:
-        HttpResponse
-        '''
-        ob = 'display_order', 'title'
-
-        d = DownloadSection.objects.filter(visible=True).order_by(ob)
 
         t = loader.get_template(self.template)
-
-        c = self._get_request_context(request, {'sections': d})
 
         return HttpResponse(t.render(c))
 
@@ -509,7 +466,7 @@ class StatusFeed(Feed):
             finally:
                 if cursor is not None:
                     cursor.close()
-    
+
         if not results or len(results) == 0:
             raise Http404
         else:

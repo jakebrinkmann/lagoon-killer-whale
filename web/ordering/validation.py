@@ -1,5 +1,10 @@
-import copy
+'''
+Purpose: Validator framework for espa-web
+Author: David V. Hill
+'''
 
+import logging
+logger = logging.getLogger(__name__)
 
 class Validator(object):
     '''Superclass to create the logic of the validation framework.  The
@@ -301,10 +306,10 @@ if __name__ == '__main__':
                                  'longitudinal_pole': 'abc123',
                                  'projection': 'ps'})
 
-    print("--------------------------------------------")
-    print("Example call to validator tree with an error")
-    print("--------------------------------------------")
-    print(form.errors())
+    logger.info("--------------------------------------------")
+    logger.info("Example call to validator tree with an error")
+    logger.info("--------------------------------------------")
+    logger.info(form.errors())
 
     # This will demonstrate a call to validator in which no validation
     # errors occurred
@@ -312,11 +317,11 @@ if __name__ == '__main__':
                                  'longitudinal_pole': 'abc123',
                                  'projection': 'ps'})
 
-    print("")
-    print("---------------------------------------------")
-    print("Example call to validator tree with no errors")
-    print("---------------------------------------------")
+    logger.info("")
+    logger.info("---------------------------------------------")
+    logger.info("Example call to validator tree with no errors")
+    logger.info("---------------------------------------------")
     # This completes with no validation errors
-    print(form.errors())
+    logger.info(form.errors())
 
     #END example call

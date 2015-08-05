@@ -1,6 +1,12 @@
-import os
+'''
+Purpose: Simple lookup to determine if a Landsat 5 scene is TMA or not
+Author: David V. Hill
+'''
 
-''' This is a simple lookup to determine if a Landsat 5 scene is TMA or not '''
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class NLAPS(object):

@@ -1,18 +1,18 @@
-from ordering.models import Scene
-from ordering.models import Order
-from ordering.models import Configuration
-from ordering.models import UserProfile
-from ordering.models import Download
-from ordering.models import DownloadSection
-from ordering.models import DataPoint
-from ordering.models import Tag
+'''
+Purpose: exposes models via the django admin site
+Author: David V. Hill
+'''
 
 from django.contrib import admin
+
+from .models import Scene
+from .models import Order
+from .models import Configuration
+from .models import UserProfile
 
 __author__ = "David V. Hill"
 
 
-#THESE DON"T WORK LIKE YOU"D EXPECT
 class SceneInline(admin.StackedInline):
     model = Scene
 
@@ -57,7 +57,7 @@ class SceneAdmin(admin.ModelAdmin):
                    'order__priority',
                    'completion_date',
                    'sensor_type',
-                   'processing_location',                   
+                   'processing_location',
                    'order'
                    )
 
@@ -83,7 +83,7 @@ class OrderAdmin(admin.ModelAdmin):
                     'order_date', 'completion_date', 'ee_order_id',
                     'order_source', 'product_options')
 
-    list_filter = ('order_date', 'completion_date', 'order_source', 'status', 
+    list_filter = ('order_date', 'completion_date', 'order_source', 'status',
                    'priority', 'order_type', 'orderid',  'user', 'user__email',
                    'ee_order_id')
 
@@ -110,26 +110,6 @@ class ConfigurationAdmin(admin.ModelAdmin):
     search_fields = ['key', 'value']
 
 
-class TagAdmin(admin.ModelAdmin):
-    fields = ['tag', 'description', 'last_updated']
-    list_display = ('tag', 'last_updated')
-    list_filter = ('tag', 'last_updated')
-    search_fields = ['tag', 'description']
-
-
-class DatapointTagInline(admin.TabularInline):
-    model = DataPoint.tags.through
-    extra = 3
-
-
-class DataPointAdmin(admin.ModelAdmin):
-    fields = ['key', 'command', 'description', 'enable', 'last_updated']
-    list_display = ('key', 'command', 'enable', 'last_updated')
-    list_filter = ('enable', 'last_updated', 'tags__tag')
-    search_fields = ['key', 'command', 'description', 'tags__tag']
-    inlines = (DatapointTagInline,)
-
-
 class UserProfileAdmin(admin.ModelAdmin):
 
     fields = ['user', 'contactid']
@@ -147,54 +127,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     readonly_fields = ('user',)
 
 
-class DownloadAdmin(admin.ModelAdmin):
-    fields = ['target_name',
-              'target_url',
-              'checksum_name',
-              'checksum_url',
-              'readme_text',
-              'display_order',
-              'visible']
-
-    list_display = ['target_name',
-                    'target_url',
-                    'checksum_name',
-                    'checksum_url',
-                    'readme_text',
-                    'display_order',
-                    'visible']
-
-    list_filter = ['visible']
-
-    search_fields = ['target_name',
-                     'target_url',
-                     'checksum_name',
-                     'checksum_url',
-                     'readme_text',
-                     'visible']
-
-
-class DownloadInline(admin.StackedInline):
-    model = Download
-
-
-class DownloadSectionAdmin(admin.ModelAdmin):
-    fields = ['title', 'text', 'display_order', 'visible']
-
-    list_display = ['title', 'display_order', 'visible']
-
-    list_filter = ['title', 'visible']
-
-    search_fields = ['title', 'text']
-
-    inlines = [DownloadInline, ]
-
-
 admin.site.register(Scene, SceneAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Configuration, ConfigurationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
-admin.site.register(Download, DownloadAdmin)
-admin.site.register(DownloadSection, DownloadSectionAdmin)
-admin.site.register(DataPoint, DataPointAdmin)
-admin.site.register(Tag, TagAdmin)

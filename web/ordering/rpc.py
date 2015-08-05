@@ -1,13 +1,20 @@
+'''
+Purpose: exposes a system api for internal use only
+Author: David V. Hill
+'''
+
+import logging
+from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
+
 # Create your views here.
 from django.http import HttpResponse
-from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.views.decorators.csrf import csrf_exempt
-from ordering import core
-from ordering.models import Configuration
 from django.core.cache import cache
-from espa_common import settings as common_settings
 
-__author__ = "David V. Hill"
+from . import core
+from .models import Configuration
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -111,7 +118,7 @@ def _handle_orders():
         cache.set(key, '', timeout)
         results = core.handle_orders()
         cache.delete(key)
-        
+
     return results
 
 

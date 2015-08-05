@@ -1,8 +1,22 @@
+'''
+Purpose: master error handler for system level errors.  there are many
+         transient conditions within the datacenter that we have attempted
+         to remedy.  Some of them either aren't possible to solve due to
+         insufficient enterprise tracability or they aren't worth the time.
+         This module helps us live with the world we're in.
+Author: David V. Hill
+'''
+
+import logging
 import collections
-from espa_common import settings
-from espa_common import sensor
 import datetime
-import emails
+
+from django.conf import settings
+
+from . import emails
+from . import sensor
+
+logger = logging.getLogger(__name__)
 
 
 class Errors(object):
@@ -61,13 +75,11 @@ class Errors(object):
         resolution = None
 
         for key in keys:
-            #print("Comparing %s" % (key.lower()))
-
+            
             if key.lower() in error_message.lower():
                 resolution = self.resolution(status, reason, extra)
                 break
 
-        #return self.resolution(status, reason, extra)
         return resolution
 
     def __add_retry(self, timeout_key, extras=dict()):
@@ -230,7 +242,7 @@ class Errors(object):
         status = 'unavailable'
         reason = 'Error transforming product, check projection parameters'
         return self.__find_error(error_message, keys, status, reason)
-        
+
     def sixs_errors(self, error_message):
         keys = ['cannot create temp file for here-document: Permission denied']
         status = 'retry'

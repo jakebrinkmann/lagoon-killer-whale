@@ -1,21 +1,31 @@
+'''
+Purpose: Easy access to run remote ssh commands.
+Original Author: David V. Hill
+'''
+
 import paramiko
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RemoteHost(object):
     client = None
 
     def __init__(self, host, user, pw=None, debug=False):
+        ''' '''
         self.host = host
         self.user = user
         self.pw = pw
         self.debug = debug
 
     def execute(self, command):
+        ''' '''
         try:
             if self.debug is True:
-                print("Attempting to run [%s] on %s as %s" % (command,
-                                                              self.host,
-                                                              self.user))
+                logger.debug("Attempting to run [%s] on %s as %s" % (command,
+                                                                     self.host,
+                                                                     self.user))
 
             self.client = paramiko.SSHClient()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -36,12 +46,12 @@ class RemoteHost(object):
             if self.client is not None:
                 self.client.close()
                 self.client = None
-                
+
     def execute_script(self, script, interpreter):
-        pass
-    
+        raise NotImplemented
+
     def put(self, localpath, remotepath, mkdirs=True):
-        pass
-    
+        raise NotImplemented
+
     def get(self, remotepath, localpath, mkdirs=True):
-        pass
+        raise NotImplemented

@@ -1,9 +1,15 @@
+'''
+Purpose: reference impl for the methods that should be exposed via a
+         semi-public api
+Author: David V. Hill
+'''
+
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from ordering.models import Order
-from espa_common import utilities
 
-__author__ = "David V. Hill"
+from .models import Order
+from . import utilities
+
 __api__version__ = "0.1.0"
 
 

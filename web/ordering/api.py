@@ -1,3 +1,8 @@
+'''
+Purpose: another demo api skeleton
+Author: David V. Hill
+'''
+
 class User(object):
     '''The User API'''
 
