@@ -62,7 +62,7 @@ class LPDAACService(object):
 
                 try:
                     response = requests.head(url)
-                    if response.ok:
+                    if response.ok is True:
                         result = True
                 except Exception, e:
                     logger.exception('Exception checking modis input {0}\n '

@@ -13,7 +13,7 @@ class NLAPS(object):
 
     def __init__(self):
         self.path = os.path.dirname(__file__)
-        self.path = os.path.join(self.path, 'nlaps.txt')
+        self.path = os.path.join(self.path, 'tma_scenes.txt')
 
         with open(self.path, 'rb') as nl:
             data = nl.read()

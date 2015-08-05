@@ -10,6 +10,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
+from django.conf import settings
 
 from . import core
 from .models import Configuration
@@ -109,15 +110,26 @@ def _mark_product_complete(name,
 
 
 def _handle_orders():
-    key = common_settings.CACHE_KEYS['handle_orders_lock']['key']
-    timeout = common_settings.CACHE_KEYS['handle_orders_lock']['timeout']
+    key = settings.CACHE_KEYS['handle_orders_lock']['key']
+    timeout = settings.CACHE_KEYS['handle_orders_lock']['timeout']
+
+    logger.debug('Ready for caching with key {0} '
+                 ' and a timeout of {1}'.format(key, timeout))
 
     results = ''
-
+    logger.info('handle orders triggered...')
     if cache.get(key) is None:
+        logger.debug('Cache key {0} was None...'.format(key))
         cache.set(key, '', timeout)
         results = core.handle_orders()
+
+        #import time
+        #logger.debug('sleeping for 20 seconds')
+        #time.sleep(20)
+
         cache.delete(key)
+    else:
+        logger.debug('handle_orders was locked, skipping call to core')
 
     return results
 

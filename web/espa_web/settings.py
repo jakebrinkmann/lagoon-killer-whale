@@ -298,6 +298,21 @@ LOGGING = {
         },
     },
     'loggers': {
+        'ordering.auth_backends': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.emails': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.errors': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
         'ordering.views': {
             # To be used by the web system
             'level': 'INFO',
@@ -322,6 +337,51 @@ LOGGING = {
             'propagate': False,
             'handlers': ['standard']
         },
+        'ordering.lta': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.lpdaac': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.rpc': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.nlaps': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.sensor': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.sshcmd': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.validation': {
+            'level': 'DEBUG',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.validators': {
+            'level': 'DEBUG',
+            'propagate':False,
+            'handlers': ['standard']
+        },
+        'ordering.utilities': {
+            'level': 'DEBUG',
+            'propagate':False,
+            'handlers': ['standard']
+        }, 
         'django.request': {
             # To be used by django
             'level': 'ERROR',
@@ -330,6 +390,12 @@ LOGGING = {
         }
     }
 }
+
+# List of hostnames to choose from for the access to the online cache
+# Runs over 10Gb line
+ESPA_CACHE_HOST_LIST = ['edclxs67p', 'edclxs140p']
+
+EXTERNAL_CACHE_HOST = 'edclpdsftp.cr.usgs.gov'
 
 # filename extension for landsat input products
 LANDSAT_INPUT_FILENAME_EXTENSION = '.tar.gz'

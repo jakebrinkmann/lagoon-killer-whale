@@ -298,11 +298,11 @@ def handle_submitted_landsat_products():
         # bulk update the nlaps scenes
         if len(landsat_nlaps) > 0:
 
-            nlaps = [p for p in landsat_products if p.name in landsat_nlaps]
+            nlaps_products = [p for p in landsat_products if p.name in landsat_nlaps]
 
             landsat_nlaps = None
 
-            set_products_unavailable(nlaps, 'TMA data cannot be processed')
+            set_products_unavailable(nlaps_products, 'TMA data cannot be processed')
 
     def get_contactids_for_submitted_landsat_products():
 
@@ -485,11 +485,11 @@ def get_products_to_process(record_limit=500,
     json per the interface description between the web and processing tier'''
 
     logger.info('Retrieving products to process...')
-    logger.debug('Record limit:{0}').format(record_limit)
-    logger.debug('Priority:{0}').format(priority)
-    logger.debug('For user:{0}').format(for_user)
-    logger.debug('Product types:{0}').format(product_types)
-    logger.debug('Encode urls:{0}').format(encode_urls)
+    logger.debug('Record limit:{0}'.format(record_limit))
+    logger.debug('Priority:{0}'.format(priority))
+    logger.debug('For user:{0}'.format(for_user))
+    logger.debug('Product types:{0}'.format(product_types))
+    logger.debug('Encode urls:{0}'.format(encode_urls))
 
     # cast the record_limit to int since that's how its being used:
     if record_limit is not None:
