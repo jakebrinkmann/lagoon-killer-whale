@@ -331,6 +331,7 @@ class OrderWrapperServiceClient(LTAService):
             msg.write('Response code was:{0}'.format(__response.status_code))
             msg.write('Reason:{0}'.format(__response.reason))
             msg.write('Response:{0}'.format(__response.content))
+            msg.write('Request:{0}'.format(payload))
             raise Exception(msg.getvalue())
 
         __response.close()
