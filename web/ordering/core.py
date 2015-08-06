@@ -834,8 +834,8 @@ def update_order_if_complete(order):
                     order.completion_email_sent = datetime.datetime.now()
                     order.save()
             except Exception, e:
-                msg = "Error calling send_completion_email:{0}".format(e)
-                logger.exception(msg)
+                #msg = "Error calling send_completion_email:{0}".format(e)
+                logger.exception('Error calling send_completion_email')
                 raise Exception(msg)
 
 
