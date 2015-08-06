@@ -263,7 +263,8 @@ else:
 # cache timeouts by usage (in seconds)
 SYSTEM_MESSAGE_CACHE_TIMEOUT = 60
 
-LOGDIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'logs')
+LOGDIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)),
+                      'espa-web-logs')
 try:
     os.makedirs(LOGDIR)
 except:
@@ -284,20 +285,20 @@ LOGGING = {
     'handlers': {
         'standard': {
             'level': 'DEBUG',
-            'class': 'logging.TimedRotatingFileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'D',
             'interval': 30,
             'formatter': 'espa.standard',
-            'filename': os.path.join(LOGDIR, 'espa-web.log'),
+            'filename': os.path.join(LOGDIR, 'application.log'),
             'mode': 'a'
         },
         'requests': {
             'level': 'DEBUG',
-            'class': 'logging.TimedRotatingFileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'D',
             'interval': 30,
             'formatter': 'espa.standard',
-            'filename': os.path.join(LOGDIR, 'espa-web-requests.log'),
+            'filename': os.path.join(LOGDIR, 'requests.log'),
             
             'mode': 'a'
         },
