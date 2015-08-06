@@ -280,14 +280,14 @@ class OrderWrapperServiceClient(LTAService):
                     "http://earthexplorer.usgs.gov/EE/orderParameters.xsd'>")
 
             sb.write(head)
-            sb.write("<contactId>{0}</contactId>".format(contact_id))
-            sb.write("requestor>ESPA</requestor>")
+            sb.write('<contactId>{0}</contactId>'.format(contact_id))
+            sb.write('<requestor>ESPA</requestor>')
 
             # 1111111 is a dummy value.
-            sb.write("<externalReferenceNumber>{0}</externalReferenceNumber>"
+            sb.write('<externalReferenceNumber>{0}</externalReferenceNumber>'
                      .format(1111111))
-                     
-            sb.write("<priority>{0}</priority>".format(priority))
+
+            sb.write('<priority>{0}</priority>'.format(priority))
 
             product_info = self.get_download_urls(product_list, contact_id)
 
@@ -298,15 +298,15 @@ class OrderWrapperServiceClient(LTAService):
                 except sensor.ProductNotImplemented, pne:
                     raise pne
                 else:
-                    sb.write("<scene>")
-                    sb.write("<sceneId>{0}</sceneId>".format(p))
-                    sb.write("<prodCode>{0}</prodCode>"
+                    sb.write('<scene>')
+                    sb.write('<sceneId>{0}</sceneId>'.format(p))
+                    sb.write('<prodCode>{0}</prodCode>'
                              .format(product_info[p]['lta_code']))
-                    sb.write("<sensor>{0}</sensor>"
+                    sb.write('<sensor>{0}</sensor>'
                              .format(product_info[p]['sensor']))
-                    sb.write("</scene>")
+                    sb.write('</scene>')
 
-            sb.write("</orderParameters>")
+            sb.write('</orderParameters>')
 
             request_body = sb.getvalue()
 
@@ -371,7 +371,7 @@ class OrderWrapperServiceClient(LTAService):
 
         </orderStatus>
         '''
-        
+
         logger.debug('Ordering scenes SOAP response:{0}'.format(response))
 
         # since the xml is namespaced there is a namespace prefix for every
@@ -471,7 +471,7 @@ class OrderWrapperServiceClient(LTAService):
                     sb.write("<scene>")
                     sb.write("<sceneId>{0}</sceneId>"
                              .format(product.product_id))
-                             
+
                     sb.write("<sensor>{0}</sensor>".format(product.lta_name))
                     sb.write("</scene>")
 
@@ -555,7 +555,7 @@ class OrderWrapperServiceClient(LTAService):
                    'Contact id:{3}'.format(response.reason,
                                            response.text,
                                            contact_id))
-            
+
             logger.error(msg)
             raise RuntimeError(msg)
 
