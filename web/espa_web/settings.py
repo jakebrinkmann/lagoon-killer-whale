@@ -290,7 +290,6 @@ LOGGING = {
             'interval': 30,
             'formatter': 'espa.standard',
             'filename': os.path.join(LOGDIR, 'application.log'),
-            'mode': 'a'
         },
         'requests': {
             'level': 'DEBUG',
@@ -298,9 +297,7 @@ LOGGING = {
             'when': 'D',
             'interval': 30,
             'formatter': 'espa.standard',
-            'filename': os.path.join(LOGDIR, 'requests.log'),
-            
-            'mode': 'a'
+            'filename': os.path.join(LOGDIR, 'requests.log'),           
         },
     },
     'loggers': {
