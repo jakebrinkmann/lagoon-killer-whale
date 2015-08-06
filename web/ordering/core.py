@@ -398,7 +398,7 @@ def handle_submitted_landsat_products():
 def handle_submitted_modis_products():
     ''' Moves all submitted modis products to oncache if true '''
 
-    logger.debug("Handling submitted modis products...")
+    logger.info("Handling submitted modis products...")
 
     filter_args = {'status': 'submitted', 'sensor_type': 'modis'}
     modis_products = Scene.objects.filter(**filter_args)
@@ -425,7 +425,7 @@ def handle_submitted_plot_products():
     ''' Moves plot products from submitted to oncache status once all
         their underlying rasters are complete or unavailable '''
 
-    logger.debug("Handling submitted plot products...")
+    logger.info("Handling submitted plot products...")
 
     filter_args = {'status': 'ordered', 'order_type': 'lpcs'}
     plot_orders = Order.objects.filter(**filter_args)
