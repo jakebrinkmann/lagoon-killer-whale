@@ -82,8 +82,10 @@ class EEAuthBackend(object):
             
             logger.exception('Exception retrieving user[{0}] from earth '
                              'explorer during login'.format(username))
-            logger.debug(traceback.format_exc())
-
+            
+            #This isn't needed as exception gives the stack trace
+            #logger.debug(traceback.format_exc())
+            
             return None
 
     def get_user(self, user_id):
