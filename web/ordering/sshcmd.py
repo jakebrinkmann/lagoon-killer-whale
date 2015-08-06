@@ -48,10 +48,10 @@ class RemoteHost(object):
                 self.client = None
 
     def execute_script(self, script, interpreter):
-        raise NotImplemented
+        raise NotImplementedError
 
     def put(self, localpath, remotepath, mkdirs=True):
-        raise NotImplemented
+        raise NotImplementedError
 
     def get(self, remotepath, localpath, mkdirs=True):
-        raise NotImplemented
+        raise NotImplementedError
