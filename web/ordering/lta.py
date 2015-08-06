@@ -326,11 +326,11 @@ class OrderWrapperServiceClient(LTAService):
             response = __response.content
         else:
             msg = StringIO()
-            msg.write("Error in lta.OrderWrapperServiceClient.order_scenes\n")
-            msg.write("Non 200 response code from service\n")
-            msg.write("Response code was:{0}".format(__response.status_code))
-            msg.write("Reason:{0}".format(__response.reason))
-            # Return the code and reason as an exception
+            msg.write('Error in lta.OrderWrapperServiceClient.order_scenes\n')
+            msg.write('Non 200 response code from service\n')
+            msg.write('Response code was:{0}'.format(__response.status_code))
+            msg.write('Reason:{0}'.format(__response.reason))
+            msg.write('Response:{0}'.format(__response.content))
             raise Exception(msg.getvalue())
 
         __response.close()
