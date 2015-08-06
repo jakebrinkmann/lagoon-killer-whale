@@ -325,13 +325,15 @@ class OrderWrapperServiceClient(LTAService):
         if __response.ok:
             response = __response.content
         else:
+            logger.debug('Non 200 response from lta.order_scenes')
+            logger.debug('Response:{0}'.format(__response.content))
+            logger.debug('Request:{0}'.format(payload))
             msg = StringIO()
             msg.write('Error in lta.OrderWrapperServiceClient.order_scenes\n')
             msg.write('Non 200 response code from service\n')
             msg.write('Response code was:{0}'.format(__response.status_code))
             msg.write('Reason:{0}'.format(__response.reason))
-            msg.write('Response:{0}'.format(__response.content))
-            msg.write('Request:{0}'.format(payload))
+            
             raise Exception(msg.getvalue())
 
         __response.close()
