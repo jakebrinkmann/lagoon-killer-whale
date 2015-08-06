@@ -308,7 +308,7 @@ LOGGING = {
             'handlers': ['requests'],
         },
         'ordering.auth_backends': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
@@ -319,22 +319,22 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.emails': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.errors': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },        
         'ordering.lpdaac': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.lta': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
@@ -345,32 +345,32 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.nlaps': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.rpc': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },        
         'ordering.sensor': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.sshcmd': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.validation': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.validators': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate':False,
             'handlers': ['standard']
         },
@@ -381,7 +381,7 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.utilities': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate':False,
             'handlers': ['standard']
         },
