@@ -1,22 +1,21 @@
+'''
+Purpose: Configures urls for the ordering application
+Original Author: David V. Hill
+'''
+
 from django.conf.urls import patterns
 from django.conf.urls import url
 from django.contrib import admin
-from ordering.views import StatusFeed
-from ordering import rpc
-from ordering.views import NewOrder
-from ordering.views import ListOrders
-from ordering.views import OrderDetails
+from .views import StatusFeed
+from . import rpc
+from .views import NewOrder
+from .views import ListOrders
+from .views import OrderDetails
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 
-from ordering.views import TestAjax
-from ordering.views import AjaxForm
-
-'''
-author David V. Hill
-
-Url module for the ordering/ application within the espa_web project
-'''
+from .views import TestAjax
+from .views import AjaxForm
 
 admin.autodiscover()
 

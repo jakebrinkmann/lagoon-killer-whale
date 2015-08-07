@@ -1,8 +1,18 @@
-from espa_common import settings
-from espa_common import sensor
-from espa_common import utilities
+'''
+Purpose: lpdaac services client module
+Author: David V. Hill
+'''
+
+import logging
 import requests
 import os
+
+from django.conf import settings
+
+from . import sensor
+from . import utilities
+
+logger = logging.getLogger(__name__)
 
 
 class LPDAACService(object):
@@ -35,27 +45,29 @@ class LPDAACService(object):
         Returns:
         True/False
         '''
-        
+
         if isinstance(product, str) or isinstance(product, unicode):
             product = sensor.instance(product)
-            
+
         result = False
 
         try:
             url = self.get_download_url(product)
-            
+
             if 'download_url' in url[product.product_id]:
-                
+
                 url = url[product.product_id]['download_url']
-            
+
                 response = None
 
                 try:
                     response = requests.head(url)
-                    if response.ok:
+                    if response.ok is True:
                         result = True
                 except Exception, e:
-                    print ("Exception checking inputs:%s" % e)
+                    logger.exception('Exception checking modis input {0}\n '
+                                     'Exception:{1}'
+                                     .format(url, e))
                     return result
                 finally:
                     if response is not None:
@@ -63,7 +75,8 @@ class LPDAACService(object):
                         response = None
 
         except sensor.ProductNotImplemented:
-            print('%s is not an implemented LPDAAC product' % product)
+            logger.warn('{0} is not an implemented LPDAAC product'
+                        .format(product))
 
         return result
 
@@ -77,7 +90,7 @@ class LPDAACService(object):
 
         #also be nice and accept a sensor.Modis object
         if isinstance(product, sensor.Modis):
-            
+
             path = self._build_modis_input_file_path(product)
 
             product_url = ''.join([self.host, ":", str(self.port), path])
@@ -87,23 +100,23 @@ class LPDAACService(object):
 
             if not product.product_id in url:
                 url[product.product_id] = {}
-                
+
             url[product.product_id]['download_url'] = product_url
 
         return url
-        
+
     def get_download_urls(self, products):
-        
-        urls = {}        
-        
+
+        urls = {}
+
         if not isinstance(products, list):
             raise TypeError("get_download_urls requires a list of products")
-        
+
         for product in products:
             urls.update(self.get_download_url(product))
-        
+
         return urls
-            
+
 
     def _build_modis_input_file_path(self, product):
 
@@ -145,6 +158,6 @@ def verify_products(products):
 
 def get_download_url(product):
     return LPDAACService().get_download_url(product)
-    
+
 def get_download_urls(products):
     return LPDAACService().get_download_urls(products)

@@ -1,10 +1,17 @@
-import lta
-import lpdaac
-from models import Order
+'''
+Purpose: validation logic for orders submitted through espa-web
+Author: David V. Hill
+'''
+import logging
 
-from espa_common import sensor
-from espa_common import utilities
-from espa_common.validation import Validator
+from . import lta
+from . import lpdaac
+from . import sensor
+from . import utilities
+from .validation import Validator
+from .models import Order
+
+logger = logging.getLogger(__name__)
 
 
 class ModisProductListValidator(Validator):
@@ -140,17 +147,6 @@ class LandsatProductListValidator(Validator):
 
                     self.add_error('input_products', [msg, ])
                 else:
-
-                    #for p in landsat_products:
-                    #
-                    #    if isinstance(p, sensor.LandsatOLITIRS):
-                    #        if (int(p.year) == 2014 and int(p.doy) > 352) or (int(p.year) > 2014):
-                    #            msg = ("%s is not available due "
-                    #                   "to TIRS 12-19-2014 "
-                    #                   "calibration event.") % p.product_id
-                    #            self.add_error('input_products', [msg, ])
-
-
                     product_list = [s.product_id for s in landsat_products]
 
                     difference = set(product_list) - set(valid)

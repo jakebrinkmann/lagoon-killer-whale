@@ -3,6 +3,15 @@ This project serves up the espa website and provides all the job ordering &
 scheduling functions.
 
 ## Change Notes
+Version 2.8.8 (August 2015)
+        - added a global lock for calls to determine order disposition from 
+          rpc.py via memcache.  This is to stop multiple instances of this 
+          process from running.  The cache key is set in settings.py and
+          the timeout on this key(lock) is 21 minutes.  If the call succeeds 
+          then the lock is removed immediately.
+        - removed espa_common and rehomed the code under ordering
+        - added in standard django (python) logging 
+
 Version 2.8.7 (August 2015)
         - altered queries for checking modis to operate product by product
           rather than in bulk.  The service calls to lpdaac were taking 

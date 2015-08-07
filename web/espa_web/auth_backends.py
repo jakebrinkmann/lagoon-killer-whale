@@ -1,9 +1,18 @@
+'''
+Purpose: enables authentication with EE for ESPA
+Author: David V. Hill
+'''
+
+import logging
+import traceback
+
+from django.contrib.auth.models import User
 
 from ordering.models import UserProfile
 from ordering import lta
-from django.contrib.auth.models import User
-from django.conf import settings
-import traceback
+
+
+logger = logging.getLogger(__name__)
 
 
 class EEAuthBackend(object):
@@ -70,11 +79,13 @@ class EEAuthBackend(object):
 
             return user
         except Exception:
-            if settings.DEBUG:
-                print("Exception retrieving the user[%s] from earth explorer \
-                during login" % username)
-                print(traceback.format_exc())
-
+            
+            logger.exception('Exception retrieving user[{0}] from earth '
+                             'explorer during login'.format(username))
+            
+            #This isn't needed as exception gives the stack trace
+            #logger.debug(traceback.format_exc())
+            
             return None
 
     def get_user(self, user_id):

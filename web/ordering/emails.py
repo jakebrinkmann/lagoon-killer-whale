@@ -1,14 +1,22 @@
-import models
-from models import Order
-from models import Configuration
-from django.db import transaction
-import datetime
+'''
+Purpose: holds all the emails + email logic for espa-web
+Author: David V. Hill
+'''
 
+import logging
+import datetime
 import re
 from email.mime.text import MIMEText
 from smtplib import SMTP
 
-from espa_common import settings
+from django.db import transaction
+from django.conf import settings
+
+from . import models
+from .models import Order
+from .models import Configuration
+
+logger = logging.getLogger(__name__)
 
 
 class Emails(object):
@@ -17,9 +25,6 @@ class Emails(object):
         self.status_base_url = Configuration().getValue('espa.status.url')
 
     def __send(self, recipient, subject, body):
-        #return espa_common.utilities.send_email(recipient=recipient,
-        #                                        subject=subject,
-        #                                        body=body)
         return self.send_email(recipient=recipient, subject=subject, body=body)
 
     def __order_status_url(self, email):
@@ -37,7 +42,7 @@ class Emails(object):
         if type(recipient) in (list, tuple):
             for r in recipient:
                 _validate(r)
-                
+
             to_header = ','.join(recipient)
         elif type(recipient) in (str, unicode):
             _validate(recipient)
@@ -163,7 +168,7 @@ class Emails(object):
         m = list()
         m.append("%s is now complete and can be downloaded " % order.orderid)
         m.append("from %s.\n\n" % url)
-        m.append("This order will remain available for 14 days.  ")
+        m.append("This order will remain available for 10 days.  ")
         m.append("Any data not downloaded will need to be reordered ")
         m.append("after this time.\n\n")
         m.append("Please contact Customer Services at 1-800-252-4547 or ")
