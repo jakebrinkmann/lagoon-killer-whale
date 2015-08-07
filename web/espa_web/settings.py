@@ -285,19 +285,17 @@ LOGGING = {
     'handlers': {
         'standard': {
             'level': 'DEBUG',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'when': 'D',
-            'interval': 30,
+            'class': 'logging.FileHandler',
+            'mode': 'a',
             'formatter': 'espa.standard',
             'filename': os.path.join(LOGDIR, 'application.log'),
         },
         'requests': {
             'level': 'DEBUG',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'when': 'D',
-            'interval': 30,
+            'class': 'logging.FileHandler',
+            'mode': 'a',
             'formatter': 'espa.standard',
-            'filename': os.path.join(LOGDIR, 'requests.log'),           
+            'filename': os.path.join(LOGDIR, 'requests.log'),
         },
     },
     'loggers': {
@@ -327,7 +325,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
-        },        
+        },
         'ordering.lpdaac': {
             'level': 'INFO',
             'propagate': False,
@@ -353,7 +351,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
-        },        
+        },
         'ordering.sensor': {
             'level': 'INFO',
             'propagate': False,
