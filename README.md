@@ -3,6 +3,12 @@ This project serves up the espa website and provides all the job ordering &
 scheduling functions.
 
 ## Change Notes
+Version 2.8.9 (August 2015)
+        - removed google analytics from the site
+        - replaced the timed rotating file handler for logfiles
+          with standard filehandler.  Logrotate will be used to manage
+          the server logs.
+
 Version 2.8.8 (August 2015)
         - added a global lock for calls to determine order disposition from 
           rpc.py via memcache.  This is to stop multiple instances of this 
