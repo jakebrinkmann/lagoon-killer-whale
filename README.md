@@ -2,6 +2,15 @@
 This project serves up the espa website and provides all the job ordering &
 scheduling functions.
 
+## Installation
+    - satisfy system dependencies listed in system-requirements.txt
+    - create a virtualenv
+    - git clone https://github.com/USGS-EROS/espa-web.git 
+    - .cfgnfo with db values
+    - ESPA_DEBUG env var
+    - logs are expected in espa-web-logs, which should be next to virtualenv
+        - create env var for this ESPA_LOG_DIR
+
 ## Change Notes
 Version 2.8.9 (August 2015)
         - removed google analytics from the site
