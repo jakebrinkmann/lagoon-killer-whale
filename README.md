@@ -24,9 +24,9 @@ key=your secret key (for Django)
 ```
 
 ## Running
-If uWSGI is installed to the system :`cd espa-web;uwsgi -i uwsgi.ini`
+If uWSGI is installed to the system :`cd espa-web; uwsgi -i uwsgi.ini`
 
-If uWSGI is installed to the virtual environment: `cd espa-web;. bin/activate;uwsgi -i uwsgi.ini`
+If uWSGI is installed to the virtual environment: `cd espa-web; . bin/activate; wsgi -i uwsgi.ini`
 
 You can of course run the built-in django development server for development,
 but it is strongly recommended that instead you use uWSGI with the configuration
