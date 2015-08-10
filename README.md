@@ -3,21 +3,17 @@ This project serves up the espa website and provides all the job ordering &
 scheduling functions.
 
 ## Change Notes
-Version 2.8.9 (August 2015)
+###### Version 2.8.9 (August 2015)
 1. removed google analytics from the site
 2. replaced the timed rotating file handler for logfiles with standard filehandler.  Logrotate will be used to manage the server logs.
 
-Version 2.8.8 (August 2015)
-
+###### Version 2.8.8 (August 2015)
 1. added a global lock for calls to determine order disposition from rpc.py via memcache.  This is to stop multiple instances of this process from running.  The cache key is set in settings.py and the timeout on this key(lock) is 21 minutes.  If the call succeeds then the lock is removed immediately.
 2. removed espa_common and rehomed the code under ordering
 3. added in standard django (python) logging 
 
-Version 2.8.7 (August 2015)
-        - altered queries for checking modis to operate product by product
-          rather than in bulk.  The service calls to lpdaac were taking 
-          way too long and causing long running transactions to lock 
-          rows.
+###### Version 2.8.7 (August 2015)
+* altered queries for checking modis to operate product by product rather than in bulk.  The service calls to lpdaac were taking way too long and causing long running transactions to lock rows.
 
 Version 2.8.6 (August 2015)
         - added caching to rss feed via urls.py in ordering
