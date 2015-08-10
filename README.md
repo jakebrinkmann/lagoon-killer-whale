@@ -4,7 +4,6 @@ scheduling functions.
 
 ## Installation
 * Clone this project: `git clone https://github.com/USGS-EROS/espa-web.git espa-web`
-* Create logging directory: `mkdir espa-web-logs`
 * Create a virtualenv: `cd espa-web; virtualenv .`
 * Satisfy system dependencies listed in system-requirements.txt
 * Create a virtualenv: `cd espa-web; virtualenv .`
