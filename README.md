@@ -143,116 +143,104 @@ scheduling functions.
 * Optimized calls to warp outputs in the cdr_ecv.
 * Added first set of prototype system level tests for cdr_ecv.py
 
-Version 2.2.0
-        Added code to perform reprojection.
-        Added code to perform framing.
-        Added code to perform subsetting.
+###### Version 2.2.0
+* Added code to perform reprojection.
+* Added code to perform framing.
+* Added code to perform subsetting.
 
-Version 2.1.6
-        Reorganized the codebase to accomodate LPVS code.
-        Implemented a standardized logging format.
-        Added webpages for marketing.
+###### Version 2.1.6
+* Reorganized the codebase to accomodate LPVS code.
+* Implemented a standardized logging format.
+* Added webpages for marketing.
 
-Version 2.1.5
-        Added a lockfile to the scene_cache update to prevent multiple
-        processes from running, which causes a parallel contention issue
+###### Version 2.1.5
+* Added a lockfile to the scene_cache update to prevent multiple processes from running, which causes contention
 
-Version 2.1.4
-        Bug fix for duplicate orders from EE.  Modified core.py
-        load_orders_from_ee() to look for an order + scene in the db before
-        attempting to add a new one
+###### Version 2.1.4
+* Bug fix for duplicate orders from EE.  Modified core.py load_orders_from_ee() to look for an order + scene in the db before attempting to add a new one
 
-Version 2.1.3
-        Fix to clear logs upon non-error status update.
-        Initial version of api.py added.
-        Integration for SI 1.1.2, cfmask 1.1.1, ledaps 1.3.0,
-        cfmask_append 1.0.1, swe 1.0.0
-        Updated code to interact with online cache over private 10Gig network
-        Added load balancing code mapper.py for contacting the online cache
+###### Version 2.1.3
+* Fix to clear logs upon non-error status update.
+* Initial version of api.py added.
+* Integration for SI 1.1.2, cfmask 1.1.1, ledaps 1.3.0, cfmask_append 1.0.1, swe 1.0.0
+* Updated code to interact with online cache over private 10Gig network
+* Added load balancing code mapper.py for contacting the online cache
 
-Version 2.1.2
-        Updates for new cfmask and appending cfmask to sr outputs.
-        Multiple bug fixes related to UI css files when viewed of https
-Version 2.1.1
-        Update internal email verbage to remove "Surface Reflectance"
-        Bug fixes for LTA integration when processing mixed orders
-        Fixed product file names
-        Corrected bug where espa user interface wouldn't accept a Glovis
-        scenelist
-        Added all available spectral indices to espa_internal
-        Integrated cfmask 1.0.4
-        Integrated updated Spectral Indices
+###### Version 2.1.2
+* Updates for new cfmask and appending cfmask to sr outputs.
+* Multiple bug fixes related to UI css files when viewed of https
 
-Version 2.1
-        Updated web code to verify submitted scenes against the inventory
-        before accepting them.
-        Updated web code to pull orders from EE on demand for surface
-        reflectance only.
+###### Version 2.1.1
+* Update internal email verbage to remove "Surface Reflectance"
+* Bug fixes for LTA integration when processing mixed orders
+* Fixed product file names
+* Corrected bug where espa user interface wouldn't accept a Glovis scenelist
+* Added all available spectral indices to espa_internal
+* Integrated cfmask 1.0.4
+* Integrated updated Spectral Indices
 
-Version 2.0.4
-        Update espa to work with new ledaps and cfmask
-        Corrected issue with bad tarballs being distributed.
-        Generated cksum files and distribute those with the product.
+###### Version 2.1
+* Updated web code to verify submitted scenes against the inventory before accepting them.
+* Updated web code to pull orders from EE on demand for surface reflectance only.
 
-Version 2.0.3
-        Updated espa to work with ledaps 1.2 & cfmask 1.0.1
-        Added ability for all users to select product options.
-        Added ability to order cfmask for espa_internal and espa_admin
-        Removed seperate source file distribution (can be selected as an option)
+###### Version 2.0.4
+* Update espa to work with new ledaps and cfmask
+* Corrected issue with bad tarballs being distributed.
+* Generated cksum files and distribute those with the product.
 
-Version 2.0.2
-        Fixed solr generation to account for landsat metadata field name
-        changes
-        Changed espa TRAM ordering priority
-        Tested setting ESPA work directory to "." or cwd()
+###### Version 2.0.3
+* Updated espa to work with ledaps 1.2 & cfmask 1.0.1
+* Added ability for all users to select product options.
+* Added ability to order cfmask for espa_internal and espa_admin
+* Removed seperate source file distribution (can be selected as an option)
 
-Version 2.0.1
-        Added espa_internal for evaluation.
+###### Version 2.0.2
+* Fixed solr generation to account for landsat metadata field name changes
+* Changed espa TRAM ordering priority
+* Tested setting ESPA work directory to "." or cwd()
 
-Version 2.0.0
-        Modified architecture to remove the Chain of Command structure from
-        processing.
-        Modified espa to work with ledaps 1.1.2.
-        Added ability for end users to select which products they want in
-        their delivery (admin acct only at this time.)
-        Added mapper.py and removed any external calls from espa.py except for
-        scp calls to obtain data.  Mapper.py handles
-        all status notifications to the espa tracking node now.
+###### Version 2.0.1
+* Added espa_internal for evaluation.
 
-Version 1.3.8
-        Updated espa to work with ledaps 1.1.1.
+###### Version 2.0.0
+* Modified architecture to remove the Chain of Command structure from processing.
+* Modified espa to work with ledaps 1.1.2.
+* Added ability for end users to select which products they want in their delivery (admin acct only at this time.)
+* Added mapper.py and removed any external calls from espa.py except for scp calls to obtain data.  Mapper.py handles all status notifications to the espa tracking node now.
 
-Version 1.3.7
-        Updated espa to work with ledaps 1.1.0.  Added scene_cache.py to speed up scene submission.
-        Multiple bugfixes and cosmetic website/email changes.
-Version 1.3.5
-        Updated 'lndpm' binary to work with new Landsat metdata
+###### Version 1.3.8
+* Updated espa to work with ledaps 1.1.1.
 
-        Corrected metadata file lookup to account for Landsat's metadata format
-        changes.
-Version 1.3.4
-        Corrections to reprojection code in espacollection.py when creating
-        browse images.
-Version 1.3.3
-        Modifications to the NDVI code to release memory more quickly, reduce
-        memory footprint.
-Version 1.3.2
-        Correction to the solr index to be semicolon seperated
+###### Version 1.3.7
+* Updated espa to work with ledaps 1.1.0.  Added scene_cache.py to speed up scene submission.
+* Multiple bugfixes and cosmetic website/email changes.
 
-Version 1.3.1
-        Bug fixes for NDVI and CleanupDirs
+###### Version 1.3.5
+* Updated 'lndpm' binary to work with new Landsat metdata
+* Corrected metadata file lookup to account for Landsat's metadata format changes.
 
-Version 1.3
-        Updated LEDAPS to the latest version from November 2011.  Added ability to generate NDVI for output products
-        Multiple additions to collection processing to create browse and solr index.
+###### Version 1.3.4
+* Corrections to reprojection code in espacollection.py when creating browse images.
+* 
+###### Version 1.3.3
+* Modifications to the NDVI code to release memory more quickly, reduce memory footprint.
 
-Version 1.2
-        Replaced Python's tar and untar commands in espa.py with the native operating system commands.
-        Prior to this there were intermittent corrupt archives making it into the distribution node.
-        Native os commands are also far faster than the python implementation.
+###### Version 1.3.2
+* Correction to the solr index to be semicolon seperated
 
-Version 1.1
-        Added RSS Status capability to ordering interface
+###### Version 1.3.1
+* Bug fixes for NDVI and CleanupDirs
 
-Version 1.0
-        First major stable version of ESPA released that will process Landsat L1T's to Surface Reflectance
+###### Version 1.3
+* Updated LEDAPS to the latest version from November 2011.  Added ability to generate NDVI for output products
+* Multiple additions to collection processing to create browse and solr index.
+
+###### Version 1.2
+* Replaced Python's tar and untar commands in espa.py with the native operating system commands.
+  * Prior to this there were intermittent corrupt archives making it into the distribution node.
+
+###### Version 1.1
+* Added RSS Status capability to ordering interface
+
+###### Version 1.0
+* First major stable version of ESPA released that will process Landsat L1T's to Surface Reflectance
