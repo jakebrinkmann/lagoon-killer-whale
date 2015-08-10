@@ -12,17 +12,17 @@ scheduling functions.
 * Set ESPA_DEBUG env var to either True or False
 * Set ESPA_LOG_DIR env var.  Defaults to espa-web-dir next to espa-web
 * Set ESPA_CONFIG_FILE env var to point to db values (defaults to ~/.cfgnfo)
-  * Required db & app config in ESPA_CONFIG_FILE
-  
-     ```
-       [config]
-       dbhost=your db host
-       dbport=your port (3306, 5432, etc)
-       db=your db name (espa)
-       dbuser=your db user
-       dbpass=your db password
-       key=your secret key (for Django)
-    ```
+
+### Required db & app config in ESPA_CONFIG_FILE
+```
+[config]
+dbhost=your db host
+dbport=your port (3306, 5432, etc)
+db=your db name (espa)
+dbuser=your db user
+dbpass=your db password
+key=your secret key (for Django)
+```
 
 ## Running
 If uWSGI is installed to the system :`cd espa-web;uwsgi -i uwsgi.ini`
