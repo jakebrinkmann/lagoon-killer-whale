@@ -263,8 +263,13 @@ else:
 # cache timeouts by usage (in seconds)
 SYSTEM_MESSAGE_CACHE_TIMEOUT = 60
 
-LOGDIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)),
-                      'espa-web-logs')
+LOGDIR = os.environ.get('ESPA_LOG_DIR',
+                        os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)),
+                                     'espa-web-logs'))
+
+#LOGDIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)),
+#                      'espa-web-logs')
+
 try:
     os.makedirs(LOGDIR)
 except:

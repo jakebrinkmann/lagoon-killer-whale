@@ -5,3 +5,7 @@
 python2.7
 libmysqlclient-dev
 python-dev
+
+#Optional depending on preference.  If this isn't installed here
+#it should be installed into the virtualenv via requirements.txt
+uwsgi
