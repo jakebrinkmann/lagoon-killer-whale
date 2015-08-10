@@ -221,7 +221,7 @@ scheduling functions.
 
 ###### Version 1.3.4
 * Corrections to reprojection code in espacollection.py when creating browse images.
-* 
+ 
 ###### Version 1.3.3
 * Modifications to the NDVI code to release memory more quickly, reduce memory footprint.
 
