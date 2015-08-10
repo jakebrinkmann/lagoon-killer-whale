@@ -47,65 +47,55 @@ start the uWSGI server on boot.
 
 ## Change Notes
 Version 2.8.10 (August 2015)
-        - updated project to rely on virtualenv for dependencies
-        - moved + updated uwsgi config to be agnostic to the environment it is running in.
+1. updated project to rely on virtualenv for dependencies
+2. moved + updated uwsgi config to be agnostic to the environment it is running in.
 
 Version 2.8.9 (August 2015)
-        - removed google analytics from the site
-        - replaced the timed rotating file handler for logfiles
-          with standard filehandler.  Logrotate will be used to manage
-          the server logs.
+1. removed google analytics from the site
+2. replaced the timed rotating file handler for logfiles with standard filehandler.
+Logrotate will be used to manage the server logs.
 
 Version 2.8.8 (August 2015)
-* added a global lock for calls to determine order disposition from rpc.py via memcache.
+1. added a global lock for calls to determine order disposition from rpc.py via memcache.
 This is to stop multiple instances of this process from running.  The cache key is set in settings.py and
 the timeout on this key(lock) is 21 minutes.  If the call succeeds 
 then the lock is removed immediately.
-* removed espa_common and rehomed the code under ordering
-* added in standard django (python) logging 
+2. removed espa_common and rehomed the code under ordering
+3. added in standard django (python) logging 
 
 Version 2.8.7 (August 2015)
-        - altered queries for checking modis to operate product by product
-          rather than in bulk.  The service calls to lpdaac were taking 
-          way too long and causing long running transactions to lock 
-          rows.
+1. altered queries for checking modis to operate product by product rather than in bulk.
+The service calls to lpdaac were taking way too long and causing long running
+transactions to lock rows.
 
 Version 2.8.6 (August 2015)
-        - added caching to rss feed via urls.py in ordering
+1. added caching to rss feed via urls.py in ordering
 
 Version 2.8.5a (July 2015)
-        - removed items unrelated to the webapp
-        - retagged as 2.8.5a to allow deployment to differentiate between
-          it and the previous version
+1. removed items unrelated to the webapp
+2. retagged as 2.8.5a to allow deployment to differentiate between it and the previous version
 
 Version 2.8.5 (July 2015)
-        Added additional error condition to network errors 
-            - retry on socket timeouts
+1. Added additional error condition to network errors 
+  * retry on socket timeouts
 
 Version 2.8.4 (July 2015)
-        Added additional error conditions to the auto error resolver
-            - sixs failures now retry
-            - additional warp failures result in status unavailable
+1. Added additional error conditions to the auto error resolver
+  * sixs failures now retry
+  * additional warp failures result in status unavailable
 
 Version 2.8.3 (July 2015)
-        Modified RSS feed queries to use raw SQL due to performance overhead
-        with large orders.
-        Created separate uwsgi ini configurations for each environment to
-        ease deployment logic.
-        Removed deploy_install.sh and replaced with deploy_install.py,
-        which now works with github instead of subversion on Google Projects.
-        Updated lsrd_stats.py to work off of separate credentials to support
-        reporting from the historical db.
-        Enhanced processing system to support using a local path for output
-        product delivery and code cleanup associated with supporting the
-        local path.
-        Modified warping parameters for UTM South to match UTM North with both
-        now using the WGS84 datum.
+1. Modified RSS feed queries to use raw SQL due to performance overhead with large orders.
+2. Created separate uwsgi ini configurations for each environment to ease deployment logic.
+3. Removed deploy_install.sh and replaced with deploy_install.py, which now works with github instead of subversion on Google Projects.
+4. Updated lsrd_stats.py to work off of separate credentials to support reporting from the historical db.
+5. Enhanced processing system to support using a local path for output product delivery and code cleanup associated with supporting the local path.
+6. Modified warping parameters for UTM South to match UTM North with both now using the WGS84 datum.
 
 Version 2.8.1 (May 2015)
-        Added additional error conditions to the master error handler
-        Cosmetic changes for field labels
-        Removed inventory restrictions on L8SR TIRS failure scenes
+1. Added additional error conditions to the master error handler
+2. Cosmetic changes for field labels
+3. Removed inventory restrictions on L8SR TIRS failure scenes
 
 Version 2.8.0 (May 2015)
 
