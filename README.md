@@ -13,7 +13,7 @@ scheduling functions.
 * Set ESPA_LOG_DIR env var.  Defaults to espa-web-dir next to espa-web
 * Set ESPA_CONFIG_FILE env var to point to db values (defaults to ~/.cfgnfo)
 
-### Required db & app config in ESPA_CONFIG_FILE
+#### Required db & app config in ESPA_CONFIG_FILE
 ```
 [config]
 dbhost=your db host
