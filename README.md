@@ -8,6 +8,7 @@ Version 2.8.9 (August 2015)
 2. replaced the timed rotating file handler for logfiles with standard filehandler.  Logrotate will be used to manage the server logs.
 
 Version 2.8.8 (August 2015)
+
 1. added a global lock for calls to determine order disposition from rpc.py via memcache.  This is to stop multiple instances of this process from running.  The cache key is set in settings.py and the timeout on this key(lock) is 21 minutes.  If the call succeeds then the lock is removed immediately.
 2. removed espa_common and rehomed the code under ordering
 3. added in standard django (python) logging 
