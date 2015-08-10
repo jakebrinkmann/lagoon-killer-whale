@@ -22,11 +22,10 @@ scheduling functions.
        key=your secret key (for Django)
     ```
 
-* Set ESPA_DEBUG env var to either True/False.
-* Set ESPA_LOG_DIR env var.  Defaults to espa-web-dir next to espa-web.
+* Set ESPA_DEBUG env var to either True or False
+* Set ESPA_LOG_DIR env var.  Defaults to espa-web-dir next to espa-web
 
 ## Running
-
 If uWSGI is installed to the system :`cd espa-web;uwsgi -i uwsgi.ini`
 
 If uWSGI is installed to the virtual environment: `cd espa-web;. bin/activate;uwsgi -i uwsgi.ini`
