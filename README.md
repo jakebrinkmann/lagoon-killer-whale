@@ -11,7 +11,9 @@ scheduling functions.
 * Install dependencies: `. bin/activate; pip install -r requirements.txt`
 * Set ESPA_CONFIG_FILE env var to point to db values (defaults to ~/.cfgnfo)
   * Required db & app config in ESPA_CONFIG_FILE
-     ```[config]
+
+     ```
+       [config]
        dbhost=your db host
        dbport=your port (3306, 5432, etc)
        db=your db name (espa)
