@@ -31,170 +31,117 @@ scheduling functions.
   * sixs failures now retry
   * additional warp failures result in status unavailable
 
-Version 2.8.3 (July 2015)
-        Modified RSS feed queries to use raw SQL due to performance overhead
-        with large orders.
-        Created separate uwsgi ini configurations for each environment to
-        ease deployment logic.
-        Removed deploy_install.sh and replaced with deploy_install.py,
-        which now works with github instead of subversion on Google Projects.
-        Updated lsrd_stats.py to work off of separate credentials to support
-        reporting from the historical db.
-        Enhanced processing system to support using a local path for output
-        product delivery and code cleanup associated with supporting the
-        local path.
-        Modified warping parameters for UTM South to match UTM North with both
-        now using the WGS84 datum.
+###### Version 2.8.3 (July 2015)
+* Modified RSS feed queries to use raw SQL due to performance overhead with large orders.
+* Created separate uwsgi ini configurations for each environment to ease deployment logic.
+* Removed deploy_install.sh and replaced with deploy_install.py, which now works with github instead of subversion on Google Projects.
+* Updated lsrd_stats.py to work off of separate credentials to support reporting from the historical db.
+* Enhanced processing system to support using a local path for output product delivery and code cleanup associated with supporting the local path.
+* Modified warping parameters for UTM South to match UTM North with both now using the WGS84 datum.
 
-Version 2.8.1 (May 2015)
-        Added additional error conditions to the master error handler
-        Cosmetic changes for field labels
-        Removed inventory restrictions on L8SR TIRS failure scenes
+###### Version 2.8.1 (May 2015)
+* Added additional error conditions to the master error handler
+* Cosmetic changes for field labels
+* Removed inventory restrictions on L8SR TIRS failure scenes
 
-Version 2.8.0 (May 2015)
+###### Version 2.8.0 (May 2015)
 
-Version 2.7.2 (March 4, 2015)
-        Added DSWE to ECV section for staff only
-        Corrected bugs with validation messages
-        UI updates for images on index page
+###### Version 2.7.2 (March 4, 2015)
+* Added DSWE to ECV section for staff only
+* Corrected bugs with validation messages
+* UI updates for images on index page
 
-Version 2.7.1 (January 6, 2015)
-        Added status update retry logic to processing tier.
-        Corrected set_product_retry in app tier to include log file.
+###### Version 2.7.1 (January 6, 2015)
+* Added status update retry logic to processing tier.
+* Corrected set_product_retry in app tier to include log file.
 
-Version 2.7.0 (December 22, 2014)
-        Added auto-retry logic.
-        Added landsat 8 surface reflectance.
-        Added timeout for SUDS ObjectCache.
-        Utilizing EE HTTP services for ordering and level 1 download.
+###### Version 2.7.0 (December 22, 2014)
+* Added auto-retry logic.
+* Added landsat 8 surface reflectance.
+* Added timeout for SUDS ObjectCache.
+* Utilizing EE HTTP services for ordering and level 1 download.
 
-Version 2.5.0 (August 27, 2014)
-        Added console application for staff personnel.
-        Added priority to Orders in conjunction with Hadoop Queueing to prevent
-        large orders from dominating all compute resources.
-        Moved espa schema file to espa-common to prevent network effects from
-        causing processing failures.
-        Added select MODIS products as customizable input products.
-        Corrected error with invalid checksum generation.
-        Multiple bug fixes relating to image reprojection and resampling.
-        Added trunk/espa_common to hold shared libs between web and processing.
+###### Version 2.5.0 (August 27, 2014)
+* Added console application for staff personnel.
+* Added priority to Orders in conjunction with Hadoop Queueing to prevent
+* large orders from dominating all compute resources.
+* Moved espa schema file to espa-common to prevent network effects from causing processing failures.
+* Added select MODIS products as customizable input products.
+* Corrected error with invalid checksum generation.
+* Multiple bug fixes relating to image reprojection and resampling.
+* Added trunk/espa_common to hold shared libs between web and processing.
 
-Version 2.4.0 (July 29, 2014)
-        Transitioned to binary raster processing for science algorithms.
-        Introduced schema constrained xml metadata for all products.
-        Format conversion has been introduced.
-        Reprojected products now have properly populated metadata entries.
+###### Version 2.4.0 (July 29, 2014)
+* Transitioned to binary raster processing for science algorithms.
+* Introduced schema constrained xml metadata for all products.
+* Format conversion has been introduced.
+* Reprojected products now have properly populated metadata entries.
 
-Version 2.3.0 (May 30, 2014)
+###### Version 2.3.0 (May 30, 2014)
+* Added ability to authenticate users against EarthExplorer
+* reorganized lta.py, added service clients for RegistrationService
+* L1T order submission changed from LTA Massloader to LTA OrderWrapperService
+* Added temporary logic to search for user email addresses in both the Django auth User table and the Order email field to support migration of EE auth.
+  * Order.email field will be removed with the next release.
+* Upgraded to Django 1.6
+* Upgraded project structure to be Django 1.6 compliant
+* Reorganized the orderservice directory
+  * now called 'web'
+  * moved contents of 'htdocs' into 'web/static'
+  * populated 'web/static' with Django admin static content, eliminating need for softlinks
+  * regenerate these with ./manage.py collectstatic
 
-        *Note -- All changes for this release are for the web tier only.
-                 No modifications were made to the back end processing code.
+* Modified settings.py to include the static files app and set STATIC_ROOT, STATIC_URL
+* Added LOGIN_URL, LOGIN_REDIRECT_URL
+* Added URL_FOR() lambda function as service locator function
+  * was previously implemented in lta.py, multiple modules now need this and its a critical dependency 
+* Added ESPA_DEBUG flag to settings.py
+  * looks for ESPA_DEBUG = TRUE in environment variables, enables DEBUG and TEMPLATE_DEBUG
+* Moved all configuration items to settings.py
+  * configurable items can be set in espa-uwsgi.ini or as environment variables
+  * private key & database credentials must be provided on the local filesystem in ~/.cfgno
+* Removed the /media mapping in espa-uwsgi.ini as it is no longer necessary (merged into /static mapping)
+* django.wsgi removed in favor of django generated wsgi.py
+* Deleted scene_cache.py from the espa/ codebase
+  * Moved the scene cache replacement from trunk/prototype/new_scene_cache to trunk/scenecache.
+* Moved all Order & Scene related operations to the models.Order and models.Scene classes as either class or static methods
+* Removed all partially hardcoded urls from template and view code, replaced with named urls, {% url %}, {% static %} and reverse() tags
+* Moved all cross-application functionality into espa_web
+* Added espa_web/context_processors.py to include needed variables in templates
+  * must include in settings.py TEMPLATE_CONTEXT_PROCESSORS
+* Added espa_web/auth_backends.py for EE authentication 
+  * Django auth system plugin
+  * must include in settings.py AUTHENTICATION_BACKENDS
 
-        -----------------
-        major features
-        -----------------
-        Added ability to authenticate users against EarthExplorer
-            - reorganized lta.py, added service clients for RegistrationService
+###### Version 2.2.5 (March 11, 2014)
+* Made change to support variable cloud pixel threshold for calls to cfmask.
 
-        L1T order submission changed from LTA Massloader to
-        LTA OrderWrapperService
+###### Version 2.2.4 (December 20, 2013)
+* Bug fix to parse_hdf_subdatasets() in cdr_ecv.py to correct reprojection failures.
 
-        Added temporary logic to search for user email addresses in both the
-        Django auth User table and the Order email field to support migration
-        of EE auth.
-            - Order.email field will be removed with the next release.
+###### Version 2.2.3
+* Altered cdr_ecv to use straight FTP rather than SCP (performance)
 
-        -----------------
-        platform
-        -----------------
-        Upgraded to Django 1.6
+###### Version 2.2.2
+* Added SCA & SWE to internal ordering
+* Corrected unchecked reprojection errors
+* Corrected Bulk Ordering Navigation
+* Fail job submission if no products selected
+* Added MSAVI to spectral indices
+* Merged all vegetation indices to a single raster
+* Removed standalone CFMask option
+* Removed solr index generation option
+* Corrected cross browser rendering issues
 
-        -----------------
-        project structure
-        -----------------
-        Upgraded project structure to be Django 1.6 compliant
-
-        Reorganized the orderservice directory
-            - now called 'web'
-            - moved contents of 'htdocs' into 'web/static'
-            - populated 'web/static' with Django admin static content,
-              eliminating need for softlinks
-                - regenerate these with ./manage.py collectstatic
-
-        -----------------
-        settings.py
-        -----------------
-        Modified settings.py to include the static files app and set STATIC_ROOT, STATIC_URL
-        Added LOGIN_URL, LOGIN_REDIRECT_URL
-        Added URL_FOR() lambda function as service locator function
-            - was previously implemented in lta.py, multiple modules now need this and its a critical dependency 
-        Added ESPA_DEBUG flag to settings.py
-            - looks for ESPA_DEBUG = TRUE in environment variables, enables DEBUG and TEMPLATE_DEBUG
-
-        Moved all configuration items to settings.py
-            - configurable items can be set in espa-uwsgi.ini or as environment variables
-            - private key & database credentials must be provided on the local filesystem in ~/.cfgno
-
-        -----------------
-        espa-uwsgi.ini
-        -----------------
-        Removed the /media mapping in espa-uwsgi.ini as it is no longer necessary (merged into /static mapping)
-
-        -----------------
-        Misc
-        -----------------
-
-        django.wsgi removed in favor of django generated wsgi.py
-
-        Deleted scene_cache.py from the espa/ codebase
-            - Moved the scene cache replacement from trunk/prototype/new_scene_cache to trunk/scenecache.
-
-        Moved all Order & Scene related operations to the models.Order and models.Scene classes as either class or static methods
-
-        Removed all partially hardcoded urls from template and view code, replaced with named urls, {% url %}, {% static %} and reverse() tags
-
-        Moved all cross-application functionality into espa_web
-
-        Added espa_web/context_processors.py to include needed variables in templates
-            - must include in settings.py TEMPLATE_CONTEXT_PROCESSORS
-
-        Added espa_web/auth_backends.py for EE authentication 
-            - Django auth system plugin
-            - must include in settings.py AUTHENTICATION_BACKENDS
-
-
-Version 2.2.5 (March 11, 2014)
-        Made change to support variable cloud pixel threshold for calls
-        to cfmask.
-
-Version 2.2.4 (December 20, 2013)
-        Bug fix to parse_hdf_subdatasets() in cdr_ecv.py to correct
-        reprojection failures.
-
-Version 2.2.3
-        Altered cdr_ecv to use straight FTP rather than SCP (performance)
-
-Version 2.2.2
-        Added SCA & SWE to internal ordering
-        Corrected unchecked reprojection errors
-        Corrected Bulk Ordering Navigation
-        Fail job submission if no products selected
-        Added MSAVI to spectral indices
-        Merged all vegetation indices to a single raster
-        Removed standalone CFMask option
-        Removed solr index generation option
-        Corrected cross browser rendering issues
-
-Version 2.2.1
-        Fixed bug reprojecting spectral indices
-        Fixed bug reprojecting cfmask
-        Modified reprojected filename extensions to '.tif'
-        Defaulted pixel size to 30 meters or dd equivalent when necessary.
-        Corrected Albers subsetting failures.
-        Modified code to properly clean up HDFs when reprojecting/reformatting
-        to GeoTiff
-        Optimized calls to warp outputs in the cdr_ecv.
-        Added first set of prototype system level tests for cdr_ecv.py
+###### Version 2.2.1
+* Fixed bug reprojecting spectral indices
+* Fixed bug reprojecting cfmask
+* Modified reprojected filename extensions to '.tif'
+* Defaulted pixel size to 30 meters or dd equivalent when necessary.
+* Corrected Albers subsetting failures.
+* Modified code to properly clean up HDFs when reprojecting/reformatting to GeoTiff
+* Optimized calls to warp outputs in the cdr_ecv.
+* Added first set of prototype system level tests for cdr_ecv.py
 
 Version 2.2.0
         Added code to perform reprojection.
