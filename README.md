@@ -1,6 +1,6 @@
 ## espa-web
 This project serves up the espa website and provides all the job ordering &
-scheduling functions.  This code is provided as a reference only, as internal EROS services are not externally available and are not hosted as open source projects.
+scheduling functions.  This code is provided as a reference only, as internal EROS services are not externally available and their source code is not also not available.
 
 ## Installation
 * Clone this project: `git clone https://github.com/USGS-EROS/espa-web.git espa-web`
