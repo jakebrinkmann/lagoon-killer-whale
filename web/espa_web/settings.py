@@ -263,8 +263,8 @@ else:
 # cache timeouts by usage (in seconds)
 SYSTEM_MESSAGE_CACHE_TIMEOUT = 60
 
-LOGDIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)),
-                      'espa-web-logs')
+LOGDIR = os.environ.get('ESPA_LOG_DIR', '/var/log/uwsgi')
+
 try:
     os.makedirs(LOGDIR)
 except:
@@ -288,14 +288,14 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'mode': 'a',
             'formatter': 'espa.standard',
-            'filename': os.path.join(LOGDIR, 'application.log'),
+            'filename': os.path.join(LOGDIR, 'espa-application.log'),
         },
         'requests': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'mode': 'a',
             'formatter': 'espa.standard',
-            'filename': os.path.join(LOGDIR, 'requests.log'),
+            'filename': os.path.join(LOGDIR, 'espa-requests.log'),
         },
     },
     'loggers': {
