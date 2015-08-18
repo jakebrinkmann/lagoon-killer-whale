@@ -8,8 +8,8 @@ scheduling functions.  This code is provided as reference only; internal EROS se
 * Create a virtualenv: `cd espa-web; virtualenv .`
 * Install dependencies: `. bin/activate; pip install -r requirements.txt`
 * Set `ESPA_DEBUG` env var to either True or False
-* Set `ESPA_LOG_DIR` env var.  Defaults to espa-web-logs next to espa-web
-* Set `ESPA_CONFIG_FILE` env var to point to db values (defaults to ~/.cfgnfo)
+* Set `ESPA_LOG_DIR` env var.  Defaults to `/var/log/uwsgi/`
+* Set `ESPA_CONFIG_FILE` env var to point to db values (defaults to `~/.cfgnfo`)
 
 ##### Required db & app config in ESPA_CONFIG_FILE
 ```
