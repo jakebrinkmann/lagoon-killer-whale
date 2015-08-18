@@ -47,7 +47,6 @@ start the uWSGI server on boot.
 ## Change Notes
 ###### Version 2.8.10 (August 2015)
 * updated project to rely on virtualenv for dependencies
-* moved + updated uwsgi config to be agnostic to the environment it is running in.
 
 ###### Version 2.8.9 (August 2015)
 * removed google analytics from the site
