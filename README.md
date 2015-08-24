@@ -22,6 +22,14 @@ dbpass=your db password
 key=your secret key (for Django)
 ```
 
+## Testing
+Unit tests are included for the application to ensure system integrity.
+The tests may be run without fear of altering the operational database; Django 
+automatically creates a test database when tests are run and destroys is when the 
+tests have completed or failed.  See https://docs.djangoproject.com/en/1.7/topics/testing/overview
+
+To run them: `cd espa-web; . bin/activate; cd web; python ./manage.py test ordering.tests`
+
 ## Running
 If uWSGI is installed to the system :`cd espa-web; uwsgi -i uwsgi.ini`
 
