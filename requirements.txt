@@ -1,4 +1,4 @@
-Django==1.6.2
+Django==1.7
 ecdsa==0.13
 MySQL-python==1.2.5
 paramiko==1.15.2

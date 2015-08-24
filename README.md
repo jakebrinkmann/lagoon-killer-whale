@@ -45,6 +45,10 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
+###### Version 2.8.11 (August 2015)
+* upgraded Django to 1.7
+* added ordering.tests directory with some simple unit tests
+
 ###### Version 2.8.10 (August 2015)
 * updated project to rely on virtualenv for dependencies
 
