@@ -65,9 +65,18 @@ class IsNumberTestCase(TestCase):
     
     def test_from_integer(self):
         self.assertTrue(utilities.is_number(1))
+        
+    def test_from_negative_integer(self):
+        self.assertTrue(utilities.is_number(-1))
     
-    def test_from_float(self):
-        self.assertTrue(utilities.is_number(1.0))
+    def test_from_negative_float(self):
+        self.assertTrue(utilities.is_number(-1.0))
+        
+    def test_from_zero(self):
+        self.assertTrue(utilities.is_number(0))
         
     def test_fail_nonnumber(self):
         self.assertFalse(utilities.is_number('asdf'))
+        
+    def test_fail_none(self):
+        self.assertFalse(utilities.is_number(None))
