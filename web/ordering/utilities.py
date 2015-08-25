@@ -55,10 +55,10 @@ def is_number(s):
     try:
         float(s)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
         return False
 
-
+#TODO: Remove this and replace with calls to str().lstrip('0')
 def strip_zeros(value):
     '''
     Description:
