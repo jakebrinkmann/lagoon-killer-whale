@@ -42,6 +42,22 @@ class DateFromDOYTestCase(TestCase):
     def test_fail_doy_not_number(self):
         # should raise exception if doy isn't a number
         self.assertRaises(ValueError, utilities.date_from_doy, '2012', 'adsf')
+        
+    def test_last_good_day_leap_year(self):
+        date = datetime(2012, 12, 31)
+        util_date = utilities.date_from_doy('2012', 366)
+        self.assertEqual(date, util_date)
+        
+    def test_first_bad_day_leap_year(self):
+        self.assertRaises(Exception, utilities.date_from_doy, 2012, 367)
+        
+    def test_last_good_day_nonleap_year(self):
+        date = datetime(2011, 12, 31)
+        util_date = utilities.date_from_doy('2011', 365)
+        self.assertEqual(date, util_date)
+        
+    def test_first_bad_day_nonleap_year(self):
+        self.assertRaises(Exception, utilities.date_from_doy, 2011, 366)
 
         
 class IsNumberTestCase(TestCase):
