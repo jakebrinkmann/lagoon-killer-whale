@@ -68,6 +68,9 @@ class IsNumberTestCase(TestCase):
         
     def test_from_negative_integer(self):
         self.assertTrue(utilities.is_number(-1))
+        
+    def test_from_float(self):
+        self.assertTrue(utilities.is_number(1.0))
     
     def test_from_negative_float(self):
         self.assertTrue(utilities.is_number(-1.0))
