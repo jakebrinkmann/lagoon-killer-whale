@@ -104,22 +104,23 @@ WSGI_APPLICATION = 'espa_web.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',       # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': config.get('config', 'db'),         # Or path to database file if using sqlite3.
-        'USER': config.get('config', 'dbuser'),     # Not used with sqlite3.
-        'PASSWORD': config.get('config', 'dbpass'), # Not used with sqlite3.
-        'HOST': config.get('config', 'dbhost'),     # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': config.get('config', 'dbport'),     # Set to empty string for default. Not used with sqlite3.
-    },
+    #'default': {
+    #    'ENGINE': 'django.db.backends.mysql',       # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+    #    'NAME': config.get('config', 'db'),         # Or path to database file if using sqlite3.
+    #    'USER': config.get('config', 'dbuser'),     # Not used with sqlite3.
+    #    'PASSWORD': config.get('config', 'dbpass'), # Not used with sqlite3.
+    #    'HOST': config.get('config', 'dbhost'),     # Set to empty string for localhost. Not used with sqlite3.
+    #    'PORT': config.get('config', 'dbport'),     # Set to empty string for default. Not used with sqlite3.
+    #},
     #'postgres': {
-    #    'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    #    'NAME': config.get('config', 'post-db'),
-    #    'USER': config.get('config', 'post-user'),
-    #    'PASSWORD': config.get('config', 'post-pass'),
-    #    'HOST': config.get('config', 'post-host'),
-    #    'PORT': config.get('config', 'post-port')
-    #}
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': config.get('config', 'post-db'),
+        'USER': config.get('config', 'post-user'),
+        'PASSWORD': config.get('config', 'post-pass'),
+        'HOST': config.get('config', 'post-host'),
+        'PORT': config.get('config', 'post-port')
+    }
 }
 
 # Internationalization
