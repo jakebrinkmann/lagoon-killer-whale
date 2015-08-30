@@ -60,53 +60,172 @@ class NewOrderFilesTestCase(TestCase):
     bad_modis = [modis_collection_6, modis_mistyped]
                                     
     def test_empty_fail(self):
+        '''
+        Fail on empty scene list        
+        should fail if no scenes are provided
+        '''
+        
         with self.assertRaises(KeyError):
             validators.NewOrderFilesValidator({})
                 
     def test_normal_tile_str_fail(self):
+        '''
+        Fail on string types instead of sensor instance
+        
+        should fail if the scene provided was not an instance of
+        sensor.SensorProduct
+        '''
+        
         parameters = {'input_products': [self.modis_collection_5]}
         with self.assertRaises(TypeError):
             validators.NewOrderFilesValidator(parameters)
             
     def test_nonexistent_tile_str_fail(self):
+        '''
+        Fail on string types instead of sensor instance        
+        should fail if the scene provided was not an instance of
+        sensor.SensorProduct
+        '''
+        
         parameters = {'input_products': [self.modis_collection_6]}
         with self.assertRaises(TypeError):
             validators.NewOrderFilesValidator(parameters)
         
     def test_mistyped_str_fail(self):
+        '''
+        Fail on string types instead of sensor instance        
+        should fail if the scene provided was not an instance of
+        sensor.SensorProduct
+        '''
+        
         parameters = {'input_products': [self.modis_mistyped]}
         with self.assertRaises(TypeError):
             validators.NewOrderFilesValidator(parameters)
             
     def test_normal_sensor_pass(self):
+        '''
+        Accept modis collection 5        
+        this is how the scenelist validation code is intended to work
+        '''
+        
         _sensor = sensor.instance(self.modis_collection_5)
         params = {'input_products': [_sensor]}        
         validator = validators.NewOrderFilesValidator(params)
         self.assertIsNone(validator.errors())
         
     def test_sensor_collection6_fail(self):
+        '''
+        Reject modis collection 6        
+        fail if they requested modis collection 6.  we don't support it
+        '''
+        
         with self.assertRaises(sensor.ProductNotImplemented):
             sensor.instance(self.modis_collection_6)
             
     def test_sensor_mistyped_fail(self):
+        '''
+        Reject mistyped scene names        
+        fail if what they requested doesnt exist
+        '''
         with self.assertRaises(sensor.ProductNotImplemented):
             sensor.instance(self.modis_mistyped)
-    
     
     # This will not pass unless the test is run in the ops environment
     # This is due to an inventory check by EE services but their dev + tst
     # inventories are incomplete and out of date        
     def test_all_good_landsat(self):
+        '''
+        Test known good landsat scenes
+        
+        This will not pass unless the test is run in the ops environment
+        due to an inventory check by EE services.  Their dev + tst
+        inventories are incomplete and out of date.  If run in ops they
+        should all pass as long as these scenes are still in the inventory
+        '''
+        
         if settings.ESPA_ENV == 'ops':
             inputs = [sensor.instance(x) for x in self.good_landsat]
             p = {'input_products': inputs}
             self.assertIsNone(validators.NewOrderFilesValidator(p).errors())
         
     def test_all_good_modis(self):
+        '''
+        Test known good modis list        
+        This should pass no matter what
+        '''
         inputs = [sensor.instance(x) for x in self.good_modis]
         params = {'input_products': inputs}
         self.assertIsNone(validators.NewOrderFilesValidator(params).errors())
+        
+        
+class NewOrderParametersTestCase(TestCase):
+    '''
+    This tests all the requested parameters that the users submit to us
+    through the UI, like requested processing levels and customization
+    '''
     
+    def test_nothing_selected_fail(self):
+        '''
+        Reject request with empty parameters
+        '''
+        validator = validators.NewOrderPostValidator({})
+        errs = validator.errors()
+        self.assertIsNotNone(errs)
+        self.assertIsNotNone(errs['product_selected'])
+        self.assertIsNotNone(errs['output_format'])
+
+    def test_output_format_not_selected_fail(self):
+        validator = validators.NewOrderPostValidator({'include_sr': True})
+        errs = validator.errors()
+        self.assertIsNotNone(errs)
+        self.assertIsNotNone(errs['output_format'])
+        
+    def test_output_format_validator_fail(self):
+        validator = validators.OutputFormatValidator({'include_sr': True})
+        errs = validator.errors()
+        self.assertIsNotNone(errs)
+        self.assertIsNotNone(errs['output_format'])
+        
+    def test_invalid_output_format_fail(self):
+        validator = validators.OutputFormatValidator({'include_sr': True,
+                                                      'output_format': 'adsf'})
+        errs = validator.errors()
+        self.assertIsNotNone(errs)
+        self.assertIsNotNone(errs['output_format'])
+        
+    def test_valid_output_format_gtiff_pass(self):
+        params = {'include_sr': True, 'output_format': 'gtiff'}
+        validator = validators.OutputFormatValidator(params)
+        errs = validator.errors()
+        self.assertIsNone(errs)
+        
+    def test_valid_output_format_hdf_pass(self):
+        params = {'include_sr': True, 'output_format': 'hdf-eos2'}
+        validator = validators.OutputFormatValidator(params)
+        errs = validator.errors()
+        self.assertIsNone(errs)
+        
+    def test_valid_output_format_envi_pass(self):
+        params = {'include_sr': True, 'output_format': 'envi'}
+        validator = validators.OutputFormatValidator(params)
+        errs = validator.errors()
+        self.assertIsNone(errs)
+        
+    def test_image_extents(self):
+        pass
+    
+    def test_resizing(self):
+        pass
+    
+    def test_reprojection(self):
+        pass
+    
+    def test_reprojection_sinu(self):
+        pass
+    
+    # and so on with all the other projections and permutations
+        
+        
         
         
         
