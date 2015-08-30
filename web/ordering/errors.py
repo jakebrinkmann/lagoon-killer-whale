@@ -41,7 +41,7 @@ class Errors(object):
         self.conditions.append(self.night_scene)
         self.conditions.append(self.no_such_file_or_directory)
         self.conditions.append(self.oli_no_sr)
-        self.conditions.append(self.only_only_no_thermal)
+        self.conditions.append(self.oli_only_no_thermal)
         self.conditions.append(self.sixs_errors)
         self.conditions.append(self.ssh_errors)
         self.conditions.append(self.warp_errors)
@@ -153,8 +153,10 @@ class Errors(object):
                                        status,
                                        reason,
                                        extras)
-        is_landsat =  isinstance(sensor.instance(self.product_name),
-                                 sensor.Landsat)
+        is_landsat = False
+        if self.product_name is not None: 
+            is_landsat =  isinstance(sensor.instance(self.product_name),
+                                     sensor.Landsat)
 
         if resolution is not None and is_landsat:
             emails.Emails().send_gzip_error_email(self.product_name)
@@ -203,7 +205,8 @@ class Errors(object):
     def network_errors(self, error_message):
         keys = ['Network is unreachable',
                 'Connection timed out',
-                'socket.timeout']
+                'socket.timeout',
+                'error: [Errno 111] Connection refused']
         status = 'retry'
         reason = 'Network error'
         extras = self.__add_retry('network_errors')
@@ -221,7 +224,7 @@ class Errors(object):
         reason = 'DSWE is not available for OLI/TIRS products'
         return self.__find_error(error_message, keys, status, reason)
 
-    def only_only_no_thermal(self, error_message):
+    def oli_only_no_thermal(self, error_message):
         keys = [('include_sr_thermal is an unavailable '
                  'product option for OLI-Only data')]
         status = 'unavailable'
