@@ -56,6 +56,7 @@ start the uWSGI server on boot.
 ###### Version 2.8.11 (August 2015)
 * upgraded Django to 1.7
 * added ordering.tests directory with some simple unit tests
+* added psycopg to requirements, now using Postgres in lieu of Mysql
 
 ###### Version 2.8.10 (August 2015)
 * updated project to rely on virtualenv for dependencies
