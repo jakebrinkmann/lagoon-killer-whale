@@ -10,7 +10,6 @@ import logging
 from django.db import models
 from django.db import transaction
 from django.contrib.auth.models import User
-from django.db.models import Q
 from django.db.models import Count
 
 from . import sensor
@@ -45,7 +44,8 @@ class Order(models.Model):
     STATUS = (
         ('ordered', 'Ordered'),
         ('partial', 'Partially Filled'),
-        ('complete', 'Complete')
+        ('complete', 'Complete'),
+        ('purged', 'Purged')
     )
 
     ORDER_SOURCE = (
@@ -312,6 +312,9 @@ class Order(models.Model):
         A tuple of orders, scenes
         '''
         order = Order.objects.get(orderid=orderid)
+        # dont return details to users on orders that are purged.        
+        if order.status == 'purged':
+            raise Order.DoesNotExist
         scenes = Scene.objects.filter(order__orderid=orderid)
         return order, scenes
 
@@ -325,12 +328,10 @@ class Order(models.Model):
         Return:
         A queryresult of orders for the given email.
         '''
-        #TODO: Modify this query to remove reference to Order.email once all
-        # pre-espa-2.3.0 orders (EE Auth) are out of the system
-        o = Order.objects.filter(
-            Q(email=email) | Q(user__email=email)
-            ).order_by('-order_date')
-        #return Order.objects.filter(email=email).order_by('-order_date')
+        
+        o = Order.objects.filter(user__email=email)
+        o = o.exclude(status = 'purged')
+        o = o.order_by('-order_date')
         return o
 
     @staticmethod
@@ -423,7 +424,8 @@ class Scene(models.Model):
         ('complete', 'Complete'),
         ('retry', 'Retry'),
         ('unavailable', 'Unavailable'),
-        ('error', 'Error')
+        ('error', 'Error'),
+        ('purged', 'Purged')
     )
 
     SENSOR_PRODUCT = (

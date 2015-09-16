@@ -116,7 +116,7 @@ def _handle_orders():
     logger.debug('Ready for caching with key {0} '
                  ' and a timeout of {1}'.format(key, timeout))
 
-    results = ''
+    results = True
     logger.info('handle orders triggered...')
     if cache.get(key) is None:
         logger.debug('Cache key {0} was None...'.format(key))

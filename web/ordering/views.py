@@ -453,7 +453,8 @@ class StatusFeed(Feed):
                  "p.product_dload_url, p.status "
                  "from auth_user u, ordering_order o, ordering_scene p "
                  "where u.id = o.user_id and o.id = p.order_id "
-                 "and p.status ='complete' and u.email = %s")
+                 "and p.status = 'complete' and u.email = %s and "
+                 "o.status != 'purged'")
 
         results = None
 

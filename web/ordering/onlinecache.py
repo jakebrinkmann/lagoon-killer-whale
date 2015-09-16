@@ -1,0 +1,87 @@
+''' Holds logic necessary for interacting with the online distribution
+cache '''
+
+import logging
+from ordering import sshcmd
+from ordering.models import Configuration
+
+logger = logging.getLogger(__name__)
+
+class OnlineCacheException(Exception):
+    ''' General exception raised from the OnlineCache '''
+    pass
+
+class OnlineCache(object):
+    ''' Client code to interact with the LSRD online cache '''
+
+    __default_order_path = '/data2/science_lsrd/LSRD/orders'
+    __order_path_key = 'online_cache_orders_dir'
+
+    def __init__(self, host=None, user=None, pw=None):
+        self.config = Configuration()
+
+        if host is None:
+            host = self.config.getValue('landsatds.host')
+        if user is None:
+            user = self.config.getValue('landsatds.username')
+        if pw is None:
+            pw = self.config.getValue('landsatds.password')
+
+        self.client = sshcmd.RemoteHost(host, user, pw, debug=False)
+
+        self.orderpath = self.config.getValue(self.__order_path_key)
+        if self.orderpath is None or len(self.orderpath) == 0:
+            logger.info('{0} not defined, setting to {1}'
+                .format(self.__order_path_key, self.__default_order_path))
+            config = Configuration()
+            config.key = self.__order_path_key
+            config.value = self.__default_order_path
+            config.save()
+
+            self.orderpath = config.value
+
+    def delete(self, orderid):
+        ''' Removes an order from physical online cache disk '''
+
+        path = '/'.join([self.orderpath, orderid])
+        # this should be the dir where the order is held
+        logger.debug('Deleting {0} from online cache'.format(path))
+
+        try:
+            result = self.client.execute('rm -r {0}'.format(path))
+        except Exception, exception:
+            raise OnlineCacheException(exception)
+
+        if result['stderr'] is not None and len(result['stderr']) > 0:
+            raise OnlineCacheException('Error deleting order {0}: {1}'
+                .format(orderid, result['stderr']))
+
+    def capacity(self):
+        ''' Returns the capacity of the online cache '''
+
+        cmd = 'df -mhP {0}'.format(self.orderpath)
+        try:
+            result = self.client.execute(cmd)
+        except Exception, exception:
+            raise OnlineCacheException(exception)
+
+        if result['stderr'] is not None and len(result['stderr']) > 0:
+            raise OnlineCacheException('Error retrieving cache capacity:{0}'
+                .format(result['stderr']))
+
+        logger.debug('call to {0} returned {1}'.format(cmd, result['stdout']))
+
+        line = result['stdout'][1].split(' ')
+        results = {'capacity':line[2],
+                   'used':line[5],
+                   'available':line[8],
+                   'percent_free':line[10]}
+        return results
+
+# Below here should be considered to be the public interface for this module
+
+def delete(orderid):
+    return OnlineCache().delete(orderid)
+    
+def capacity():
+    return OnlineCache().capacity()
