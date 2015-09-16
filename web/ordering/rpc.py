@@ -42,7 +42,8 @@ def rpc_handler(request):
         d.register_function(_get_products_to_process, 'get_scenes_to_process')
         d.register_function(_get_data_points, 'get_data_points')
 
-        response = HttpResponse(mimetype="application/xml")
+        #response = HttpResponse(mimetype="application/xml")
+        response = HttpResponse(content_type="application/xml")
         response.write(d._marshaled_dispatch(request.body))
     else:
         response = HttpResponse()
