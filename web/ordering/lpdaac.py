@@ -9,8 +9,8 @@ import os
 
 from django.conf import settings
 
-from . import sensor
-from . import utilities
+from ordering import sensor
+from ordering import utilities
 
 logger = logging.getLogger(__name__)
 

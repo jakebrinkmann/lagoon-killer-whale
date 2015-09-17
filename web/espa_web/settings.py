@@ -73,7 +73,6 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -99,21 +98,8 @@ ROOT_URLCONF = 'espa_web.urls'
 
 WSGI_APPLICATION = 'espa_web.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
 DATABASES = {
-    #'default': {
-    #    'ENGINE': 'django.db.backends.mysql',       # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-    #    'NAME': config.get('config', 'db'),         # Or path to database file if using sqlite3.
-    #    'USER': config.get('config', 'dbuser'),     # Not used with sqlite3.
-    #    'PASSWORD': config.get('config', 'dbpass'), # Not used with sqlite3.
-    #    'HOST': config.get('config', 'dbhost'),     # Set to empty string for localhost. Not used with sqlite3.
-    #    'PORT': config.get('config', 'dbport'),     # Set to empty string for default. Not used with sqlite3.
-    #},
-    #'postgres': {
-    'default': {
+   'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': config.get('config', 'post-db'),
         'USER': config.get('config', 'post-user'),
@@ -123,12 +109,8 @@ DATABASES = {
     }
 }
 
-# Internationalization
-# https://docs.djangoproject.com/en/1.6/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
-#TIME_ZONE = 'UTC'
 TIME_ZONE = 'America/Chicago'
 
 USE_I18N = True
@@ -137,15 +119,10 @@ USE_L10N = True
 
 USE_TZ = False
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, 'espa_web', 'static/')
-
 STATIC_URL = '/static/'
 
 # Templates
-
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates"
     #or "C:/www/django/templates".
@@ -468,32 +445,66 @@ DEFAULT_PIXEL_SIZE = {
 
 ''' Constant dictionary to hold the cache keys used in Django
  caching/memcached'''
-CACHE_KEYS = {
-    'handle_orders_lock': {'key': 'handle_orders_lock',
-                           'timeout': 60 * 21},
-}
+#CACHE_KEYS = {
+#    'handle_orders_lock': {'key': 'handle_orders_lock',
+#                           'timeout': 60 * 21},
+#}
 
 ''' SOAP client configuration parameters '''
 # timeout is in seconds
-SOAP_CLIENT_TIMEOUT = 60 * 30
+#SOAP_CLIENT_TIMEOUT = 60 * 30
 
 # location where the WSDLS should be cached
-SOAP_CACHE_LOCATION = '/tmp/suds'
+#SOAP_CACHE_LOCATION = '/tmp/suds'
 
 
 ''' Dictionary containing retry timeouts in seconds'''
-RETRY = {
-    'http_errors': {'timeout': 60 * 15, 'retry_limit': 10},
-    'ftp_errors': {'timeout': 60 * 15, 'retry_limit': 10},
-    'gzip_errors': {'timeout': 60 * 60 * 6, 'retry_limit': 10},
-    'network_errors': {'timeout': 60 * 2, 'retry_limit': 5},
-    'db_lock_timeout': {'timeout': 60 * 5, 'retry_limit': 10},
-    'lta_soap_errors': {'timeout': 60 * 60, 'retry_limit': 12},
-    'missing_aux_data': {'timeout': 60 * 60 * 24, 'retry_limit': 5},
-    'retry_missing_l1': {'timeout': 60 * 60, 'retry_limit': 8},
-    'ssh_errors': {'timeout': 60 * 5, 'retry_limit': 3},
-    'sixs_errors': {'timeout': 60, 'retry_limit': 3}
+#RETRY = {
+#    'http_errors': {'timeout': 60 * 15, 'retry_limit': 10},
+#    'ftp_errors': {'timeout': 60 * 15, 'retry_limit': 10},
+#    'gzip_errors': {'timeout': 60 * 60 * 6, 'retry_limit': 10},
+#    'network_errors': {'timeout': 60 * 2, 'retry_limit': 5},
+#    'db_lock_timeout': {'timeout': 60 * 5, 'retry_limit': 10},
+#    'lta_soap_errors': {'timeout': 60 * 60, 'retry_limit': 12},
+#    'missing_aux_data': {'timeout': 60 * 60 * 24, 'retry_limit': 5},
+#    'retry_missing_l1': {'timeout': 60 * 60, 'retry_limit': 8},
+#    'ssh_errors': {'timeout': 60 * 5, 'retry_limit': 3},
+#    'sixs_errors': {'timeout': 60, 'retry_limit': 3}
+#}
+
+# these keys + values will be loaded into the models.Configuration() at 
+# startup if they don't already exist.  They will also be automatically
+# cached.  Put all application settings here following the convention.
+# They will then be available to modify via the admin console.
+# The default.cache_ttl is used to determine how long a value should be 
+# cached.  This can be overridden by including a 'cache_ttl' key/value on the
+# particular attribute.  Example: 'cache_ttl': 60.
+
+CONFIGURATION = {
+    'default.cache_ttl': {'default':30, 'units':'seconds'},
+    'email.espa_address': {'default':'espa@usgs.gov', 'units':''},
+    'email.espa_server': {'default':'gssdsflh01.cr.usgs.gov', 'units':''},
+    'lock.timeout.handle_orders': {'default': 60 * 21, 'units': 'seconds'},
+    'retry.http_errors.timeout': {'default':60 * 15, 'units':'seconds'},
+    'retry.http_errors.retries': {'default':10, 'units':'seconds'},
+    'retry.ftp_errors.timeout': {'default':60 * 15, 'units':'seconds'},
+    'retry.ftp_errors.retries': {'default':10, 'units':'seconds'},
+    'retry.gzip_errors.timeout': {'default':60 * 60 * 6, 'units':'seconds'},
+    'retry.gzip_errors.retries': {'default':10, 'units':'seconds'},
+    'retry.network_errors.timeout': {'default':60 * 2, 'units':'seconds'},
+    'retry.network_errors.retries': {'default':5, 'units':'seconds'},
+    'retry.db_lock_timeout.timeout': {'default':60 * 5, 'units':'seconds'},
+    'retry.db_lock_timeout.retries': {'default':10, 'units':'seconds'},
+    'retry.lta_soap_errors.timeout': {'default':60 * 60, 'units':'seconds'},
+    'retry.lta_soap_errors.retries': {'default':12, 'units':'seconds'},
+    'retry.missing_aux_data.timeout': {'default':60 * 60 * 24, 'units':'seconds'},
+    'retry.missing_aux_data.retries': {'default':5, 'units':'seconds'},
+    'retry.retry_missing_l1.timeout': {'default':60 * 60, 'units':'seconds'},
+    'retry.retry_missing_l1.retries': {'default':8, 'units':'seconds'}, 
+    'retry.ssh_errors.timeout': {'default':60 * 5, 'units':'seconds'},
+    'retry.ssh_errors.retries': {'default':3, 'units':'seconds'},
+    'retry.sixs_errors.timeout': {'default':60, 'units':'seconds'},
+    'retry.sixs_errors.retries': {'default':3, 'units':'seconds'},
+    'soap.client_timeout': {'default': 60 * 30, 'units':'seconds'},
+    'soap.cache_location': {'default': '/tmp/suds', 'units':'string'}
 }
-
-
-

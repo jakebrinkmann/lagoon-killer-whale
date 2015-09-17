@@ -11,13 +11,15 @@ from django.db import models
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.db.models import Count
+from django.conf import settings
+from django.core.cache import cache
 
-from . import sensor
+from ordering import sensor
 
 logger = logging.getLogger(__name__)
 
 
-class UserProfile (models.Model):
+class UserProfile(models.Model):
     '''Extends the information attached to ESPA users with a one-to-one
     relationship. The other options were to extend the actual Django User
     model or create an entirely new User model.  This is the cleanest and
@@ -122,11 +124,11 @@ class Order(models.Model):
         '''Returns a dictionary of product status with a count for each one'''
         counts = {}
 
-        for s,d in Scene.STATUS:
+        for s, _ in Scene.STATUS:
             counts[s] = 0
 
         scenes = Scene.objects.filter(order=self)
-        scenes = scenes.values('status').annotate(Count('status'));
+        scenes = scenes.values('status').annotate(Count('status'))
 
         for scene in scenes:
             counts[scene['status']] = scene['status__count']
@@ -237,6 +239,7 @@ class Order(models.Model):
 
     @staticmethod
     def get_default_output_format():
+        ''' Returns the default ESPA output format'''
         o = {}
         o['output_format'] = 'gtiff'
         return o
@@ -312,7 +315,7 @@ class Order(models.Model):
         A tuple of orders, scenes
         '''
         order = Order.objects.get(orderid=orderid)
-        # dont return details to users on orders that are purged.        
+        # dont return details to users on orders that are purged.
         if order.status == 'purged':
             raise Order.DoesNotExist
         scenes = Scene.objects.filter(order__orderid=orderid)
@@ -328,9 +331,9 @@ class Order(models.Model):
         Return:
         A queryresult of orders for the given email.
         '''
-        
+
         o = Order.objects.filter(user__email=email)
-        o = o.exclude(status = 'purged')
+        o = o.exclude(status='purged')
         o = o.order_by('-order_date')
         return o
 
@@ -520,13 +523,35 @@ class Configuration(models.Model):
     def __unicode__(self):
         return ('%s : %s') % (self.key, self.value)
 
-    def getValue(self, key):
-        try:
-            value = Configuration.objects.get(key=key).value
+    @staticmethod
+    def get(key):
+        ''' Used to retrieve values from Configuration.  Incorporates 
+        caching '''
+        value = cache.get(key)
+        if value is None:
+            value = str(Configuration.objects.get(key=key).value)
 
-            return str(value)
-        except:
-            return ''
+            if (key in settings.CONFIGURATION.keys() and
+                'cache_ttl' in settings.CONFIGURATION[key]):
+
+                cache.put(key,
+                          value,
+                          settings.CONFIGURATION[key]['cache_ttl'])
+            else:
+                cache.put(key,
+                          value,
+                          settings.CONFIGURATION['default.cache_ttl'])
+
+        return str(value) if (value is not None and len(value) > 0) else str()
+
+    def save(self, *args, **kwargs):
+        ''' Override save '''
+        super(Configuration, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        ''' Override delete to clear the cache if the value exists there '''
+        cache.delete(self.key)
+        super(Configuration, self).delete(*args, **kwargs)
 
 
 class DownloadSection(models.Model):

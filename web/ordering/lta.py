@@ -13,7 +13,7 @@ from django.conf import settings
 from suds.client import Client as SoapClient
 from suds.cache import ObjectCache
 
-from . import sensor
+from ordering import sensor
 
 logger = logging.getLogger(__name__)
 

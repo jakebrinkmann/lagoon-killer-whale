@@ -12,8 +12,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.conf import settings
 
-from . import core
-from .models import Configuration
+from ordering import core
+from ordering.models import Configuration
+from ordering.models import DataPoint
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +138,7 @@ def _handle_orders():
 
 #method to expose master configuration repository to the system
 def _get_configuration(key):
-    return Configuration().getValue(key)
+    return Configuration.get(key)
 
 
 def _get_products_to_process(limit, for_user, priority, product_types):

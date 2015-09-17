@@ -13,8 +13,8 @@ import datetime
 
 from django.conf import settings
 
-from . import emails
-from . import sensor
+from ordering import emails
+from ordering import sensor
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class Errors(object):
         resolution = None
 
         for key in keys:
-            
+
             if key.lower() in error_message.lower():
                 resolution = self.resolution(status, reason, extra)
                 break
@@ -154,7 +154,7 @@ class Errors(object):
                                        reason,
                                        extras)
         is_landsat = False
-        if self.product_name is not None: 
+        if self.product_name is not None:
             is_landsat =  isinstance(sensor.instance(self.product_name),
                                      sensor.Landsat)
 

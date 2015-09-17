@@ -23,12 +23,12 @@ from django.views.generic import View
 import django.contrib.auth
 from django.contrib.auth.models import User
 
-from . import emails
-from . import sensor
-from . import utilities
-from . import validators
-from .models import Order
-from .models import Configuration as Config
+from ordering import emails
+from ordering import sensor
+from ordering import utilities
+from ordering import validators
+from ordering.models import Order
+from ordering.models import Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class AbstractView(View):
         # if its not there then look in the Config() model for it then update
         # the cache
         if not msg:
-            msg = Config().getValue('display_system_message')
+            msg = Configuration.get('display_system_message')
             cache.set('display_system_message',
                       msg,
                       timeout=settings.SYSTEM_MESSAGE_CACHE_TIMEOUT)
@@ -71,13 +71,11 @@ class AbstractView(View):
             # need to be updated
             update_cache = False
 
-            c = Config()
-
             #look through the cache_vals and see if any of them are none
             for key in cache_keys:
                 if not key in cache_vals:
                     update_cache = True
-                    cache_vals[key] = c.getValue(key)
+                    cache_vals[key] = Configuration.get(key)
 
             if update_cache:
                 cache.set_many(cache_vals,
@@ -85,7 +83,6 @@ class AbstractView(View):
 
             ctx['system_message_title'] = cache_vals['system_message_title']
             ctx['system_message_body'] = cache_vals['system_message_body']
-            c = None
         else:
             ctx['display_system_message'] = False
 

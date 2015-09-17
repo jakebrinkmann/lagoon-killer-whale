@@ -678,7 +678,7 @@ def mark_product_complete(name,
     product.log_file_contents = log_file_contents
     product.note = None
 
-    base_url = Configuration().getValue('distribution.cache.home.url')
+    base_url = Configuration.get('distribution.cache.home.url')
 
     product_file_parts = completed_file_location.split('/')
     product_file = product_file_parts[len(product_file_parts) - 1]
@@ -757,7 +757,7 @@ def load_ee_orders():
     '''
 
     #check to make sure this operation is enabled.  Bail if not
-    enabled = Configuration().getValue("load_ee_orders_enabled")
+    enabled = Configuration.get("load_ee_orders_enabled")
     if enabled.lower() != 'true':
         logger.info('enable_load_ee_orders is disabled,'
                     'skipping load_ee_orders()')
@@ -968,7 +968,7 @@ def purge_orders(send_email=False):
     # but not blow up if the value hasn't been set.
     config_key = 'orders.retain_for(days)'
     default_days = 10
-    days = Configuration.getValue(config_key)
+    days = Configuration.get(config_key)
 
     if days is None or len(days) == 0:
 
@@ -1040,7 +1040,7 @@ def handle_orders():
         __default_order_purge = 24 * 60 * 60
 
         config = Configuration()
-        timeout = config.getValue(config_key)
+        timeout = Configuration.get(config_key)
 
         if timeout is None or len(timeout) == 0:
             timeout = __default_order_purge

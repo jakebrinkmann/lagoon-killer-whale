@@ -18,18 +18,17 @@ class OnlineCache(object):
     __order_path_key = 'online_cache_orders_dir'
 
     def __init__(self, host=None, user=None, pw=None):
-        self.config = Configuration()
-
+        
         if host is None:
-            host = self.config.getValue('landsatds.host')
+            host = Configuration.get('landsatds.host')
         if user is None:
-            user = self.config.getValue('landsatds.username')
+            user = Configuration.get('landsatds.username')
         if pw is None:
-            pw = self.config.getValue('landsatds.password')
+            pw = Configuration.get('landsatds.password')
 
         self.client = sshcmd.RemoteHost(host, user, pw, debug=False)
 
-        self.orderpath = self.config.getValue(self.__order_path_key)
+        self.orderpath = Configuration.get(self.__order_path_key)
         if self.orderpath is None or len(self.orderpath) == 0:
             logger.info('{0} not defined, setting to {1}'
                 .format(self.__order_path_key, self.__default_order_path))

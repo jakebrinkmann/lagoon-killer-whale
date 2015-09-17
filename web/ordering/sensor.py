@@ -9,7 +9,7 @@ import logging
 
 from django.conf import settings
 
-from . import utilities
+from ordering import utilities
 
 logger = logging.getLogger(__name__)
 

@@ -12,9 +12,9 @@ from smtplib import SMTP
 from django.db import transaction
 from django.conf import settings
 
-from . import models
-from .models import Order
-from .models import Configuration
+from ordering import models
+from ordering.models import Order
+from ordering.models import Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class Emails(object):
 
     def __init__(self):
-        self.status_base_url = Configuration().getValue('espa.status.url')
+        self.status_base_url = Configuration.get('espa.status.url')
 
     def __send(self, recipient, subject, body):
         return self.send_email(recipient=recipient, subject=subject, body=body)
@@ -81,7 +81,7 @@ class Emails(object):
         '''Sends an email to our people telling them to reprocess
            a bad gzip on the online cache'''
 
-        address_block = Configuration().getValue('corrupt.gzip.email.list')
+        address_block = Configuration.get('corrupt.gzip.email.list')
         addresses = address_block.split(',')
 
         subject = "Corrupt gzip detected: %s" % product_id

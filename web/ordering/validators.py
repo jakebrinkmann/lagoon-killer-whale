@@ -4,12 +4,12 @@ Author: David V. Hill
 '''
 import logging
 
-from . import lta
-from . import lpdaac
-from . import sensor
-from . import utilities
-from .validation import Validator
-from .models import Order
+from ordering import lta
+from ordering import lpdaac
+from ordering import sensor
+from ordering import utilities
+from ordering.validation import Validator
+from ordering.models import Order
 
 logger = logging.getLogger(__name__)
 
