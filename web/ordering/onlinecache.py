@@ -3,7 +3,7 @@ cache '''
 
 import logging
 from ordering import sshcmd
-from ordering.models import Configuration
+from ordering.models.configuration import Configuration
 
 logger = logging.getLogger(__name__)
 

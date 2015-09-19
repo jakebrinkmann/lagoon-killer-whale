@@ -1,4 +1,4 @@
-from django.conf import settings
+from ordering.models.configuration import Configuration as config
 
 
 def include_external_urls(request):
@@ -13,7 +13,7 @@ def include_external_urls(request):
     A dictionary of values to be included in the request context
     '''
     context = {}
-    context['register_user'] = settings.URL_FOR('register_user')
-    context['forgot_login'] = settings.URL_FOR('forgot_login')
-    context['earthexplorer'] = settings.URL_FOR('earthexplorer')
+    context['register_user'] = config.url_for('register_user')
+    context['forgot_login'] = config.url_for('forgot_login')
+    context['earthexplorer'] = config.url_for('earthexplorer')
     return context

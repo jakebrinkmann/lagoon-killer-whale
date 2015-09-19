@@ -1,36 +1,11 @@
-'''
-Purpose: database model definitions for espa-web
-Author: David V. Hill
-'''
-
 import datetime
-import json
-import logging
 
 from django.db import models
-from django.db import transaction
 from django.contrib.auth.models import User
 from django.db.models import Count
-from django.conf import settings
-from django.core.cache import cache
+from django.db import transaction
 
 from ordering import sensor
-
-logger = logging.getLogger(__name__)
-
-
-class UserProfile(models.Model):
-    '''Extends the information attached to ESPA users with a one-to-one
-    relationship. The other options were to extend the actual Django User
-    model or create an entirely new User model.  This is the cleanest and
-    recommended method per the Django docs.
-    '''
-    # reference to the User this Profile belongs to
-    user = models.OneToOneField(User)
-
-    # The EE contactid of this user
-    contactid = models.CharField(max_length=10)
-
 
 class Order(models.Model):
     '''Persistent object that models a user order for processing.'''
@@ -512,115 +487,3 @@ class Scene(models.Model):
                                       blank=True,
                                       null=True,
                                       default=0)
-
-
-class Configuration(models.Model):
-    '''Implements a key/value datastore on top of a relational database
-    '''
-    key = models.CharField(max_length=255, unique=True)
-    value = models.CharField(max_length=2048)
-
-    def __unicode__(self):
-        return ('%s : %s') % (self.key, self.value)
-
-    @staticmethod
-    def get(key):
-        ''' Used to retrieve values from Configuration.  Incorporates 
-        caching '''
-        value = cache.get(key)
-        if value is None:
-            value = str(Configuration.objects.get(key=key).value)
-
-            if (key in settings.CONFIGURATION.keys() and
-                'cache_ttl' in settings.CONFIGURATION[key]):
-
-                cache.put(key,
-                          value,
-                          settings.CONFIGURATION[key]['cache_ttl'])
-            else:
-                cache.put(key,
-                          value,
-                          settings.CONFIGURATION['default.cache_ttl'])
-
-        return str(value) if (value is not None and len(value) > 0) else str()
-
-    def save(self, *args, **kwargs):
-        ''' Override save '''
-        super(Configuration, self).save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        ''' Override delete to clear the cache if the value exists there '''
-        cache.delete(self.key)
-        super(Configuration, self).delete(*args, **kwargs)
-
-
-class DownloadSection(models.Model):
-    ''' Persists grouping of download items and controls appearance order'''
-    title = models.CharField('name', max_length=255)
-    text = models.TextField('section_text')
-    display_order = models.IntegerField()
-    visible = models.BooleanField('visible')
-
-
-class Download(models.Model):
-    section = models.ForeignKey(DownloadSection)
-    target_name = models.CharField('target_name', max_length=255)
-    target_url = models.URLField('target_url', max_length=255)
-    checksum_name = models.CharField('checksum_name',
-                                     max_length=255,
-                                     blank=True,
-                                     null=True)
-    checksum_url = models.URLField('checksum_url',
-                                   max_length=255,
-                                   blank=True,
-                                   null=True)
-    readme_text = models.TextField('readme_text', blank=True, null=True)
-    display_order = models.IntegerField()
-    visible = models.BooleanField('visible')
-
-
-class Tag(models.Model):
-    tag = models.CharField('tag', max_length=255)
-    description = models.TextField('description', blank=True, null=True)
-    last_updated = models.DateTimeField('last_updated',
-                                        blank=True,
-                                        null=True)
-
-    def __unicode__(self):
-        return self.tag
-
-    def save(self, *args, **kwargs):
-        self.last_updated = datetime.datetime.now()
-        super(Tag, self).save(*args, **kwargs)
-
-
-class DataPoint(models.Model):
-    tags = models.ManyToManyField(Tag)
-    key = models.CharField('key', max_length=250)
-    command = models.CharField('command', max_length=2048)
-    description = models.TextField('description', blank=True, null=True)
-    enable = models.BooleanField('enable')
-    last_updated = models.DateTimeField('last_updated',
-                                        blank=True,
-                                        null=True)
-
-    def __unicode__(self):
-        return "%s:%s" % (self.key, self.command)
-
-    def save(self, *args, **kwargs):
-        self.last_updated = datetime.datetime.now()
-        super(DataPoint, self).save(*args, **kwargs)
-
-    @staticmethod
-    def get_data_points(tagnames=[]):
-        js = {}
-
-        if len(tagnames) > 0:
-            dps = DataPoint.objects.filter(enable=True, tags__tag__in=tagnames)
-        else:
-            dps = DataPoint.objects.filter(enable=True)
-
-        for d in dps:
-            js[d.key] = d.command
-
-        return json.dumps(js)

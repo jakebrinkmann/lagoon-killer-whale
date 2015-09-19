@@ -7,7 +7,7 @@ Author: David V. Hill
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from ordering.models import Order
+from ordering.models.order import Order
 from ordering import utilities
 
 __api__version__ = "0.1.0"

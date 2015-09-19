@@ -9,7 +9,7 @@ from django.views.generic import View
 from django.views.generic.edit import FormView
 
 from forms import StatusMessageForm
-from ordering.models import Configuration
+from ordering.models.configuration import Configuration
 
 class Index(View):
     template = 'console/index.html'
@@ -46,13 +46,13 @@ class StatusMessage(SuccessMessageMixin, FormView):
         context = super(StatusMessage, self).get_context_data(**kwargs)
 
         try:
-            update_date = Configuration.objects.get(key="system_message_updated_date")
+            update_date = Configuration.get('msg.system_message_updated_date')
             context['update_date'] = update_date.value
         except Configuration.DoesNotExist:
             context['update_date'] = 'n/a'
 
         try:
-            updated_by = Configuration.objects.get(key="system_message_updated_by")
+            updated_by = Configuration.get('msg.system_message_updated_by')
             context['updated_by'] = updated_by.value
         except Configuration.DoesNotExist:
             context['updated_by'] = 'n/a'
@@ -63,19 +63,19 @@ class StatusMessage(SuccessMessageMixin, FormView):
     def get_initial(self):
         return_data = {}
         try:
-            title = Configuration.objects.get(key="system_message_title")
+            title = Configuration.get('msg.system_message_title')
             return_data['title'] = title.value
         except Configuration.DoesNotExist:
             return_data['title'] = ''
 
         try:
-            message = Configuration.objects.get(key="system_message_body")
+            message = Configuration.get('msg.system_message_body')
             return_data['message'] = message.value
         except Configuration.DoesNotExist:
             return_data['message'] = ''
 
         try:
-            display = Configuration.objects.get(key="display_system_message")
+            display = Configuration.get('system.display_system_message')
             if display.value.lower() == 'true':
                 return_data['display'] = True
             else:
@@ -85,24 +85,26 @@ class StatusMessage(SuccessMessageMixin, FormView):
 
         return return_data
 
+
+
     def form_valid(self, form):
-        title, created = Configuration.objects.get_or_create(key="system_message_title")
+        title, created = Configuration.objects.get_or_create(key="msg.system_message_title")
         title.value = form.cleaned_data['title']
         title.save()
 
-        message, created = Configuration.objects.get_or_create(key="system_message_body")
+        message, created = Configuration.objects.get_or_create(key="msg.system_message_body")
         message.value = form.cleaned_data['message']
         message.save()
 
-        display, created = Configuration.objects.get_or_create(key="display_system_message")
+        display, created = Configuration.objects.get_or_create(key="system.display_system_message")
         display.value = form.cleaned_data['display']
         display.save()
 
-        date_updated, created = Configuration.objects.get_or_create(key="system_message_updated_date")
+        date_updated, created = Configuration.objects.get_or_create(key="msg.system_message_updated_date")
         date_updated.value = time.strftime('%a %b %d %Y %X')
         date_updated.save()
 
-        username, created = Configuration.objects.get_or_create(key="system_message_updated_by")
+        username, created = Configuration.objects.get_or_create(key="msg.system_message_updated_by")
         username.value = self.request.user.username
         username.save()
         

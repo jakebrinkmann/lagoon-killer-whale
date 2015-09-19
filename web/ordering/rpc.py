@@ -10,11 +10,10 @@ from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from django.conf import settings
 
 from ordering import core
-from ordering.models import Configuration
-from ordering.models import DataPoint
+from ordering.models.configuration import Configuration as config
+from ordering.models.models import DataPoint
 
 logger = logging.getLogger(__name__)
 
@@ -112,9 +111,10 @@ def _mark_product_complete(name,
 
 
 def _handle_orders():
-    key = settings.CACHE_KEYS['handle_orders_lock']['key']
-    timeout = settings.CACHE_KEYS['handle_orders_lock']['timeout']
-
+    
+    key = '_handle_orders_lock'
+    timeout = int(config.get('cache.key.handle_orders_lock_timeout'))
+    
     logger.debug('Ready for caching with key {0} '
                  ' and a timeout of {1}'.format(key, timeout))
 
@@ -138,7 +138,7 @@ def _handle_orders():
 
 #method to expose master configuration repository to the system
 def _get_configuration(key):
-    return Configuration.get(key)
+    return config.get(key)
 
 
 def _get_products_to_process(limit, for_user, priority, product_types):

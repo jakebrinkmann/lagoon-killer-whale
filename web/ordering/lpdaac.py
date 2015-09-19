@@ -7,7 +7,7 @@ import logging
 import requests
 import os
 
-from django.conf import settings
+from ordering.models.configuration import Configuration as config
 
 from ordering import sensor
 from ordering import utilities
@@ -18,9 +18,8 @@ logger = logging.getLogger(__name__)
 class LPDAACService(object):
 
     def __init__(self):
-        self.host = settings.MODIS_INPUT_CHECK_HOST
-        self.port = settings.MODIS_INPUT_CHECK_PORT
-
+        self.datapool = config.url_for('modis.datapool')        
+        
     def verify_products(self, products):
         response = {}
 
@@ -93,7 +92,7 @@ class LPDAACService(object):
 
             path = self._build_modis_input_file_path(product)
 
-            product_url = ''.join([self.host, ":", str(self.port), path])
+            product_url = ''.join([self.datapool, path])
 
             if not product_url.lower().startswith("http"):
                 product_url = ''.join(['http://', product_url])
@@ -124,9 +123,9 @@ class LPDAACService(object):
             product = sensor.instance(product)
 
         if isinstance(product, sensor.Aqua):
-            base_path = settings.AQUA_BASE_SOURCE_PATH
+            base_path = config.get('path.aqua_base_source')
         elif isinstance(product, sensor.Terra):
-            base_path = settings.TERRA_BASE_SOURCE_PATH
+            base_path = config.get('path.terra_base_source')
         else:
             msg = "Cant build input file path for unknown LPDAAC product:%s"
             raise Exception(msg % product.product_id)
@@ -137,9 +136,9 @@ class LPDAACService(object):
                                   str(date.month).zfill(2),
                                   str(date.day).zfill(2))
 
-        input_file_extension = settings.MODIS_INPUT_FILENAME_EXTENSION
+        input_extension = config.get('file.extension.modis.input.filename')
 
-        input_file_name = "%s%s" % (product.product_id, input_file_extension)
+        input_file_name = "%s%s" % (product.product_id, input_extension)
 
         path = os.path.join(base_path,
                             '.'.join([product.short_name.upper(),

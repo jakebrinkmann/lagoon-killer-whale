@@ -11,10 +11,9 @@ import logging
 import collections
 import datetime
 
-from django.conf import settings
-
 from ordering import emails
 from ordering import sensor
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +48,6 @@ class Errors(object):
         #construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
                                                  ['status', 'reason', 'extra'])
-
-        #set our internal retry dictionary to the settings.RETRY
-        #in the future, retrieve it from a database or elsewhere if necessary
-        self.retry = settings.RETRY
 
     def __find_error(self, error_message, keys, status, reason, extra=None):
         '''Logic to search the error_message and return the appropriate value
@@ -94,10 +89,11 @@ class Errors(object):
         A dictionary with retry_after populated with the datetimestamp after
         which an operation should be retried.
         '''
-        timeout = self.retry[timeout_key]['timeout']
+        timeout = config.get('retry.{0}.timeout')
         ts = datetime.datetime.now()
-        extras['retry_after'] = ts + datetime.timedelta(seconds=timeout)
-        extras['retry_limit'] = self.retry[timeout_key]['retry_limit']
+        extras['retry_after'] = ts + datetime.timedelta(seconds=int(timeout))
+        
+        extras['retry_limit'] = config.get('retry.{0}.retries')
         return extras
 
     def ssh_errors(self, error_message):

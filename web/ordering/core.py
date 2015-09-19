@@ -10,14 +10,13 @@ import datetime
 import urllib
 
 from django.contrib.auth.models import User
-from django.conf import settings
 from django.db import transaction
 from django.core.cache import cache
 
-from ordering.models import Scene
-from ordering.models import Order
-from ordering.models import Configuration
-from ordering.models import UserProfile
+from ordering.models.order import Scene
+from ordering.models.order import Order
+from ordering.models.configuration import Configuration as config
+from ordering.models.user import UserProfile
 from ordering import lta
 from ordering import lpdaac
 from ordering import errors
@@ -499,9 +498,9 @@ def get_products_to_process(record_limit=500,
                         landsat_urls[scene.name]['status'] != 'available'):
 
                     try:
-                        lookup = settings.RETRY
-                        limit = lookup['retry_missing_l1']['retry_limit']
-                        timeout = lookup['retry_missing_l1']['timeout']
+            
+                        limit = config.get('retry.retry_missing_l1.retries')
+                        timeout = config.get('retry.retry_missing_l1.timeout')
                         ts = datetime.datetime.now()
                         after = ts + datetime.timedelta(seconds=timeout)
 
@@ -678,7 +677,7 @@ def mark_product_complete(name,
     product.log_file_contents = log_file_contents
     product.note = None
 
-    base_url = Configuration.get('distribution.cache.home.url')
+    base_url = config.url_for('distribution.cache')
 
     product_file_parts = completed_file_location.split('/')
     product_file = product_file_parts[len(product_file_parts) - 1]
@@ -757,9 +756,9 @@ def load_ee_orders():
     '''
 
     #check to make sure this operation is enabled.  Bail if not
-    enabled = Configuration.get("load_ee_orders_enabled")
+    enabled = config.get("system.load_ee_orders_enabled")
     if enabled.lower() != 'true':
-        logger.info('enable_load_ee_orders is disabled,'
+        logger.info('system.load_ee_orders_enabled is disabled,'
                     'skipping load_ee_orders()')
         return
 
@@ -964,22 +963,7 @@ def purge_orders(send_email=False):
     ''' Will move any orders older than X days to purged status and will also
     remove the files from disk'''
 
-    # this allows us to customize the policy through the database
-    # but not blow up if the value hasn't been set.
-    config_key = 'orders.retain_for(days)'
-    default_days = 10
-    days = Configuration.get(config_key)
-
-    if days is None or len(days) == 0:
-
-        logger.debug('{0} not found... setting to [{1} days]'
-            .format(config_key, default_days))
-
-        config = Configuration()
-        config.key = config_key
-        config.value = default_days
-        config.save()
-        days = config.value
+    days = config.get('policy.purge_orders_after')
 
     cutoff = datetime.datetime.now() - datetime.timedelta(days=days)
 
@@ -1036,21 +1020,66 @@ def handle_orders():
         logger.debug('Purge lock expired... running')
 
         # first thing, populate the cached lock field
-        config_key = 'orders.purge_schedule(seconds)'
-        __default_order_purge = 24 * 60 * 60
-
-        config = Configuration()
-        timeout = Configuration.get(config_key)
-
-        if timeout is None or len(timeout) == 0:
-            timeout = __default_order_purge
-            config.key = config_key
-            config.value = timeout
-            config.save()
-
+        timeout = int(config.get('system.run_order_purge_every'))
         cache.set(cache_key, datetime.datetime.now(), timeout)
 
         # purge the orders from disk now
         purge_orders(send_email=True)
     else:
         logger.debug('Purge lock detected... skipping')
+
+
+def create_bootstrap(filepath):
+    ''' Dumps the current configuration to a file that can then be imported
+    using load_bootstrap '''
+    
+    with open(filepath, 'wb') as output:
+        items = config.objects.order_by('key')
+        for item in items:
+            entry = '{0}={1}\n'.format(item.key.strip(), item.value.strip())
+            output.write(entry)    
+            
+def load_bootstrap(filepath, delete_existing=False):
+    ''' Loads configuration items from a file in the format of key=value '''
+    ts = datetime.datetime.now()
+    
+    backup = '{0}-{1}{2}{3}-{4}:{5}.{6}'.format(filepath,
+                                                ts.month,
+                                                ts.day,
+                                                ts.year,
+                                                ts.hour,
+                                                ts.minute,
+                                                ts.second)
+                                                
+    logger.info('Creating backup of {0} at {1}'.format(filepath, backup))
+
+    create_bootstrap(backup)
+    
+    with open(filepath, 'rb') as bootstrap:
+
+        logger.info('Checking {0} for bootstrap configuration'
+            .format(filepath))
+            
+        data = bootstrap.readlines()
+        
+        if delete_existing == True:
+            logger.info('Removing existing configuration')
+            for item in config.objects.all():
+                logger.info('Removing item:{0}:{1}'
+                    .format(item.key, item.value))
+                    
+                item.delete()
+                
+        for item in data:
+            if (len(item) > 0 and item.find('=') != -1):
+                logger.info('Found bootstrap configuration:{0}'.format(item))
+                parts = item.split('=')
+                logger.info('Found item:{0}'.format(parts))
+
+                key = parts[0].strip()
+                val = parts[1].strip()
+                
+                logger.info("Loading {0}:{1} into Configuration()"
+                       .format(key, val))
+
+                config(key=key, value=val).save()                

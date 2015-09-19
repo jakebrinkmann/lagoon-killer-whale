@@ -7,8 +7,6 @@ Author: David V. Hill
 import re
 import logging
 
-from django.conf import settings
-
 from ordering import utilities
 
 logger = logging.getLogger(__name__)
@@ -54,6 +52,12 @@ class SensorProduct(object):
 
     # this is a dictionary
     default_pixel_size = {}
+    
+    config = {
+    
+    
+    
+    }
 
     def __init__(self, product_id):
         '''Constructor for the SensorProduct base class
@@ -70,12 +74,13 @@ class SensorProduct(object):
         self.product_id = product_id
         self.sensor_code = product_id[0:3]
 
-        self.sensor_info = settings.SENSOR_INFO[self.sensor_code.upper()]
-
-        self.sensor_name = self.sensor_info['name']
-
-        if 'lta_name' in self.sensor_info:
-            self.lta_name = self.sensor_info['lta_name']
+        __basekey = 'sensor.{0}'.format(self.sensor_code.upper())
+        self.sensor_name = config.get('{0}.name'.format(__basekey))
+        
+        try:
+            self.lta_name = config.get('{0}.lta_name'.format(__basekey))
+        except config.DoesNotExist:
+            logger.debug('{0}.lta_name not found in config'.format(__basekey))
 
 
 class Modis(SensorProduct):
@@ -109,9 +114,9 @@ class Modis(SensorProduct):
         # this comes out to 09A1, 09GA, 13A1, etc
         _product_code = self.short_name.split(self.sensor_code)[1]
 
-        _meters = settings.DEFAULT_PIXEL_SIZE['meters'][_product_code]
+        _meters = config.get('pixel.size.meters.{0}'.format(_product_code))
 
-        _dd = settings.DEFAULT_PIXEL_SIZE['dd'][_product_code]
+        _dd = config.get('pixel.size.dd.{0}'.format(_product_code))
 
         self.default_pixel_size = {'meters': _meters, 'dd': _dd}
 
@@ -228,12 +233,11 @@ class Landsat(SensorProduct):
         self.station = product_id[16:19]
         self.version = product_id[19:21]
 
-        # set the default pixel sizes
-        _pixels = settings.DEFAULT_PIXEL_SIZE
-
-        _meters = _pixels['meters'][self.sensor_code.upper()]
-
-        _dd = _pixels['dd'][self.sensor_code.upper()]
+        _meters = config.get('pixels.size.meters.{0}'
+            .format(self.sensor_code.upper()))
+        
+        _dd = config.get('pixels.size.dd.{0}'
+            .format(self.sensor_code.upper()))
 
         self.default_pixel_size = {'meters': _meters, 'dd': _dd}
 
@@ -279,15 +283,17 @@ def instance(product_id):
     # remove known file extensions before comparison
     # do not alter the case of the actual product_id!
     _id = product_id.lower().strip()
-
-    if _id.endswith(settings.MODIS_INPUT_FILENAME_EXTENSION):
-        index = _id.index(settings.MODIS_INPUT_FILENAME_EXTENSION)
+    __modis_ext = config.get('file.extension.modis.input.filename')
+    __landsat_ext = config.get('file.extension.landsat.input.filename')
+    
+    if _id.endswith(__modis_ext):
+        index = _id.index(__modis_ext)
         # leave original case intact
         product_id = product_id[0:index]
         _id = _id[0:index]
 
-    elif _id.endswith(settings.LANDSAT_INPUT_FILENAME_EXTENSION):
-        index = _id.index(settings.LANDSAT_INPUT_FILENAME_EXTENSION)
+    elif _id.endswith(__landsat_ext):
+        index = _id.index(__landsat_ext)
         # leave original case intact
         product_id = product_id[0:index]
         _id = _id[0:index]

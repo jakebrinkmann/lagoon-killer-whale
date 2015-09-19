@@ -10,11 +10,10 @@ from email.mime.text import MIMEText
 from smtplib import SMTP
 
 from django.db import transaction
-from django.conf import settings
 
 from ordering import models
-from ordering.models import Order
-from ordering.models import Configuration
+from ordering.models.order import Order
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 class Emails(object):
 
     def __init__(self):
-        self.status_base_url = Configuration.get('espa.status.url')
+        self.status_base_url = config.url_for('status_url')
 
     def __send(self, recipient, subject, body):
         return self.send_email(recipient=recipient, subject=subject, body=body)
@@ -53,9 +52,9 @@ class Emails(object):
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['To'] = to_header
-        msg['From'] = settings.ESPA_EMAIL_ADDRESS
-        s = SMTP(host=settings.ESPA_EMAIL_SERVER)
-        s.sendmail(settings.ESPA_EMAIL_ADDRESS, recipient, msg.as_string())
+        msg['From'] = config.get('email.espa_address')
+        s = SMTP(host=config.get('email.espa_server'))
+        s.sendmail(msg['From'], recipient, msg.as_string())
         s.quit()
 
         return True
@@ -81,7 +80,7 @@ class Emails(object):
         '''Sends an email to our people telling them to reprocess
            a bad gzip on the online cache'''
 
-        address_block = Configuration.get('corrupt.gzip.email.list')
+        address_block = config.get('email.corrupt_gzip_notification_list')
         addresses = address_block.split(',')
 
         subject = "Corrupt gzip detected: %s" % product_id

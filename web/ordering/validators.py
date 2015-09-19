@@ -9,7 +9,7 @@ from ordering import lpdaac
 from ordering import sensor
 from ordering import utilities
 from ordering.validation import Validator
-from ordering.models import Order
+from ordering.models.order import Order
 
 logger = logging.getLogger(__name__)
 

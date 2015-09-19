@@ -5,10 +5,10 @@ Author: David V. Hill
 
 from django.contrib import admin
 
-from ordering.models import Scene
-from ordering.models import Order
-from ordering.models import Configuration
-from ordering.models import UserProfile
+from ordering.models.order import Scene
+from ordering.models.order import Order
+from ordering.models.configuration import Configuration
+from ordering.models.user import UserProfile
 
 __author__ = "David V. Hill"
 

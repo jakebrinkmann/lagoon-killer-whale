@@ -4,11 +4,10 @@ Author: David V. Hill
 '''
 
 import logging
-import traceback
 
 from django.contrib.auth.models import User
 
-from ordering.models import UserProfile
+from ordering.models.user import UserProfile
 from ordering import lta
 
 

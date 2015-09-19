@@ -9,10 +9,8 @@ import logging
 
 from django import forms
 from django.db import connection
-from django.conf import settings
 from django.contrib.syndication.views import Feed
 from django.core.urlresolvers import reverse
-from django.core.cache import cache
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import Http404
@@ -27,8 +25,8 @@ from ordering import emails
 from ordering import sensor
 from ordering import utilities
 from ordering import validators
-from ordering.models import Order
-from ordering.models import Configuration
+from ordering.models.order import Order
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -45,44 +43,17 @@ class AbstractView(View):
         No return.  Dictionary is passed by reference.
         '''
 
-        # calls to the Django cache return none if the key is not present
-        msg = cache.get('display_system_message')
-
-        # look for the trigger flag 'display_system_message' in the cache.
-        # if its not there then look in the Config() model for it then update
-        # the cache
-        if not msg:
-            msg = Configuration.get('display_system_message')
-            cache.set('display_system_message',
-                      msg,
-                      timeout=settings.SYSTEM_MESSAGE_CACHE_TIMEOUT)
+        system_msg_enabled = config.get('system.display_system_message')
 
         # system message is only going to be displayed if the msg.lower() is
         # equal to 'true' (string value)
-        if msg.lower() == 'true':
-
+        if system_msg_enabled.lower() == 'true':
+            title = config.get('msg.system_message_title')
+            body = config.get('msg.system_message_body')
+            
             ctx['display_system_message'] = True
-
-            cache_keys = ['system_message_title', 'system_message_body']
-
-            cache_vals = cache.get_many(cache_keys)
-
-            # flag to determine if any cached values were expired/missing and
-            # need to be updated
-            update_cache = False
-
-            #look through the cache_vals and see if any of them are none
-            for key in cache_keys:
-                if not key in cache_vals:
-                    update_cache = True
-                    cache_vals[key] = Configuration.get(key)
-
-            if update_cache:
-                cache.set_many(cache_vals,
-                               timeout=settings.SYSTEM_MESSAGE_CACHE_TIMEOUT)
-
-            ctx['system_message_title'] = cache_vals['system_message_title']
-            ctx['system_message_body'] = cache_vals['system_message_body']
+            ctx['system_message_title'] = title
+            ctx['system_message_body'] = body
         else:
             ctx['display_system_message'] = False
 
