@@ -47,13 +47,13 @@ class StatusMessage(SuccessMessageMixin, FormView):
 
         try:
             update_date = Configuration.get('msg.system_message_updated_date')
-            context['update_date'] = update_date.value
+            context['update_date'] = update_date
         except Configuration.DoesNotExist:
             context['update_date'] = 'n/a'
 
         try:
             updated_by = Configuration.get('msg.system_message_updated_by')
-            context['updated_by'] = updated_by.value
+            context['updated_by'] = updated_by
         except Configuration.DoesNotExist:
             context['updated_by'] = 'n/a'
 
@@ -64,19 +64,19 @@ class StatusMessage(SuccessMessageMixin, FormView):
         return_data = {}
         try:
             title = Configuration.get('msg.system_message_title')
-            return_data['title'] = title.value
+            return_data['title'] = title
         except Configuration.DoesNotExist:
             return_data['title'] = ''
 
         try:
             message = Configuration.get('msg.system_message_body')
-            return_data['message'] = message.value
+            return_data['message'] = message
         except Configuration.DoesNotExist:
             return_data['message'] = ''
 
         try:
             display = Configuration.get('system.display_system_message')
-            if display.value.lower() == 'true':
+            if display.lower() == 'true':
                 return_data['display'] = True
             else:
                 return_data['display'] = False

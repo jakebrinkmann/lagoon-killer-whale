@@ -8,6 +8,7 @@ import re
 import logging
 
 from ordering import utilities
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -233,10 +234,10 @@ class Landsat(SensorProduct):
         self.station = product_id[16:19]
         self.version = product_id[19:21]
 
-        _meters = config.get('pixels.size.meters.{0}'
+        _meters = config.get('pixel.size.meters.{0}'
             .format(self.sensor_code.upper()))
         
-        _dd = config.get('pixels.size.dd.{0}'
+        _dd = config.get('pixel.size.dd.{0}'
             .format(self.sensor_code.upper()))
 
         self.default_pixel_size = {'meters': _meters, 'dd': _dd}
