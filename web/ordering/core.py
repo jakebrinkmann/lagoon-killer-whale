@@ -11,6 +11,7 @@ import urllib
 
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db import IntegrityError
 from django.core.cache import cache
 
 from ordering.models.order import Scene
@@ -498,7 +499,7 @@ def get_products_to_process(record_limit=500,
                         landsat_urls[scene.name]['status'] != 'available'):
 
                     try:
-            
+
                         limit = config.get('retry.retry_missing_l1.retries')
                         timeout = config.get('retry.retry_missing_l1.timeout')
                         ts = datetime.datetime.now()
@@ -1032,17 +1033,17 @@ def handle_orders():
 def create_bootstrap(filepath):
     ''' Dumps the current configuration to a file that can then be imported
     using load_bootstrap '''
-    
+
     with open(filepath, 'wb') as output:
         items = config.objects.order_by('key')
         for item in items:
             entry = '{0}={1}\n'.format(item.key.strip(), item.value.strip())
-            output.write(entry)    
-            
+            output.write(entry)
+
 def load_bootstrap(filepath, delete_existing=False):
     ''' Loads configuration items from a file in the format of key=value '''
     ts = datetime.datetime.now()
-    
+
     backup = '{0}-{1}{2}{3}-{4}:{5}.{6}'.format(filepath,
                                                 ts.month,
                                                 ts.day,
@@ -1050,36 +1051,38 @@ def load_bootstrap(filepath, delete_existing=False):
                                                 ts.hour,
                                                 ts.minute,
                                                 ts.second)
-                                                
+
     logger.info('Creating backup of {0} at {1}'.format(filepath, backup))
 
     create_bootstrap(backup)
-    
+
     with open(filepath, 'rb') as bootstrap:
 
         logger.info('Checking {0} for bootstrap configuration'
             .format(filepath))
-            
+
         data = bootstrap.readlines()
-        
+
         if delete_existing == True:
             logger.info('Removing existing configuration')
             for item in config.objects.all():
                 logger.info('Removing item:{0}:{1}'
                     .format(item.key, item.value))
-                    
+
                 item.delete()
-                
+
         for item in data:
             if (len(item) > 0 and item.find('=') != -1):
-                logger.info('Found bootstrap configuration:{0}'.format(item))
                 parts = item.split('=')
                 logger.info('Found item:{0}'.format(parts))
 
                 key = parts[0].strip()
                 val = parts[1].strip()
-                
+
                 logger.info("Loading {0}:{1} into Configuration()"
                        .format(key, val))
 
-                config(key=key, value=val).save()                
+                try:
+                    config(key=key, value=val).save()
+                except IntegrityError:
+                    logger.info('Key:{0} exists, continuing'.format(key))
