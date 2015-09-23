@@ -20,6 +20,12 @@ def bootstrap_config(apps, schema_editor):
                                                   'units':'string'},
 
         'lock.timeout.handle_orders': {'default': 60 * 21, 'units': 'seconds'},
+        'ladsftp.password': {'default': '', 'units': 'string'},
+        'ladsftp.username': {'default': '', 'units': 'string'},
+        'landsatds.host': {'default': '', 'units': 'string'},
+        'landsatds.password': {'default': '', 'units': 'string'},
+        'landsatds.port': {'default': '', 'units': 'int'},
+        'landsatds.username': {'default': '', 'units': 'string'},
 
         'msg.system_message_title': {'default': '', 'units':'string'},
         'msg.system_message_body': {'default': '', 'units': 'string'},

@@ -6,6 +6,9 @@ Author: David V. Hill
 import logging
 import datetime
 import re
+
+from cStringIO import StringIO
+
 from email.mime.text import MIMEText
 from smtplib import SMTP
 
@@ -117,7 +120,7 @@ class Emails(object):
         elif isinstance(order, int):
             order = Order.objects.get(id=order)
 
-        if not isinstance(order, models.Order):
+        if not isinstance(order, Order):
             msg = 'order must be str, int or instance of models.Order'
             raise TypeError(msg)
 
@@ -188,3 +191,61 @@ class Emails(object):
         subject = 'Processing for %s complete.' % order.orderid
 
         return self.__send(recipient=email, subject=subject, body=body)
+
+
+    def send_purge_report(self, start_capacity, end_capacity, orders):
+        buffer = StringIO()
+        for order in orders:
+            buffer.write('{0}\n'.format(order))
+        order_str = buffer.getvalue()
+        buffer.close()               
+
+        body = '''===================================
+        Disk usage before purge
+        Capacity:{start_capacity} Used:{start_used} Available:{start_available} Percent Free:{start_percent_free} 
+
+        ===================================
+        Disk usage after purge
+        Capacity:{end_capacity} Used:{end_used} Available:{end_available} Percent Free:{end_percent_free}
+
+        ===================================
+        Past 24 Hours
+        Orders Placed:not available
+        Orders Completed:not available
+        Scenes Placed:not available
+        Scenes Completed:not available
+
+        Past 7 Days
+        Orders Placed:not available
+        Orders Completed:not available
+        Scenes Placed:not available
+        Scenes Completed:not available
+
+        ===================================
+        Open orders:not available
+        Open scenes:not available
+
+        ===================================
+        Purged orders
+        {purged_orders}
+        ========== End of report ==========
+        '''.format(start_capacity=start_capacity['capacity'],
+                   start_used=start_capacity['used'],
+                   start_available=start_capacity['available'],
+                   start_percent_free=start_capacity['percent_free'],
+                   end_capacity=end_capacity['capacity'],
+                   end_used=end_capacity['used'],
+                   end_available=end_capacity['available'],
+                   end_percent_free=end_capacity['percent_free'],
+                   purged_orders=order_str)
+
+        now = datetime.datetime.now()
+        subject = 'Purged orders for {day}-{month}-{year}'.format(day=now.day,
+                                                                  month=now.month,
+                                                                  year=now.year)
+        recipients = config.get('email.purge_report_list')
+        return self.__send(recipient=recipients, subject=subject, body=body)
+
+def send_purge_report(start_capacity, end_capacity, orders):
+    return Emails().send_purge_report(start_capacity, end_capacity, orders)
+    
