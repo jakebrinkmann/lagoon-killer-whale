@@ -8,6 +8,7 @@ import logging
 import json
 import datetime
 import urllib
+import os
 
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -966,7 +967,9 @@ def purge_orders(send_email=False):
 
     days = config.get('policy.purge_orders_after')
 
-    cutoff = datetime.datetime.now() - datetime.timedelta(days=days)
+    logger.info('Using purge policy of {0} days'.format(days))
+
+    cutoff = datetime.datetime.now() - datetime.timedelta(days=int(days))
 
     orders = Order.objects.filter(status='complete')
     orders = orders.filter(completion_date__lt=cutoff)
@@ -982,11 +985,21 @@ def purge_orders(send_email=False):
             with transaction.atomic():
                 order.status = 'purged'
                 order.save()
+                for product in order.scene_set.all():
+                    product.status = 'purged'
+                    product.log_file_contents = ''
+                    product.product_distro_location = ''
+                    product.product_dload_url = ''
+                    product.cksum_distro_location = ''
+                    product.cksum_download_url = ''
+                    product.job_name = ''
+                    product.save()
+
                 # bulk update product status, delete unnecessary field data
                 logger.info('Deleting {0} from online cache disk'
                    .format(order.orderid))
 
-                onlinecache.delete(order)
+                onlinecache.delete(order.orderid)
         except onlinecache.OnlineCacheException:
             logger.exception('Could not delete {0} from the online cache'
                 .format(order.orderid))
@@ -1018,7 +1031,7 @@ def handle_orders():
 
     # dont run this unless the cached lock has expired
     if result is None:
-        logger.debug('Purge lock expired... running')
+        logger.info('Purge lock expired... running')
 
         # first thing, populate the cached lock field
         timeout = int(config.get('system.run_order_purge_every'))
@@ -1027,20 +1040,27 @@ def handle_orders():
         # purge the orders from disk now
         purge_orders(send_email=True)
     else:
-        logger.debug('Purge lock detected... skipping')
+        logger.info('Purge lock detected... skipping')
 
 
-def create_bootstrap(filepath):
+def dump_config(filepath):
     ''' Dumps the current configuration to a file that can then be imported
     using load_bootstrap '''
+
+    if not os.path.exists(os.path.dirname(filepath)):
+        logger.info('Creating {0}'.format(filepath))
+        os.makedirs(os.path.dirname(filepath))
 
     with open(filepath, 'wb') as output:
         items = config.objects.order_by('key')
         for item in items:
             entry = '{0}={1}\n'.format(item.key.strip(), item.value.strip())
             output.write(entry)
+    
+    os.chmod(filepath, 0444)
 
-def load_bootstrap(filepath, delete_existing=False):
+
+def load_config(filepath, delete_existing=False):
     ''' Loads configuration items from a file in the format of key=value '''
     ts = datetime.datetime.now()
 
@@ -1054,7 +1074,7 @@ def load_bootstrap(filepath, delete_existing=False):
 
     logger.info('Creating backup of {0} at {1}'.format(filepath, backup))
 
-    create_bootstrap(backup)
+    dump_config(backup)
 
     with open(filepath, 'rb') as bootstrap:
 

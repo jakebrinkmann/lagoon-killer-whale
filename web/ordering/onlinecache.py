@@ -27,9 +27,10 @@ class OnlineCache(object):
             pw = Configuration.get('landsatds.password')
 
         self.client = sshcmd.RemoteHost(host, user, pw, debug=False)
-
-        self.orderpath = Configuration.get(self.__order_path_key)
-        if self.orderpath is None or len(self.orderpath) == 0:
+        
+        try:
+            self.orderpath = Configuration.get(self.__order_path_key)
+        except Configuration.DoesNotExist:
             logger.info('{0} not defined, setting to {1}'
                 .format(self.__order_path_key, self.__default_order_path))
             config = Configuration()

@@ -36,6 +36,7 @@ class LTASoapService(LTAService):
 
     def __init__(self, *args, **kwargs):
         super(LTASoapService, self).__init__(*args, **kwargs)
+        logger.info('Building SoapClient for:{0}'.format(self.url))
         self.client = SoapClient(self.url, cache=self.build_object_cache())
 
     def build_object_cache(self):
