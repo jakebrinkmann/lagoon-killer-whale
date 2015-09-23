@@ -13,7 +13,6 @@ from django.core.cache import cache
 
 from ordering import core
 from ordering.models.configuration import Configuration as config
-from ordering.models.models import DataPoint
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,6 @@ def rpc_handler(request):
         d.register_function(_queue_products, 'queue_products')
         d.register_function(_get_configuration, 'get_configuration')
         d.register_function(_get_products_to_process, 'get_scenes_to_process')
-        d.register_function(_get_data_points, 'get_data_points')
 
         #response = HttpResponse(mimetype="application/xml")
         response = HttpResponse(content_type="application/xml")
@@ -149,6 +147,3 @@ def _get_products_to_process(limit, for_user, priority, product_types):
                                         product_types=product_types,
                                         encode_urls=True)
 
-
-def _get_data_points(tags=[]):
-    return DataPoint.get_data_points(tags)

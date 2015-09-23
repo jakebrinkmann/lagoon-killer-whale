@@ -45,7 +45,7 @@ class Order(models.Model):
     email = models.EmailField(db_index=True)
 
     # reference the user that placed this order
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name='order')
 
     # order_type describes the order characteristics so we can use logic to
     # handle multiple varieties of orders
