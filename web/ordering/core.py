@@ -461,6 +461,8 @@ def get_products_to_process(record_limit=500,
         # ['orderid', 'sensor_type', 'contactid', 'name', 'product_options']
         by_cid.setdefault(cid, []).append(result)
 
+    #this will be returned to the caller
+    results = []
     for cid in by_cid.keys():
         cid_items = by_cid[cid]
 
@@ -480,9 +482,6 @@ def get_products_to_process(record_limit=500,
         modis_urls = lpdaac.get_download_urls(modis)
 
         logger.info('Retrieved {0} urls for cid:{1}'.format(len(modis_urls), cid))
-
-        # this will be returned to the caller
-        results = []
 
         for item in cid_items:
             dload_url = None
@@ -669,7 +668,7 @@ def mark_product_complete(name,
     product.completion_date = datetime.datetime.now()
     product.cksum_distro_location = destination_cksum_file
     product.log_file_contents = log_file_contents
-    product.note = None
+    product.note = '' 
 
     base_url = config.url_for('distribution.cache')
 
