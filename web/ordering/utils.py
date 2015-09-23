@@ -1,6 +1,6 @@
 ''' Utility module '''
 
-def dictfetchall(self, cursor):
+def dictfetchall(cursor):
     ''' Returns all rows from a cursor as a dict '''
     desc = cursor.description
     return [
