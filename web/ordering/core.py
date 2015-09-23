@@ -9,10 +9,12 @@ import json
 import datetime
 import urllib
 import os
+from cStringIO import StringIO
 
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db import IntegrityError
+from django.db import connection
 from django.core.cache import cache
 
 from ordering.models.order import Scene
@@ -26,6 +28,7 @@ from ordering import emails
 from ordering import nlaps
 from ordering import sensor
 from ordering import onlinecache
+from ordering import utils
 
 logger = logging.getLogger(__name__)
 
@@ -405,111 +408,100 @@ def get_products_to_process(record_limit=500,
     logger.debug('Product types:{0}'.format(product_types))
     logger.debug('Encode urls:{0}'.format(encode_urls))
 
-    # cast the record_limit to int since that's how its being used:
-    if record_limit is not None:
-        record_limit = int(record_limit)
+    buffer = StringIO()
+    buffer.write('SELECT ')
+    buffer.write('p.contactid, s.name, s.sensor_type, ')
+    buffer.write('o.orderid, o.product_options, o.priority ')
+    buffer.write('FROM ')
+    buffer.write('ordering_order o, ')
+    buffer.write('ordering_scene s, ')
+    buffer.write('ordering_userprofile p, ')
+    buffer.write('auth_user u ')
+    buffer.write('WHERE ')
+    buffer.write('o.user_id = u.id AND ')
+    buffer.write('s.order_id = o.id AND ')
+    buffer.write('u.id = p.user_id AND ')
+    buffer.write('s.status = \'oncache\' ')
 
-    # use kwargs so we can dynamically build the filter criteria
-    filters = {
-        'order__scene__status': 'oncache'
-    }
-
-    #optimize the query so it creates a join call rather than executing
-    #multiple database calls for the related fields
-    select_related = ('order__orderid,'
-                      'order__priority,'
-                      'order__product_options,'
-                      'userprofile__contactid')
-
-    # use orderby for the orderby clause
-    orderby = 'order__order_date'
+    if product_types is not None and len(product_types) > 0:
+        type_str = ','.join('\'{0}\''.format(x) for x in product_types)
+        buffer.write('AND s.sensor_type IN ({0}) '.format(type_str))
 
     if for_user is not None:
-        # Find orders submitted by a specific user
-        filters['username'] = for_user
+        buffer.write('AND u.username = \'{0}\' '.format(for_user))
 
     if priority is not None:
-        # retrieve by specified priority
-        filters['order__priority'] = priority
+        buffer.write('AND o.priority = \'{0}\' '.format(priority))
 
-    if product_types is not None:
-        #filter based on what user asked for... modis, landsat or plot
-        filters['order__scene__sensor_type__in'] = product_types
+    buffer.write('ORDER BY ')
+    buffer.write('o.order_date ')
+    buffer.write('LIMIT {0}'.format(record_limit))
 
-    u = User.objects.filter(**filters)
-    u = u.select_related(select_related).order_by(orderby)
+    query = buffer.getvalue()
+    buffer.close()
 
-    #pull all the cids but cast to set() to eliminate dups then back to list
-    #to support index based iteration
-    cids = list(set([c[0] for c in u.values_list('userprofile__contactid')]))
+    logger.debug("QUERY:{0}".format(query))
 
-    results = []
+    query_results = None
+    cursor = connection.cursor()
 
-    for cid in cids:
+    if cursor is not None:
+        try:
+            cursor.execute(query)
+            query_results = utils.dictfetchall(cursor)
+        finally:
+            if cursor is not None:
+                cursor.close()
 
-        if record_limit is not None and len(results) + 1 > record_limit:
-            break
+    # Need the results reorganized by contact id so we can get dload urls from
+    # ee in bulk by id.
+    by_cid = {}
+    for result in query_results:
+        cid = result.pop('contactid')
+        # ['orderid', 'sensor_type', 'contactid', 'name', 'product_options']
+        by_cid.setdefault(cid, []).append(result)
 
-        filters = {
-            'order__user__userprofile__contactid': cid,
-            'status': 'oncache'
-        }
+    for cid in by_cid.keys():
+        cid_items = by_cid[cid]
 
-        if priority is not None:
-            filters['order__priority'] = priority
-
-        select_related = 'order'
-
-        orderby = 'order__order_date'
-
-        scenes = Scene.objects.filter(**filters)
-        scenes = scenes.select_related(select_related)
-
-        if record_limit is not None:
-            scenes = scenes.order_by(orderby)[:record_limit]
-        else:
-            scenes = scenes.order_by(orderby)
-
-        landsat = [s.name for s in scenes if s.sensor_type == 'landsat']
-
+        landsat = [item['name'] for item in cid_items if item['sensor_type'] == 'landsat']
         logger.debug('Retrieving {0} landsat download urls for cid:{1}'
                      .format(len(landsat), cid))
 
         start = datetime.datetime.now()
-
         landsat_urls = lta.get_download_urls(landsat, cid)
-
         stop = datetime.datetime.now()
         interval = stop - start
         logger.debug('Retrieving download urls took {0} seconds'
                      .format(interval.seconds))
+        logger.info('Retrieved {0} landat urls for cid:{1}'.format(len(landsat_urls), cid))
 
-        modis = [s.name for s in scenes if s.sensor_type == 'modis']
+        modis = [item['name'] for item in cid_items if item['sensor_type'] == 'modis']
         modis_urls = lpdaac.get_download_urls(modis)
 
-        for scene in scenes:
+        logger.info('Retrieved {0} urls for cid:{1}'.format(len(modis_urls), cid))
 
-            if record_limit is not None and len(results) + 1 > record_limit:
-                break
+        # this will be returned to the caller
+        results = []
 
+        for item in cid_items:
             dload_url = None
-
-            if scene.sensor_type == 'landsat':
-
-                if ('status' in landsat_urls[scene.name] and
-                        landsat_urls[scene.name]['status'] != 'available'):
-
+            if item['sensor_type'] == 'landsat':
+               
+                 # check to see if the product is still available
+                
+                if ('status' in landsat_urls[item['name']] and
+                        landsat_urls[item['name']]['status'] != 'available'):
                     try:
-
                         limit = config.get('retry.retry_missing_l1.retries')
                         timeout = config.get('retry.retry_missing_l1.timeout')
                         ts = datetime.datetime.now()
                         after = ts + datetime.timedelta(seconds=timeout)
 
-                        logger.debug('{0} for order {1} was oncache '
-                                     'but now unavailable, reordering'
-                                     .format(scene.name,
-                                             scene.order.orderid))
+                        logger.info('{0} for order {1} was oncache '
+                                    'but now unavailable, reordering'
+                                    .format(scene.name,
+                                            scene.order.orderid))
 
                         set_product_retry(scene.name,
                                           scene.order.orderid,
@@ -518,11 +510,11 @@ def get_products_to_process(record_limit=500,
                                           'reorder missing level1 product',
                                           after, limit)
                     except Exception:
-
-                        logger.debug('Retry limit exceeded for {0} in '
-                                     'order {1}... moving to error status.'
-                                     .format(scene.name,
-                                             scene.order.orderid))
+   
+                        logger.info('Retry limit exceeded for {0} in '
+                                    'order {1}... moving to error status.'
+                                    .format(scene.name,
+                                            scene.order.orderid))
 
                         set_product_error(scene.name, scene.order.orderid,
                                           'get_products_to_process',
@@ -531,36 +523,36 @@ def get_products_to_process(record_limit=500,
                                            'marked product as available'))
                     continue
 
-                if 'download_url' in landsat_urls[scene.name]:
-                    dload_url = landsat_urls[scene.name]['download_url']
+                if 'download_url' in landsat_urls[item['name']]:
+                    logger.info('download_url was in landsat_urls for {0}'.format(item['name']))
+                    dload_url = landsat_urls[item['name']]['download_url']
                     if encode_urls:
                         dload_url = urllib.quote(dload_url, '')
 
-            elif scene.sensor_type == 'modis':
-                if 'download_url' in modis_urls[scene.name]:
-                    dload_url = modis_urls[scene.name]['download_url']
-
+            elif item['sensor_type'] == 'modis':
+                if 'download_url' in modis_urls[item['name']]:
+                    dload_url = modis_urls[item['name']]['download_url']
                     if encode_urls:
                         dload_url = urllib.quote(dload_url, '')
 
             result = {
-                'orderid': scene.order.orderid,
-                'product_type': scene.sensor_type,
-                'scene': scene.name,
-                'priority': scene.order.priority,
-                'options': json.loads(scene.order.product_options)
+                'orderid': item['orderid'],
+                'product_type': item['sensor_type'],
+                'scene': item['name'],
+                'priority': item['priority'],
+                'options': json.loads(item['product_options'])
             }
 
-            if scene.sensor_type == 'plot':
+            if item['sensor_type'] == 'plot':
+                # no dload url for plot items, just append it
                 results.append(result)
             elif dload_url is not None:
                 result['download_url'] = dload_url
                 results.append(result)
             else:
-                logger.debug('dload_url for {0} in order {0} '
-                             'was None, skipping...'
-                             .format(scene.order.id, scene.name))
-
+                logger.info('dload_url for {0} in order {0} '
+                            'was None, skipping...'
+                            .format(item['orderid'], item['name']))
     return results
 
 
@@ -1106,3 +1098,4 @@ def load_config(filepath, delete_existing=False):
                     config(key=key, value=val).save()
                 except IntegrityError:
                     logger.info('Key:{0} exists, continuing'.format(key))
+
