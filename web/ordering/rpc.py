@@ -39,8 +39,7 @@ def rpc_handler(request):
         d.register_function(_queue_products, 'queue_products')
         d.register_function(_get_configuration, 'get_configuration')
         d.register_function(_get_products_to_process, 'get_scenes_to_process')
-
-        #response = HttpResponse(mimetype="application/xml")
+        
         response = HttpResponse(content_type="application/xml")
         response.write(d._marshaled_dispatch(request.body))
     else:
@@ -65,26 +64,42 @@ def rpc_handler(request):
 
 
 def _update_status(name, orderid, processing_loc, status):
-        return core.update_status(name, orderid, processing_loc, status)
+    try:
+        resp = core.update_status(name, orderid, processing_loc, status)
+        return resp
+    except Exception, e:
+        logger.exception('Exception on call to _update_status')
+        raise e
 
 
 def _set_product_error(name, orderid, processing_loc, error):
-    return core.set_product_error(name, orderid, processing_loc, error)
+    try:
+        return core.set_product_error(name, orderid, processing_loc, error)
+    except Exception, e:
+        logger.exception('Exception in _set_product_error')
+        raise e
 
 
 def _set_product_unavailable(name, orderid, processing_loc, error, note):
-    return core.set_product_unavailable(name,
-                                        orderid,
-                                        processing_loc,
-                                        error,
-                                        note)
+    try:
+        return core.set_product_unavailable(name,
+                                            orderid,
+                                            processing_loc,
+                                            error,
+                                            note)
+    except Exception, e:
+        logger.exception('Exception in _set_product_unavailable')
+        raise e
 
 
 def _queue_products(order_name_tuple_list, processing_location, job_name):
-
-    return core.queue_products(order_name_tuple_list,
-                               processing_location,
-                               job_name)
+    try:
+        return core.queue_products(order_name_tuple_list,
+                                   processing_location,
+                                   job_name)
+    except Exception, e:
+        logger.exception('Exception in _queue_products()')
+        raise e
 
 
 def _mark_product_complete(name,
@@ -94,56 +109,66 @@ def _mark_product_complete(name,
                            cksum_file_location,
                            log_file_contents_binary):
 
-    log_file_contents = None
-    if type(log_file_contents_binary) is str:
-        log_file_contents = log_file_contents_binary
-    else:
-        log_file_contents = log_file_contents_binary.data
+    try:
+        log_file_contents = None
+        if type(log_file_contents_binary) is str:
+            log_file_contents = log_file_contents_binary
+        else:
+            log_file_contents = log_file_contents_binary.data
 
-    return core.mark_product_complete(name,
-                                      orderid,
-                                      processing_loc,
-                                      completed_scene_location,
-                                      cksum_file_location,
-                                      log_file_contents)
+        return core.mark_product_complete(name,
+                                          orderid,
+                                          processing_loc,
+                                          completed_scene_location,
+                                          cksum_file_location,
+                                          log_file_contents)
+    except Exception, e:
+        logger.exception('Exception in _mark_product_complete()')
+        raise e
 
 
 def _handle_orders():
+    try:    
+        key = '_handle_orders_lock'
+        timeout = int(config.get('cache.key.handle_orders_lock_timeout'))
     
-    key = '_handle_orders_lock'
-    timeout = int(config.get('cache.key.handle_orders_lock_timeout'))
-    
-    logger.debug('Ready for caching with key {0} '
-                 ' and a timeout of {1}'.format(key, timeout))
+        logger.debug('Ready for caching with key {0} '
+                     ' and a timeout of {1}'.format(key, timeout))
 
-    results = True
-    logger.info('handle orders triggered...')
-    if cache.get(key) is None:
-        logger.debug('Cache key {0} was None...'.format(key))
-        cache.set(key, '', timeout)
-        results = core.handle_orders()
+        results = True
+        logger.info('handle orders triggered...')
+        if cache.get(key) is None:
+            logger.debug('Cache key {0} was None...'.format(key))
+            cache.set(key, '', timeout)
+            results = core.handle_orders()
 
-        #import time
-        #logger.debug('sleeping for 20 seconds')
-        #time.sleep(20)
+            cache.delete(key)
+        else:
+            logger.debug('handle_orders was locked, skipping call to core')
 
-        cache.delete(key)
-    else:
-        logger.debug('handle_orders was locked, skipping call to core')
-
-    return results
+        return results
+    except Exception, e:
+        logger.exception('Exception occurred in _handle_orders()')
+        raise e
 
 
 #method to expose master configuration repository to the system
 def _get_configuration(key):
-    return config.get(key)
+    try:
+        return config.get(key)
+    except Exception, e:
+        logger.exception('Exeption in _get_configuration()')
+        raise e
 
 
 def _get_products_to_process(limit, for_user, priority, product_types):
-
-    return core.get_products_to_process(record_limit=limit,
-                                        for_user=for_user,
-                                        priority=priority,
-                                        product_types=product_types,
-                                        encode_urls=True)
+    try:
+        return core.get_products_to_process(record_limit=limit,
+                                            for_user=for_user,
+                                            priority=priority,
+                                            product_types=product_types,
+                                            encode_urls=True)
+    except Exception, e:
+        logger.exception('Exception in _get_products_to_process')
+        raise e
 
