@@ -25,6 +25,7 @@ from ordering import emails
 from ordering import sensor
 from ordering import utilities
 from ordering import validators
+from ordering import utils
 from ordering.models.order import Order
 from ordering.models.configuration import Configuration as config
 
@@ -407,13 +408,6 @@ class StatusFeed(Feed):
 
     email = ""
 
-    def dictfetchall(self, cursor):
-        "Returns all rows from a cursor as a dict"
-        desc = cursor.description
-        return [
-            dict(zip([col[0] for col in desc], row))
-            for row in cursor.fetchall() ]
-
     def get_object(self, request, email):
         self.email = email
 
@@ -431,7 +425,7 @@ class StatusFeed(Feed):
         if cursor is not None:
             try:
                 cursor.execute(query, [email])
-                results = self.dictfetchall(cursor)
+                results = utils.dictfetchall(cursor)
             finally:
                 if cursor is not None:
                     cursor.close()
