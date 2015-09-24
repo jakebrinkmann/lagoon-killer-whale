@@ -1093,9 +1093,7 @@ def load_config(filepath, delete_existing=False):
 
                 logger.info("Loading {0}:{1} into Configuration()"
                        .format(key, val))
-
-                try:
-                    config(key=key, value=val).save()
-                except IntegrityError:
-                    logger.info('Key:{0} exists, continuing'.format(key))
+                
+                config.objects.update_or_create(key=key,
+                                                defaults={'key':key, 'value':val})
 
