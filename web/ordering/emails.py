@@ -160,7 +160,7 @@ class Emails(object):
         elif isinstance(order, int):
             order = Order.objects.get(id=order)
 
-        if not isinstance(order, models.Order):
+        if not isinstance(order, models.order.Order):
             msg = 'order must be str, int or instance of models.Order'
             raise TypeError(msg)
 
@@ -240,7 +240,7 @@ class Emails(object):
                    purged_orders=order_str)
 
         now = datetime.datetime.now()
-        subject = 'Purged orders for {day}-{month}-{year}'.format(day=now.day,
+        subject = 'Purged orders for {month}-{day}-{year}'.format(day=now.day,
                                                                   month=now.month,
                                                                   year=now.year)
         recipients = config.get('email.purge_report_list')

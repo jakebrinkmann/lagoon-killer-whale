@@ -128,6 +128,7 @@ def _mark_product_complete(name,
 
 
 def _handle_orders():
+
     try:    
         key = '_handle_orders_lock'
         timeout = int(config.get('cache.key.handle_orders_lock_timeout'))
