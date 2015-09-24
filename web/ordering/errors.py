@@ -89,11 +89,11 @@ class Errors(object):
         A dictionary with retry_after populated with the datetimestamp after
         which an operation should be retried.
         '''
-        timeout = config.get('retry.{0}.timeout')
+        timeout = config.get('retry.{0}.timeout'.format(timeout_key))
         ts = datetime.datetime.now()
         extras['retry_after'] = ts + datetime.timedelta(seconds=int(timeout))
         
-        extras['retry_limit'] = config.get('retry.{0}.retries')
+        extras['retry_limit'] = config.get('retry.{0}.retries'.format(timeout_key))
         return extras
 
     def ssh_errors(self, error_message):

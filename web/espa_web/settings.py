@@ -212,7 +212,7 @@ if ESPA_ENV is 'dev':
         'KEY_PREFIX' : ESPA_ENV,
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': [
-            'localhost:11211',
+            'l8srlscp20.cr.usgs.gov:11211',
         ]
     }
 }

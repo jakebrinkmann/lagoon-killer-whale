@@ -10,6 +10,9 @@ scheduling functions.  This code is provided as reference only; internal EROS se
 * Set `ESPA_DEBUG` env var to either True or False
 * Set `ESPA_LOG_DIR` env var.  Defaults to `/var/log/uwsgi/`
 * Set `ESPA_CONFIG_FILE` env var to point to db values (defaults to `~/.cfgnfo`)
+* Apply database migrations: `python ./manage.py migrate`
+* Dump the system configuration: `python ./manage.py shell; from ordering import core; core.dump_config('/dir/file.txt')`
+* Edit `file.txt` and then: `python ./manage.py shell; from ordering import core; core.load_config('/dir/file.txt')`
 
 ##### Required db & app config in ESPA_CONFIG_FILE
 ```
@@ -53,10 +56,14 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
-###### Version 2.8.11 (August 2015)
-* upgraded Django to 1.7
+###### Version 2.8.11 (September 2015)
+* upgraded Django to 1.8
 * added ordering.tests directory with some simple unit tests
 * added psycopg to requirements, now using Postgres in lieu of Mysql
+* added exception logging to all rpc.py methods
+* rewrote core.py:get_products_to_process to use straight SQL (got queries down to only 1)
+* added load_config and dump_config to core.py, allowing configuration bootstrapping
+* conventionalized configuration keys minus a couple used by external scripts
 
 ###### Version 2.8.10 (August 2015)
 * updated project to rely on virtualenv for dependencies

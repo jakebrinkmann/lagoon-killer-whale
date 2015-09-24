@@ -528,7 +528,7 @@ class OrderWrapperServiceClient(LTAService):
 
                     if dload_url.find(ehost) != -1:
                         dload_url = dload_url.replace(ehost,
-                                                      ihosts[index % 2])
+                                                      ihosts[index % 2].strip())
                     retval[name]['download_url'] = dload_url
 
             return retval
