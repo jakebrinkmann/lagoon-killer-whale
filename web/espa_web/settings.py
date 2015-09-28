@@ -121,29 +121,49 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'espa_web', 'static/')
 STATIC_URL = '/static/'
 
 # Templates
-TEMPLATE_DIRS = (
+#EMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates"
     #or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(BASE_DIR, "espa_web/templates"),
-)
+#   os.path.join(BASE_DIR, "espa_web/templates"),
+#
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    'espa_web.context_processors.include_external_urls',
-)
+#EMPLATE_CONTEXT_PROCESSORS = (
+#   'django.core.context_processors.debug',
+#   'django.core.context_processors.i18n',
+#   'django.core.context_processors.media',
+#   'django.core.context_processors.static',
+#   'django.contrib.auth.context_processors.auth',
+#   'django.contrib.messages.context_processors.messages',
+#   'espa_web.context_processors.include_external_urls',
+#
 
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
+#TEMPLATE_LOADERS = (
+#   'django.template.loaders.filesystem.Loader',
+#   'django.template.loaders.app_directories.Loader',
+#
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [ os.path.join(BASE_DIR, 'espa_web/templates'),],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+                'espa_web.context_processors.include_external_urls',
+            ],
+        },
+    },
+]
 
 #ESPA Service URLS
 '''SERVICE_LOCATOR = {
