@@ -63,6 +63,7 @@ class AbstractView(View):
                              include_system_message=True):
 
         context = RequestContext(request, params)
+        
 
         if include_system_message:
             self._display_system_message(context)
@@ -368,10 +369,13 @@ class OrderDetails(AbstractView):
 
         t = loader.get_template(self.template)
 
-        c = self._get_request_context(request)
+        #c = self._get_request_context(request)
         try:
-            c['order'], c['scenes'] = Order.get_order_details(orderid)
-            return HttpResponse(t.render(c))
+            #c['order'], c['scenes'] = Order.get_order_details(orderid)
+            orders, scenes = Order.get_order_details(orderid)
+            logger.info("Found {0} scenes for order {1}".format(len(scenes), orders.orderid))
+            html = t.render({'order':orders, 'scenes':scenes}, request)
+            return HttpResponse(html)
         except Order.DoesNotExist:
             raise Http404
 
