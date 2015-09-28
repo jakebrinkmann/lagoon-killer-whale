@@ -28,7 +28,7 @@ from ordering import emails
 from ordering import nlaps
 from ordering import sensor
 from ordering import onlinecache
-from ordering import utils
+from ordering import utilities
 
 logger = logging.getLogger(__name__)
 
@@ -448,7 +448,7 @@ def get_products_to_process(record_limit=500,
     if cursor is not None:
         try:
             cursor.execute(query)
-            query_results = utils.dictfetchall(cursor)
+            query_results = utilities.dictfetchall(cursor)
         finally:
             if cursor is not None:
                 cursor.close()
