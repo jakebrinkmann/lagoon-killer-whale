@@ -57,18 +57,19 @@ class AbstractView(View):
         else:
             ctx['display_system_message'] = False
 
+        return ctx
+
     def _get_request_context(self,
                              request,
                              params=dict(),
                              include_system_message=True):
 
-        context = RequestContext(request, params)
+        #context = RequestContext(request, params)
         
-
-        if include_system_message:
-            self._display_system_message(context)
-
-        return context
+        if include_system_message == True:
+            return self._display_system_message(params)
+        else:
+            return params
 
 
 class AjaxForm(AbstractView):
@@ -128,7 +129,7 @@ class Index(AbstractView):
         '''
         c = self._get_request_context(request)
         t = loader.get_template(self.template)
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
 
 class NewOrder(AbstractView):
@@ -223,7 +224,7 @@ class NewOrder(AbstractView):
 
         t = loader.get_template(self.template)
 
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
     def post(self, request):
         '''Request handler for new order submission
@@ -348,7 +349,7 @@ class ListOrders(AbstractView):
 
         t = loader.get_template(self.template)
 
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
 
 class OrderDetails(AbstractView):
@@ -368,10 +369,7 @@ class OrderDetails(AbstractView):
         '''
 
         t = loader.get_template(self.template)
-
-        #c = self._get_request_context(request)
         try:
-            #c['order'], c['scenes'] = Order.get_order_details(orderid)
             orders, scenes = Order.get_order_details(orderid)
             logger.info("Found {0} scenes for order {1}".format(len(scenes), orders.orderid))
             html = t.render({'order':orders, 'scenes':scenes}, request)
@@ -392,7 +390,7 @@ class LogOut(AbstractView):
 
         c = self._get_request_context(request, include_system_message=False)
 
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
 
 class ListOrdersForm(forms.Form):
