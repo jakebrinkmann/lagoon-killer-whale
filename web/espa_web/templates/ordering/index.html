@@ -5,7 +5,30 @@
 {% cache 60 index_html_1 %}
 
 {% block title %}LSRD{% endblock %}
+
 {% block header %}LSDS Science Research and Development (LSRD){% endblock %}
+
+{% block stylesheets %}
+
+    <link rel="stylesheet" type="text/css" href="{% static 'js/slick/slick.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'js/slick/slick-theme.css' %}"/>
+{% endblock %}
+
+{% block js_files %}
+    <script type="text/javascript" src="{% static 'js/slick/slick.min.js' %}"></script>
+{% endblock %}
+
+{% block scripts %}
+    $(document).ready(function(){
+      $('#logo_box').slick({
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          autoplay: true,
+          autoplaySpeed: 3500,
+      });
+    });
+{% endblock %}
+
 {% block style %}
 
 	
@@ -91,7 +114,7 @@
 
     div#logo_box {
         margin-top:10px;
-        padding:10px;
+        padding:0px;
         width:270px;
         height:200px;
         overflow:hidden;
@@ -102,7 +125,7 @@
         width:250px;
         height:200px;
         margin:0 auto;
-        margin-left: 10px;
+        margin-left: 0px;
         text-align:center;
         /*box-shadow:10px 10px 5px #888888;*/
     }
@@ -136,9 +159,14 @@
     {% include "ordering/system_message.html" %}
 {% endif %}
 
-	<div id="logo_box">
-          <img class='shadow' src="{% static 'img/big_lizards.jpg' %}" />
-      </div> 
+	<div id="logo_box" class='shadow'>
+	  <img class='shadow' src="{% static 'img/lsrds/1.png' %}" />
+          <img class='shadow' src="{% static 'img/lsrds/2.png' %}" />
+          <img class='shadow' src="{% static 'img/lsrds/3.png' %}" />
+          <img class='shadow' src="{% static 'img/lsrds/4.png' %}" />
+          <img class='shadow' src="{% static 'img/lsrds/5.jpg' %}" />
+          <img class='shadow' src="{% static 'img/lsrds/6.jpg' %}" />
+        </div> 
 
 	<div id="opensource_box">
             <h3>Did you know?</h3>
