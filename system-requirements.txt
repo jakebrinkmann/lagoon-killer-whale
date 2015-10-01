@@ -4,6 +4,7 @@
 #on the system.
 python2.7
 libmysqlclient-dev (yum package is  mysql-devel)
+libpq-dev          (yum package is postgresql-devel)
 python-dev
 
 #Optional depending on preference.  If this isn't installed here

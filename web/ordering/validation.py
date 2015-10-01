@@ -138,23 +138,33 @@ class Validator(object):
             and len(self.child_validators) > 0
 
     def add_error(self, key, errmsg):
+        
+        if type(errmsg) not in (str, unicode):
+            t = type(errmsg)
+            msg = 'errmsg must be str or unicode, found:{0}'.format(t)
+            raise TypeError(msg)
+            
         if not self.validation_errors:
-            self.validation_errors = {key: errmsg, }
+            errs = list()
+            errs.append(errmsg)
+            self.validation_errors = {key: errs}
         elif key in self.validation_errors:
-            self.validation_errors[key].extend(errmsg)
+            errs = self.validation_errors[key]
+            errs = errs.append(errmsg)
             # do this to prevent the list from continuing to grow
-            errs = set(self.validation_errors[key])
-            self.validation_errors[key] = list(errs)
+            self.validation_errors[key] = list(set(errs))
         else:
+            # the key was in in validation errors, add it and the msg
             self.validation_errors[key] = errmsg
 
     def errors(self):
         if self.has_children():
             for v in self.child_validators:
                 errs = v.errors()
-                if errs:
-                    for key, value in errs.iteritems():
-                        self.add_error(key, value)
+                if errs and errs is not None:
+                    for key, values in errs.iteritems():
+                        for item in values:
+                            self.add_error(key, item)
 
         # make a copy of the dictionary and return the copy
         # then wipe out the original object

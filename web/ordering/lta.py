@@ -9,11 +9,11 @@ import collections
 import xml.etree.ElementTree as xml
 from cStringIO import StringIO
 
-from django.conf import settings
 from suds.client import Client as SoapClient
 from suds.cache import ObjectCache
 
-from . import sensor
+from ordering import sensor
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -25,36 +25,24 @@ class LTAService(object):
 
     def __init__(self):
         self.xml_header = "<?xml version ='1.0' encoding='UTF-8' ?>"
-        self.url = self.get_url(self.service_name)
+        self.url = config.url_for(self.service_name)
 
     def __repr__(self):
         return "LTAService:{0}".format(self.__dict__)
 
-    def get_url(self, service_name):
-        ''' Service locator pattern.  Retrieves proper url from settings.py
-        based on the environment
-
-        Keyword args:
-        service_name Name of a service as defined in settings.py
-        SERVICE_LOCATOR dictionary
-
-        Returns:
-        A url to contact the desired service
-        '''
-        return settings.URL_FOR(service_name)
-
-
+    
 class LTASoapService(LTAService):
     ''' Abstract service class for SOAP based clients '''
 
     def __init__(self, *args, **kwargs):
         super(LTASoapService, self).__init__(*args, **kwargs)
+        logger.info('Building SoapClient for:{0}'.format(self.url))
         self.client = SoapClient(self.url, cache=self.build_object_cache())
 
     def build_object_cache(self):
         cache = ObjectCache()
-        cache.setduration(seconds=settings.SOAP_CLIENT_TIMEOUT)
-        cache.setlocation(settings.SOAP_CACHE_LOCATION)
+        cache.setduration(seconds=config.get('soap.client_timeout'))
+        cache.setlocation(config.get('soap.cache_location'))
         return cache
 
 
@@ -517,8 +505,8 @@ class OrderWrapperServiceClient(LTAService):
 
             retval = {}
 
-            ehost = settings.EXTERNAL_CACHE_HOST
-            ihosts = settings.ESPA_CACHE_HOST_LIST
+            ehost = config.url_for('external_cache')
+            ihosts = config.url_for('internal_cache').split(',')
 
             for index, scene in enumerate(list(scene_elements)):
                 name = scene.find(sceneid_elem).text
@@ -540,7 +528,7 @@ class OrderWrapperServiceClient(LTAService):
 
                     if dload_url.find(ehost) != -1:
                         dload_url = dload_url.replace(ehost,
-                                                      ihosts[index % 2])
+                                                      ihosts[index % 2].strip())
                     retval[name]['download_url'] = dload_url
 
             return retval

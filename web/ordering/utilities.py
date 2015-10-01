@@ -55,10 +55,10 @@ def is_number(s):
     try:
         float(s)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
         return False
 
-
+#TODO: Remove this and replace with calls to str().lstrip('0')
 def strip_zeros(value):
     '''
     Description:
@@ -68,3 +68,11 @@ def strip_zeros(value):
     while value.startswith('0'):
         value = value[1:len(value)]
     return value
+
+
+def dictfetchall(cursor):
+    ''' Returns all rows from a cursor as a dict '''
+    desc = cursor.description
+    return [
+            dict(zip([col[0] for col in desc], row))
+            for row in cursor.fetchall() ]

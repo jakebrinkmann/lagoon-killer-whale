@@ -8,121 +8,29 @@ import logging
 import json
 import datetime
 import urllib
+import os
+from cStringIO import StringIO
 
 from django.contrib.auth.models import User
-from django.conf import settings
 from django.db import transaction
+from django.db import IntegrityError
+from django.db import connection
+from django.core.cache import cache
 
-from .models import Scene
-from .models import Order
-from .models import Configuration
-from .models import UserProfile
-from . import lta
-from . import lpdaac
-from . import errors
-from . import emails
-from . import nlaps
-from . import sensor
+from ordering.models.order import Scene
+from ordering.models.order import Order
+from ordering.models.configuration import Configuration as config
+from ordering.models.user import UserProfile
+from ordering import lta
+from ordering import lpdaac
+from ordering import errors
+from ordering import emails
+from ordering import nlaps
+from ordering import sensor
+from ordering import onlinecache
+from ordering import utilities
 
 logger = logging.getLogger(__name__)
-
-'''
-TODO -- Create new method handle_submitted_scenes() or something to that effect
-_process down to this comment should be included in it.
-
-The rest of this method down should actually be 'get_scenes_to_process()'
-
-TODO -- renamed this module 'actions.py'
-TODO -- OO'ize the order handling into OrderHandler()
-TODO -- Encapsulate all models.py classes here... don't let them flow
-TODO --     up into the callers of this module.
-TODO -- OrderHandler().get_scenes_to_process()
-TODO -- OrderHandler().determine_disposition()
-TODO -- OrderHandler().cancel(Order())
-TODO -- OrderHandler().cancel(Order(), ProductSensor())
-TODO -- OrderHandler().cleanup(Order())
-TODO -- OrderHandler().status(Order())
-TODO -- OrderHandler().status(Order(), ProductSensor())
-
-TODO -- Build HadoopHandler() as well.
-TODO -- HadoopHandler().cluster_status()
-TODO -- HadoopHandler().cancel_job(jobid)
-'''
-
-
-class ProductHandler(object):
-
-    def check_ordered(self):
-        pass
-
-    def accept_submitted(self):
-        pass
-
-    def move_to_queued(self):
-        pass
-
-    def move_to_complete(self):
-        pass
-
-    def move_to_unavailable(self):
-        pass
-
-    def move_to_error(self):
-        pass
-
-    def move_to_retry(self):
-        pass
-
-    def move_to_submitted(self):
-        pass
-
-    def are_oncache(self):
-        pass
-
-
-class LandsatProductHandler(object):
-
-    def __init__(self, *args, **kwargs):
-        super(LandsatProductHandler, self).__init__(*args, **kwargs)
-
-    def check_ordered(self):
-        pass
-
-    def accept_submitted(self):
-        pass
-
-
-class ModisProductHandler(object):
-
-    def __init__(self, *args, **kwargs):
-        super(ModisProductHandler, self).__init__(*args, **kwargs)
-
-
-class OrderHandler(object):
-
-    def __init__(self):
-        pass
-
-    def are_all_products_complete(self, order):
-        pass
-
-    def cancel(self, order):
-        pass
-
-    def status(self, order):
-        pass
-
-    def details(self, order):
-        pass
-
-    def cleanup(self, order):
-        pass
-
-    def finalize_all(self):
-        pass
-
-    def load_ee(self):
-        pass
 
 
 @transaction.atomic
@@ -154,8 +62,8 @@ def set_product_retry(name,
 
 
 @transaction.atomic
-#  Marks a scene unavailable and stores a reason
 def set_product_unavailable(name, orderid, processing_loc, error, note):
+    ''' Marks a scene unavailable and stores a reason '''
 
     product = Scene.objects.get(name=name, order__orderid=orderid)
 
@@ -198,6 +106,8 @@ def set_products_unavailable(products, reason):
 
 @transaction.atomic
 def handle_retry_products():
+    ''' handles all products in retry status '''
+
     now = datetime.datetime.now()
 
     filter_args = {'status': 'retry',
@@ -211,6 +121,7 @@ def handle_retry_products():
 
 @transaction.atomic
 def handle_onorder_landsat_products():
+    ''' handles landsat products still on order '''
 
     filters = {
         'tram_order_id__isnull': False,
@@ -265,9 +176,11 @@ def handle_onorder_landsat_products():
 
 
 def handle_submitted_landsat_products():
+    ''' handles all submitted landsat products '''
 
     @transaction.atomic
     def mark_nlaps_unavailable():
+        ''' inner function to support marking nlaps products unavailable '''
 
         logger.debug("In mark_nlaps_unavailable")
 
@@ -283,7 +196,7 @@ def handle_submitted_landsat_products():
 
         logger.debug("Found {0} submitted landsat products"
                      .format(len(landsat_products)))
-        
+
         landsat_submitted = [l.name for l in landsat_products]
 
         logger.debug("Checking for TMA data in submitted landsat products")
@@ -293,16 +206,17 @@ def handle_submitted_landsat_products():
 
         landsat_submitted = None
 
-        logger.debug("Found {0} landsat TMA products".format(len(landsat_nlaps)))
+        logger.debug("Found {0} landsat TMA products"
+            .format(len(landsat_nlaps)))
 
         # bulk update the nlaps scenes
         if len(landsat_nlaps) > 0:
 
-            nlaps_products = [p for p in landsat_products if p.name in landsat_nlaps]
+            _nlaps = [p for p in landsat_products if p.name in landsat_nlaps]
 
             landsat_nlaps = None
 
-            set_products_unavailable(nlaps_products, 'TMA data cannot be processed')
+            set_products_unavailable(_nlaps, 'TMA data cannot be processed')
 
     def get_contactids_for_submitted_landsat_products():
 
@@ -317,11 +231,13 @@ def handle_submitted_landsat_products():
         contact_ids = u.values_list('userprofile__contactid').distinct()
 
         logger.debug("Found contact ids:{0}".format(contact_ids))
-        
+
         return [c[0] for c in contact_ids]
 
     @transaction.atomic
     def update_landsat_product_status(contact_id):
+        ''' updates the product status for all landsat products for the
+        ee contact id '''
 
         logger.debug("Updating landsat product status")
 
@@ -385,16 +301,15 @@ def handle_submitted_landsat_products():
         try:
             logger.info("Updating landsat_product_status for {0}"
                         .format(contact_id))
-                        
+
             update_landsat_product_status(contact_id)
-            
+
         except Exception, e:
             msg = ('Could not update_landsat_product_status for {0}\n'
                    'Exception:{1}'.format(contact_id, e))
             logger.exception(msg)
 
 
-#@transaction.atomic
 def handle_submitted_modis_products():
     ''' Moves all submitted modis products to oncache if true '''
 
@@ -402,7 +317,7 @@ def handle_submitted_modis_products():
 
     filter_args = {'status': 'submitted', 'sensor_type': 'modis'}
     modis_products = Scene.objects.filter(**filter_args)
-    
+
     logger.debug("Found {0} submitted modis products"
                  .format(len(modis_products)))
 
@@ -429,7 +344,7 @@ def handle_submitted_plot_products():
 
     filter_args = {'status': 'ordered', 'order_type': 'lpcs'}
     plot_orders = Order.objects.filter(**filter_args)
-    
+
     logger.debug("Found {0} submitted plot orders"
                  .format(len(plot_orders)))
 
@@ -448,7 +363,7 @@ def handle_submitted_plot_products():
         #is done.
 
         if product_count - (unavailable_products + complete_products) == 1:
-            filter_args = {'status': 'submitted', 'sensor_type': 'plot'}                         
+            filter_args = {'status': 'submitted', 'sensor_type': 'plot'}
             plot = order.scene_set.filter(**filter_args)
             if len(plot) >= 1:
                 for p in plot:
@@ -469,6 +384,8 @@ def handle_submitted_plot_products():
 
 @transaction.atomic
 def handle_submitted_products():
+    ''' handles all submitted products in the system '''
+
     logger.info('Handling submitted products...')
     handle_submitted_landsat_products()
     handle_submitted_modis_products()
@@ -491,167 +408,156 @@ def get_products_to_process(record_limit=500,
     logger.debug('Product types:{0}'.format(product_types))
     logger.debug('Encode urls:{0}'.format(encode_urls))
 
-    # cast the record_limit to int since that's how its being used:
-    if record_limit is not None:
-        record_limit = int(record_limit)
+    buffer = StringIO()
+    buffer.write('SELECT ')
+    buffer.write('p.contactid, s.name, s.sensor_type, ')
+    buffer.write('o.orderid, o.product_options, o.priority ')
+    buffer.write('FROM ')
+    buffer.write('ordering_order o, ')
+    buffer.write('ordering_scene s, ')
+    buffer.write('ordering_userprofile p, ')
+    buffer.write('auth_user u ')
+    buffer.write('WHERE ')
+    buffer.write('o.user_id = u.id AND ')
+    buffer.write('s.order_id = o.id AND ')
+    buffer.write('u.id = p.user_id AND ')
+    buffer.write('s.status = \'oncache\' ')
 
-    # use kwargs so we can dynamically build the filter criteria
-    filters = {
-        'order__scene__status': 'oncache'
-    }
-
-    #optimize the query so it creates a join call rather than executing
-    #multiple database calls for the related fields
-    select_related = ('order__orderid,'
-                      'order__priority,'
-                      'order__product_options,'
-                      'userprofile__contactid')
-
-    # use orderby for the orderby clause
-    orderby = 'order__order_date'
+    if product_types is not None and len(product_types) > 0:
+        type_str = ','.join('\'{0}\''.format(x) for x in product_types)
+        buffer.write('AND s.sensor_type IN ({0}) '.format(type_str))
 
     if for_user is not None:
-        # Find orders submitted by a specific user
-        filters['username'] = for_user
+        buffer.write('AND u.username = \'{0}\' '.format(for_user))
 
     if priority is not None:
-        # retrieve by specified priority
-        filters['order__priority'] = priority
+        buffer.write('AND o.priority = \'{0}\' '.format(priority))
 
-    if product_types is not None:
-        #filter based on what user asked for... modis, landsat or plot
-        filters['order__scene__sensor_type__in'] = product_types
+    buffer.write('ORDER BY ')
+    buffer.write('o.order_date ')
+    buffer.write('LIMIT {0}'.format(record_limit))
 
-    u = User.objects.filter(**filters)
-    u = u.select_related(select_related).order_by(orderby)
+    query = buffer.getvalue()
+    buffer.close()
 
-    #pull all the cids but cast to set() to eliminate dups then back to list
-    #to support index based iteration
-    cids = list(set([c[0] for c in u.values_list('userprofile__contactid')]))
+    logger.debug("QUERY:{0}".format(query))
 
+    query_results = None
+    cursor = connection.cursor()
+
+    if cursor is not None:
+        try:
+            cursor.execute(query)
+            query_results = utilities.dictfetchall(cursor)
+        finally:
+            if cursor is not None:
+                cursor.close()
+
+    # Need the results reorganized by contact id so we can get dload urls from
+    # ee in bulk by id.
+    by_cid = {}
+    for result in query_results:
+        cid = result.pop('contactid')
+        # ['orderid', 'sensor_type', 'contactid', 'name', 'product_options']
+        by_cid.setdefault(cid, []).append(result)
+
+    #this will be returned to the caller
     results = []
+    for cid in by_cid.keys():
+        cid_items = by_cid[cid]
 
-    for cid in cids:
-
-        if record_limit is not None and len(results) + 1 > record_limit:
-            break
-
-        filters = {
-            'order__user__userprofile__contactid': cid,
-            'status': 'oncache'
-        }
-
-        if priority is not None:
-            filters['order__priority'] = priority
-
-        select_related = 'order'
-
-        orderby = 'order__order_date'
-
-        scenes = Scene.objects.filter(**filters)
-        scenes = scenes.select_related(select_related)
-
-        if record_limit is not None:
-            scenes = scenes.order_by(orderby)[:record_limit]
-        else:
-            scenes = scenes.order_by(orderby)
-
-        landsat = [s.name for s in scenes if s.sensor_type == 'landsat']
-        
+        landsat = [item['name'] for item in cid_items if item['sensor_type'] == 'landsat']
         logger.debug('Retrieving {0} landsat download urls for cid:{1}'
                      .format(len(landsat), cid))
-                     
+
         start = datetime.datetime.now()
-        
         landsat_urls = lta.get_download_urls(landsat, cid)
-        
-        stop = datetime.datetime.now()        
-        interval = stop - start        
+        stop = datetime.datetime.now()
+        interval = stop - start
         logger.debug('Retrieving download urls took {0} seconds'
                      .format(interval.seconds))
+        logger.info('Retrieved {0} landat urls for cid:{1}'.format(len(landsat_urls), cid))
 
-        modis = [s.name for s in scenes if s.sensor_type == 'modis']
+        modis = [item['name'] for item in cid_items if item['sensor_type'] == 'modis']
         modis_urls = lpdaac.get_download_urls(modis)
 
-        for scene in scenes:
+        logger.info('Retrieved {0} urls for cid:{1}'.format(len(modis_urls), cid))
 
-            if record_limit is not None and len(results) + 1 > record_limit:
-                break
-
+        for item in cid_items:
             dload_url = None
+            if item['sensor_type'] == 'landsat':
+               
+                 # check to see if the product is still available
+                
+                if ('status' in landsat_urls[item['name']] and
+                        landsat_urls[item['name']]['status'] != 'available'):
+                    try:
+                        limit = config.get('retry.retry_missing_l1.retries')
+                        timeout = config.get('retry.retry_missing_l1.timeout')
+                        ts = datetime.datetime.now()
+                        after = ts + datetime.timedelta(seconds=timeout)
 
-            if scene.sensor_type == 'landsat':
+                        logger.info('{0} for order {1} was oncache '
+                                    'but now unavailable, reordering'
+                                    .format(scene.name,
+                                            scene.order.orderid))
 
-                if ('status' in landsat_urls[scene.name] and
-                        landsat_urls[scene.name]['status'] != 'available'):
+                        set_product_retry(scene.name,
+                                          scene.order.orderid,
+                                          'get_products_to_process',
+                                          'product was not available',
+                                          'reorder missing level1 product',
+                                          after, limit)
+                    except Exception:
+   
+                        logger.info('Retry limit exceeded for {0} in '
+                                    'order {1}... moving to error status.'
+                                    .format(scene.name,
+                                            scene.order.orderid))
 
-                        try:
-                            lookup = settings.RETRY
-                            limit = lookup['retry_missing_l1']['retry_limit']
-                            timeout = lookup['retry_missing_l1']['timeout']
-                            ts = datetime.datetime.now()
-                            after = ts + datetime.timedelta(seconds=timeout)
+                        set_product_error(scene.name, scene.order.orderid,
+                                          'get_products_to_process',
+                                          ('level1 product data '
+                                           'not available after EE call '
+                                           'marked product as available'))
+                    continue
 
-                            logger.debug('{0} for order {1} was oncache '
-                                         'but now unavailable, reordering'
-                                         .format(scene.name,
-                                                 scene.order.orderid))
-
-                            set_product_retry(scene.name,
-                                              scene.order.orderid,
-                                              'get_products_to_process',
-                                              'product was not available',
-                                              'reorder missing level1 product',
-                                              after, limit)
-                        except:
-                            
-                            logger.debug('Retry limit exceeded for {0} in '
-                                         'order {1}... moving to error status.'
-                                         .format(scene.name,
-                                                 scene.order.orderid))
-
-                            set_product_error(scene.name, scene.order.orderid,
-                                              'get_products_to_process',
-                                              ('level1 product data '
-                                               'not available after EE call '
-                                               'marked product as available'))
-                        continue
-
-                if 'download_url' in landsat_urls[scene.name]:
-                    dload_url = landsat_urls[scene.name]['download_url']
+                if 'download_url' in landsat_urls[item['name']]:
+                    logger.info('download_url was in landsat_urls for {0}'.format(item['name']))
+                    dload_url = landsat_urls[item['name']]['download_url']
                     if encode_urls:
                         dload_url = urllib.quote(dload_url, '')
 
-            elif scene.sensor_type == 'modis':
-                if 'download_url' in modis_urls[scene.name]:
-                    dload_url = modis_urls[scene.name]['download_url']
-
+            elif item['sensor_type'] == 'modis':
+                if 'download_url' in modis_urls[item['name']]:
+                    dload_url = modis_urls[item['name']]['download_url']
                     if encode_urls:
                         dload_url = urllib.quote(dload_url, '')
 
             result = {
-                'orderid': scene.order.orderid,
-                'product_type': scene.sensor_type,
-                'scene': scene.name,
-                'priority': scene.order.priority,
-                'options': json.loads(scene.order.product_options)
+                'orderid': item['orderid'],
+                'product_type': item['sensor_type'],
+                'scene': item['name'],
+                'priority': item['priority'],
+                'options': json.loads(item['product_options'])
             }
 
-            if scene.sensor_type == 'plot':
+            if item['sensor_type'] == 'plot':
+                # no dload url for plot items, just append it
                 results.append(result)
             elif dload_url is not None:
                 result['download_url'] = dload_url
                 results.append(result)
             else:
-                logger.debug('dload_url for {0} in order {0} '
-                             'was None, skipping...'
-                             .format(scene.order.id, scene.name))
-
+                logger.info('dload_url for {0} in order {0} '
+                            'was None, skipping...'
+                            .format(item['orderid'], item['name']))
     return results
 
 
 @transaction.atomic
 def update_status(name, orderid, processing_loc, status):
+    ''' updates scene/product status '''
 
     product = Scene.objects.get(name=name, order__orderid=orderid)
 
@@ -664,8 +570,8 @@ def update_status(name, orderid, processing_loc, status):
 
 
 @transaction.atomic
-#  Marks a scene in error and accepts the log file contents
 def set_product_error(name, orderid, processing_loc, error):
+    ''' Marks a scene in error and accepts the log file contents '''
 
     product = Scene.objects.get(name=name, order__orderid=orderid)
 
@@ -739,16 +645,12 @@ def queue_products(order_name_tuple_list, processing_location, job_name):
                        'log_file_contents': '',
                        'job_name': job_name}
 
-        #helper_logger("Queuing %s:%s from %s for job %s"
-        #              % (order, products, processing_location, job_name))
-
         Scene.objects.filter(**filter_args).update(**update_args)
 
     return True
 
 
 @transaction.atomic
-#  Marks a scene complete in the database for a given order
 def mark_product_complete(name,
                           orderid,
                           processing_loc,
@@ -756,6 +658,7 @@ def mark_product_complete(name,
                           destination_cksum_file=None,
                           log_file_contents=""):
 
+    ''' Marks a scene complete in the database for a given order '''
     logger.debug("Marking {0} complete for {1}".format(name, orderid))
     product = Scene.objects.get(name=name, order__orderid=orderid)
 
@@ -765,9 +668,9 @@ def mark_product_complete(name,
     product.completion_date = datetime.datetime.now()
     product.cksum_distro_location = destination_cksum_file
     product.log_file_contents = log_file_contents
-    product.note = None
+    product.note = '' 
 
-    base_url = Configuration().getValue('distribution.cache.home.url')
+    base_url = config.url_for('distribution.cache')
 
     product_file_parts = completed_file_location.split('/')
     product_file = product_file_parts[len(product_file_parts) - 1]
@@ -836,7 +739,7 @@ def update_order_if_complete(order):
             except Exception, e:
                 #msg = "Error calling send_completion_email:{0}".format(e)
                 logger.exception('Error calling send_completion_email')
-                raise Exception(msg)
+                raise e
 
 
 @transaction.atomic
@@ -846,9 +749,9 @@ def load_ee_orders():
     '''
 
     #check to make sure this operation is enabled.  Bail if not
-    enabled = Configuration().getValue("load_ee_orders_enabled")
+    enabled = config.get("system.load_ee_orders_enabled")
     if enabled.lower() != 'true':
-        logger.info('enable_load_ee_orders is disabled,'
+        logger.info('system.load_ee_orders_enabled is disabled,'
                     'skipping load_ee_orders()')
         return
 
@@ -945,7 +848,7 @@ def load_ee_orders():
                     if not success:
                         log_msg = ("Error updating lta for "
                                    "[eeorder:%s ee_unit_num:%s "
-                                   "scene name:%s order:%s")
+                                   "scene name:%s order:%s to 'C' status")
                         log_msg = log_msg % (eeorder, s['unit_num'],
                                              scene.name, order.orderid)
 
@@ -964,7 +867,7 @@ def load_ee_orders():
                     if not success:
                         log_msg = ("Error updating lta for "
                                    "[eeorder:%s ee_unit_num:%s "
-                                   "scene name:%s order:%s")
+                                   "scene name:%s order:%s to 'R' status")
                         log_msg = log_msg % (eeorder, s['unit_num'],
                                              scene.name, order.orderid)
 
@@ -983,7 +886,7 @@ def load_ee_orders():
                 product = None
                 try:
                     product = sensor.instance(s['sceneid'])
-                except:
+                except Exception:
                     log_msg = ("Received product via EE that "
                                "is not implemented: %s" % s['sceneid'])
                     logger.warn(log_msg)
@@ -1011,10 +914,10 @@ def load_ee_orders():
             if not success:
                 log_msg = ("Error updating lta for "
                            "[eeorder:%s ee_unit_num:%s scene "
-                           "name:%s order:%simport re") % (eeorder,
-                                                           s['unit_num'],
-                                                           scene.name,
-                                                           order.orderid)
+                           "name:%s order:%s to 'I' status") % (eeorder,
+                                                                s['unit_num'],
+                                                                scene.name,
+                                                                order.orderid)
 
                 logger.error(log_msg)
 
@@ -1024,16 +927,18 @@ def load_ee_orders():
                 logger.error(log_msg)
 
 
-    # Sends the order submission confirmation email
 def send_initial_email(order):
+    ''' public interface to send the initial email '''
     return emails.Emails().send_initial(order)
 
 
 def send_completion_email(order):
+    ''' public interface to send the completion email '''
     return emails.Emails().send_completion(order)
 
 
 def send_initial_emails():
+    ''' public interface to send all initial emails '''
     return emails.Emails().send_all_initial()
 
 
@@ -1043,8 +948,62 @@ def finalize_orders():
     required scene processing is done'''
 
     orders = Order.objects.filter(status='ordered')
-    for o in orders:
-        update_order_if_complete(o)
+    [update_order_if_complete(o) for o in orders]
+    return True
+
+
+def purge_orders(send_email=False):
+    ''' Will move any orders older than X days to purged status and will also
+    remove the files from disk'''
+
+    days = config.get('policy.purge_orders_after')
+
+    logger.info('Using purge policy of {0} days'.format(days))
+
+    cutoff = datetime.datetime.now() - datetime.timedelta(days=int(days))
+
+    orders = Order.objects.filter(status='complete')
+    orders = orders.filter(completion_date__lt=cutoff)
+
+    logger.info('Purging {0} orders from the active record.'
+        .format(orders.count()))
+
+    start_capacity = onlinecache.capacity()
+    logger.info('Starting cache capacity:{0}'.format(start_capacity))
+
+    for order in orders:
+        try:
+            with transaction.atomic():
+                order.status = 'purged'
+                order.save()
+                for product in order.scene_set.all():
+                    product.status = 'purged'
+                    product.log_file_contents = ''
+                    product.product_distro_location = ''
+                    product.product_dload_url = ''
+                    product.cksum_distro_location = ''
+                    product.cksum_download_url = ''
+                    product.job_name = ''
+                    product.save()
+
+                # bulk update product status, delete unnecessary field data
+                logger.info('Deleting {0} from online cache disk'
+                   .format(order.orderid))
+
+                onlinecache.delete(order.orderid)
+        except onlinecache.OnlineCacheException:
+            logger.exception('Could not delete {0} from the online cache'
+                .format(order.orderid))
+        except Exception:
+            logger.exception('Exception purging {0}'
+                .format(order.orderid))
+
+    end_capacity = onlinecache.capacity()
+    logger.info('Ending cache capacity:{0}'.format(end_capacity))
+
+    if send_email is True:
+        logger.info('Sending purge report')
+        emails.send_purge_report(start_capacity, end_capacity, orders)
 
     return True
 
@@ -1057,4 +1016,84 @@ def handle_orders():
     load_ee_orders()
     handle_submitted_products()
     finalize_orders()
+
+    cache_key = 'orders_last_purged'
+    result = cache.get(cache_key)
+
+    # dont run this unless the cached lock has expired
+    if result is None:
+        logger.info('Purge lock expired... running')
+
+        # first thing, populate the cached lock field
+        timeout = int(config.get('system.run_order_purge_every'))
+        cache.set(cache_key, datetime.datetime.now(), timeout)
+
+        # purge the orders from disk now
+        purge_orders(send_email=True)
+    else:
+        logger.info('Purge lock detected... skipping')
     return True
+
+
+def dump_config(filepath):
+    ''' Dumps the current configuration to a file that can then be imported
+    using load_bootstrap '''
+
+    if not os.path.exists(os.path.dirname(filepath)):
+        logger.info('Creating {0}'.format(filepath))
+        os.makedirs(os.path.dirname(filepath))
+
+    with open(filepath, 'wb') as output:
+        items = config.objects.order_by('key')
+        for item in items:
+            entry = '{0}={1}\n'.format(item.key.strip(), item.value.strip())
+            output.write(entry)
+    
+    os.chmod(filepath, 0444)
+
+
+def load_config(filepath, delete_existing=False):
+    ''' Loads configuration items from a file in the format of key=value '''
+    ts = datetime.datetime.now()
+
+    backup = '{0}-{1}{2}{3}-{4}:{5}.{6}'.format(filepath,
+                                                ts.month,
+                                                ts.day,
+                                                ts.year,
+                                                ts.hour,
+                                                ts.minute,
+                                                ts.second)
+
+    logger.info('Creating backup of {0} at {1}'.format(filepath, backup))
+
+    dump_config(backup)
+
+    with open(filepath, 'rb') as bootstrap:
+
+        logger.info('Checking {0} for bootstrap configuration'
+            .format(filepath))
+
+        data = bootstrap.readlines()
+
+        if delete_existing == True:
+            logger.info('Removing existing configuration')
+            for item in config.objects.all():
+                logger.info('Removing item:{0}:{1}'
+                    .format(item.key, item.value))
+
+                item.delete()
+
+        for item in data:
+            if (len(item) > 0 and item.find('=') != -1):
+                parts = item.split('=')
+                logger.info('Found item:{0}'.format(parts))
+
+                key = parts[0].strip()
+                val = parts[1].strip()
+
+                logger.info("Loading {0}:{1} into Configuration()"
+                       .format(key, val))
+                
+                config.objects.update_or_create(key=key,
+                                                defaults={'key':key, 'value':val})
+

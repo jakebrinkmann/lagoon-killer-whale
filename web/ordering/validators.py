@@ -4,12 +4,12 @@ Author: David V. Hill
 '''
 import logging
 
-from . import lta
-from . import lpdaac
-from . import sensor
-from . import utilities
-from .validation import Validator
-from .models import Order
+from ordering import lta
+from ordering import lpdaac
+from ordering import sensor
+from ordering import utilities
+from ordering.validation import Validator
+from ordering.models.order import Order
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class ModisProductListValidator(Validator):
 
                     msg = ''.join(msg_parts)
 
-                    self.add_error('input_products', [msg, ])
+                    self.add_error('input_products', msg)
                 else:
                     prod_ids = [p.product_id for p in modis_products]
 
@@ -69,7 +69,7 @@ class ModisProductListValidator(Validator):
                     if len(difference) > 0:
                         for diff in difference:
                             msg = ("%s not found in Modis datapool" % diff)
-                            self.add_error('input_products', [msg, ])
+                            self.add_error('input_products', msg)
 
         return super(ModisProductListValidator, self).errors()
 
@@ -145,7 +145,7 @@ class LandsatProductListValidator(Validator):
 
                     msg = ''.join(msg_parts)
 
-                    self.add_error('input_products', [msg, ])
+                    self.add_error('input_products', msg)
                 else:
                     product_list = [s.product_id for s in landsat_products]
 
@@ -154,7 +154,7 @@ class LandsatProductListValidator(Validator):
                     if len(difference) > 0:
                         for diff in difference:
                             msg = ("%s not found in Landsat inventory" % diff)
-                            self.add_error('input_products', [msg, ])
+                            self.add_error('input_products', msg)
 
         return super(LandsatProductListValidator, self).errors()
 
@@ -172,7 +172,7 @@ class ProductIsSelectedValidator(Validator):
 
         if not product_is_selected:
             self.add_error('product_selected',
-                           ['Please select at least one output product.', ])
+                           'Please select at least one output product.')
 
         return super(ProductIsSelectedValidator, self).errors()
 
@@ -181,16 +181,17 @@ class OutputFormatValidator(Validator):
     '''Validates the requested output format'''
 
     def errors(self):
+              
         valid_formats = ['gtiff', 'envi', 'hdf-eos2']
 
-        if not ('output_format' in self.parameters
-                and self.parameters['output_format']):
-
-                self.add_error('output_format',
-                               ['Please select an output format', ])
+        if 'output_format' not in self.parameters.keys():
+            self.add_error('output_format',
+                           'Please select an output format')
         elif self.parameters['output_format'] not in valid_formats:
             self.add_error('output_format',
-                           ['Output format must be one of:%s' % valid_formats])
+                           'Output format must be one of:%s' % valid_formats)
+                           
+        return super(OutputFormatValidator, self).errors()
 
 
 class FalseEastingValidator(Validator):
@@ -202,7 +203,7 @@ class FalseEastingValidator(Validator):
                 or not utilities.is_number(self.parameters['false_easting'])):
 
                 msg = "Please provide a valid false easting value"
-                self.add_error('false_easting', [msg, ])
+                self.add_error('false_easting', msg)
 
         return super(FalseEastingValidator, self).errors()
 
@@ -216,7 +217,7 @@ class FalseNorthingValidator(Validator):
                 or not utilities.is_number(self.parameters['false_northing'])):
 
                 msg = "Please provide a valid false northing value"
-                self.add_error('false_northing', [msg, ])
+                self.add_error('false_northing', msg)
 
         return super(FalseNorthingValidator, self).errors()
 
@@ -238,10 +239,10 @@ class CentralMeridianValidator(Validator):
 
                 cm = float(self.parameters['central_meridian'])
         else:
-            self.add_error('central_meridian', [msg, ])
+            self.add_error('central_meridian', msg)
 
         if cm and (cm < -180.0 or cm > 180.0):
-            self.add_error('central_meridian', [msg, ])
+            self.add_error('central_meridian', msg)
 
         return super(CentralMeridianValidator, self).errors()
 
@@ -262,7 +263,7 @@ class LatitudeTrueScaleValidator(Validator):
             ts = float(self.parameters['latitude_true_scale'])
 
         else:
-            self.add_error('latitude_true_scale', [msg, ])
+            self.add_error('latitude_true_scale', msg)
 
         # make sure ts is either in the range of 60 to 90 or -90 to -60
         has_err = False
@@ -275,7 +276,7 @@ class LatitudeTrueScaleValidator(Validator):
                 has_err = True
 
             if has_err is True:
-                self.add_error('latitude_true_scale', [msg, ])
+                self.add_error('latitude_true_scale', msg)
 
         return super(LatitudeTrueScaleValidator, self).errors()
 
@@ -295,10 +296,10 @@ class LongitudinalPoleValidator(Validator):
                 utilities.is_number(self.parameters['longitude_pole'])):
                 lp = float(self.parameters['longitude_pole'])
         else:
-            self.add_error('longitude_pole', [msg, ])
+            self.add_error('longitude_pole', msg)
 
         if lp and (lp > 180.0 or lp < -180.0):
-            self.add_error('longitude_pole', [msg, ])
+            self.add_error('longitude_pole', msg)
 
         return super(LongitudinalPoleValidator, self).errors()
 
@@ -317,10 +318,10 @@ class StandardParallel1Validator(Validator):
                 utilities.is_number(self.parameters['std_parallel_1'])):
                 sp = float(self.parameters['std_parallel_1'])
         else:
-            self.add_error('std_parallel_1', [msg, ])
+            self.add_error('std_parallel_1', msg)
 
         if sp and (sp < -90.0 or sp > 90.0):
-            self.add_error('std_parallel_1', [msg, ])
+            self.add_error('std_parallel_1', msg)
 
         return super(StandardParallel1Validator, self).errors()
 
@@ -339,10 +340,10 @@ class StandardParallel2Validator(Validator):
                 utilities.is_number(self.parameters['std_parallel_2'])):
                 sp = float(self.parameters['std_parallel_2'])
         else:
-            self.add_error('std_parallel_2', [msg, ])
+            self.add_error('std_parallel_2', msg)
 
         if sp and (sp < -90.0 or sp > 90.0):
-            self.add_error('std_parallel_2', [msg, ])
+            self.add_error('std_parallel_2', msg)
 
         return super(StandardParallel2Validator, self).errors()
 
@@ -361,10 +362,10 @@ class OriginLatitudeValidator(Validator):
                 utilities.is_number(self.parameters['origin_lat'])):
                 lo = float(self.parameters['origin_lat'])
         else:
-            self.add_error('origin_lat', [msg, ])
+            self.add_error('origin_lat', msg)
 
         if lo and (lo < -90.0 or lo > 90.0):
-            self.add_error('origin_lat', [msg, ])
+            self.add_error('origin_lat', msg)
 
         return super(OriginLatitudeValidator, self).errors()
 
@@ -379,7 +380,7 @@ class DatumValidator(Validator):
                 self.parameters['datum'] in self.valid_datum):
 
             msg = "Please select a datum from one of:%s" % self.valid_datum
-            self.add_error('datum', [msg, ])
+            self.add_error('datum', msg)
 
         return super(DatumValidator, self).errors()
 
@@ -393,7 +394,7 @@ class UTMZoneValidator(Validator):
                 or not str(self.parameters['utm_zone']).isdigit()
                 or not int(self.parameters['utm_zone']) in range(1, 61)):
                 msg = "Please provide a utm zone between 1 and 60"
-                self.add_error('utm_zone', [msg, ])
+                self.add_error('utm_zone', msg)
 
         return super(UTMZoneValidator, self).errors()
 
@@ -406,7 +407,7 @@ class UTMNorthSouthValidator(Validator):
                 self.parameters['utm_north_south'] in ('north', 'south')):
 
                 msg = "Please select north or south for the UTM zone"
-                self.add_error('utm_north_south', [msg, ])
+                self.add_error('utm_north_south', msg)
 
         return super(UTMNorthSouthValidator, self).errors()
 
@@ -428,15 +429,15 @@ class ProjectionValidator(Validator):
         proj = None
 
         if not 'target_projection' in self.parameters:
-            self.add_error("projection", ['projection must be specified'])
+            self.add_error("projection", 'projection must be specified')
         else:
             proj = self.parameters['target_projection']
 
         if proj and proj not in self.valid_projections:
 
             self.add_error("projection",
-                           ['projection must be one of %s'
-                               % self.valid_projections])
+                           'projection must be one of {0}'
+                           .format(self.valid_projections))                             
         else:
 
             if proj == 'aea':
@@ -548,10 +549,10 @@ class MeterPixelSizeValidator(Validator):
 
             ps = float(self.parameters['pixel_size'])
         else:
-            self.add_error('pixel_size', [msg, ])
+            self.add_error('pixel_size', msg)
 
         if ps and not (ps >= 30.0 or ps <= 1000.0):
-            self.add_error('pixel_size', [msg, ])
+            self.add_error('pixel_size', msg)
 
         return super(MeterPixelSizeValidator, self).errors()
 
@@ -573,10 +574,10 @@ class DecimalDegreePixelSizeValidator(Validator):
 
             ps = float(self.parameters['pixel_size'])
         else:
-            self.add_error('pixel_size', [msg, ])
+            self.add_error('pixel_size', msg)
 
         if ps and (ps > 0.0089831 or ps < 0.0002695):
-            self.add_error('pixel_size', [msg1, ])
+            self.add_error('pixel_size', msg1)
 
         return super(DecimalDegreePixelSizeValidator, self).errors()
 
@@ -593,13 +594,13 @@ class PixelSizeValidator(Validator):
                 or not parameters['pixel_size_units']):
 
             msg = "Target pixel size units not recognized"
-            self.add_error('pixel_size_units', [msg, ])
+            self.add_error('pixel_size_units', msg)
         else:
             units = parameters['pixel_size_units'].strip()
 
             if not units in ['dd', 'meters']:
                 msg = "Unknown pixel size units provided:%s" % units
-                self.add_error('pixel_size_units', [msg, ])
+                self.add_error('pixel_size_units', msg)
             elif units == 'dd':
                 self.add_child(DecimalDegreePixelSizeValidator(parameters))
             else:
@@ -626,25 +627,25 @@ class ImageExtentsValidator(Validator):
         # make sure we got upper left x,y and lower right x,y vals
         if not 'minx' in P or not utilities.is_number(P['minx']):
             msg = "Please provide a valid upper left x value"
-            self.add_error('minx', [msg, ])
+            self.add_error('minx', msg)
         else:
             minx = float(P['minx'])
 
         if not 'maxx' in P or not utilities.is_number(P['maxx']):
             msg = "Please provide a valid lower right x value"
-            self.add_error('maxx', [msg, ])
+            self.add_error('maxx', msg)
         else:
             maxx = float(P['maxx'])
 
         if not 'miny' in P or not utilities.is_number(P['miny']):
             msg = "Please provide a valid lower right y value"
-            self.add_error('miny', [msg, ])
+            self.add_error('miny', msg)
         else:
             miny = float(P['miny'])
 
         if not 'maxy' in P or not utilities.is_number(P['maxy']):
             msg = "Please provide a valid upper left y value"
-            self.add_error('maxy', [msg, ])
+            self.add_error('maxy', msg)
         else:
             maxy = float(P['maxy'])
 
@@ -655,12 +656,12 @@ class ImageExtentsValidator(Validator):
         # then we can validate the values in the bounding box
             if minx >= maxx:
                 m = "Upper left x value must be less than lower right x value"
-                self.add_error('minx', [m, ])
+                self.add_error('minx', m)
                 #self.add_error('maxx', [m, ])
 
             if miny >= maxy:
                 m = "Lower right y value must be less than upper left y value"
-                self.add_error('miny', [m, ])
+                self.add_error('miny', m)
                 #self.add_error('maxy', [m, ])
 
             if image_extents_units == 'dd':
@@ -668,16 +669,16 @@ class ImageExtentsValidator(Validator):
                 y_m = ('Decimal degree latitude values must be -90 to 90')
 
                 if minx < -180.0 or minx > 180.0:
-                    self.add_error('minx', [x_m, ])
+                    self.add_error('minx', x_m)
 
                 if maxx < -180.0 or maxx > 180.0:
-                    self.add_error('maxx', [x_m, ])
+                    self.add_error('maxx', x_m)
 
                 if miny < -90.0 or miny > 90.0:
-                    self.add_error('miny', [y_m, ])
+                    self.add_error('miny', y_m)
 
                 if maxy < -90.0 or maxy > 90.0:
-                    self.add_error('maxy', [y_m, ])
+                    self.add_error('maxy', y_m)
             else:
                 m = ('Please specify extent coordinates in meters.')
 
@@ -686,7 +687,7 @@ class ImageExtentsValidator(Validator):
                     miny >= -90.0 and miny <= 90.0 and
                     maxy >= -90.0 and maxy <= 90.0):
 
-                    self.add_error('minx', [m, ])
+                    self.add_error('minx', m)
 
 
         return super(ImageExtentsValidator, self).errors()
@@ -721,7 +722,7 @@ class NewOrderFilesValidator(Validator):
         if (not 'input_products' in self.parameters
                 or len(self.parameters['input_products']) == 0):
 
-            self.add_error('input_products', [msg, ])
+            self.add_error('input_products', msg)
 
         return super(NewOrderFilesValidator, self).errors()
 
@@ -738,6 +739,7 @@ class NewOrderPostValidator(Validator):
                                                     name)
 
         self.add_child(ProductIsSelectedValidator(parameters))
+        
         self.add_child(OutputFormatValidator(parameters))
 
         if 'reproject' in parameters and parameters['reproject'] == 'on':

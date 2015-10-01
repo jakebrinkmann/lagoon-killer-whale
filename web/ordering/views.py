@@ -9,10 +9,8 @@ import logging
 
 from django import forms
 from django.db import connection
-from django.conf import settings
 from django.contrib.syndication.views import Feed
 from django.core.urlresolvers import reverse
-from django.core.cache import cache
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import Http404
@@ -23,12 +21,12 @@ from django.views.generic import View
 import django.contrib.auth
 from django.contrib.auth.models import User
 
-from . import emails
-from . import sensor
-from . import utilities
-from . import validators
-from .models import Order
-from .models import Configuration as Config
+from ordering import emails
+from ordering import sensor
+from ordering import utilities
+from ordering import validators
+from ordering.models.order import Order
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -45,61 +43,33 @@ class AbstractView(View):
         No return.  Dictionary is passed by reference.
         '''
 
-        # calls to the Django cache return none if the key is not present
-        msg = cache.get('display_system_message')
-
-        # look for the trigger flag 'display_system_message' in the cache.
-        # if its not there then look in the Config() model for it then update
-        # the cache
-        if not msg:
-            msg = Config().getValue('display_system_message')
-            cache.set('display_system_message',
-                      msg,
-                      timeout=settings.SYSTEM_MESSAGE_CACHE_TIMEOUT)
+        system_msg_enabled = config.get('system.display_system_message')
 
         # system message is only going to be displayed if the msg.lower() is
         # equal to 'true' (string value)
-        if msg.lower() == 'true':
-
+        if system_msg_enabled.lower() == 'true':
+            title = config.get('msg.system_message_title')
+            body = config.get('msg.system_message_body')
+            
             ctx['display_system_message'] = True
-
-            cache_keys = ['system_message_title', 'system_message_body']
-
-            cache_vals = cache.get_many(cache_keys)
-
-            # flag to determine if any cached values were expired/missing and
-            # need to be updated
-            update_cache = False
-
-            c = Config()
-
-            #look through the cache_vals and see if any of them are none
-            for key in cache_keys:
-                if not key in cache_vals:
-                    update_cache = True
-                    cache_vals[key] = c.getValue(key)
-
-            if update_cache:
-                cache.set_many(cache_vals,
-                               timeout=settings.SYSTEM_MESSAGE_CACHE_TIMEOUT)
-
-            ctx['system_message_title'] = cache_vals['system_message_title']
-            ctx['system_message_body'] = cache_vals['system_message_body']
-            c = None
+            ctx['system_message_title'] = title
+            ctx['system_message_body'] = body
         else:
             ctx['display_system_message'] = False
+
+        return ctx
 
     def _get_request_context(self,
                              request,
                              params=dict(),
                              include_system_message=True):
 
-        context = RequestContext(request, params)
-
-        if include_system_message:
-            self._display_system_message(context)
-
-        return context
+        #context = RequestContext(request, params)
+        
+        if include_system_message == True:
+            return self._display_system_message(params)
+        else:
+            return params
 
 
 class AjaxForm(AbstractView):
@@ -159,7 +129,7 @@ class Index(AbstractView):
         '''
         c = self._get_request_context(request)
         t = loader.get_template(self.template)
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
 
 class NewOrder(AbstractView):
@@ -254,7 +224,7 @@ class NewOrder(AbstractView):
 
         t = loader.get_template(self.template)
 
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
     def post(self, request):
         '''Request handler for new order submission
@@ -379,7 +349,7 @@ class ListOrders(AbstractView):
 
         t = loader.get_template(self.template)
 
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
 
 class OrderDetails(AbstractView):
@@ -399,11 +369,11 @@ class OrderDetails(AbstractView):
         '''
 
         t = loader.get_template(self.template)
-
-        c = self._get_request_context(request)
         try:
-            c['order'], c['scenes'] = Order.get_order_details(orderid)
-            return HttpResponse(t.render(c))
+            orders, scenes = Order.get_order_details(orderid)
+            logger.info("Found {0} scenes for order {1}".format(len(scenes), orders.orderid))
+            html = t.render({'order':orders, 'scenes':scenes}, request)
+            return HttpResponse(html)
         except Order.DoesNotExist:
             raise Http404
 
@@ -420,7 +390,7 @@ class LogOut(AbstractView):
 
         c = self._get_request_context(request, include_system_message=False)
 
-        return HttpResponse(t.render(c))
+        return HttpResponse(t.render(c, request))
 
 
 class ListOrdersForm(forms.Form):
@@ -439,13 +409,6 @@ class StatusFeed(Feed):
 
     email = ""
 
-    def dictfetchall(self, cursor):
-        "Returns all rows from a cursor as a dict"
-        desc = cursor.description
-        return [
-            dict(zip([col[0] for col in desc], row))
-            for row in cursor.fetchall() ]
-
     def get_object(self, request, email):
         self.email = email
 
@@ -453,7 +416,8 @@ class StatusFeed(Feed):
                  "p.product_dload_url, p.status "
                  "from auth_user u, ordering_order o, ordering_scene p "
                  "where u.id = o.user_id and o.id = p.order_id "
-                 "and p.status ='complete' and u.email = %s")
+                 "and p.status = 'complete' and u.email = %s and "
+                 "o.status != 'purged'")
 
         results = None
 
@@ -462,7 +426,7 @@ class StatusFeed(Feed):
         if cursor is not None:
             try:
                 cursor.execute(query, [email])
-                results = self.dictfetchall(cursor)
+                results = utilities.dictfetchall(cursor)
             finally:
                 if cursor is not None:
                     cursor.close()

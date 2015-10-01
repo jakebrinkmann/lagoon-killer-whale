@@ -68,12 +68,9 @@ if os.environ.get('ESPA_DEBUG', '').lower() == 'true':
     DEBUG = True
     TEMPLATE_DEBUG = True
 
-
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -99,35 +96,20 @@ ROOT_URLCONF = 'espa_web.urls'
 
 WSGI_APPLICATION = 'espa_web.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',       # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': config.get('config', 'db'),         # Or path to database file if using sqlite3.
-        'USER': config.get('config', 'dbuser'),     # Not used with sqlite3.
-        'PASSWORD': config.get('config', 'dbpass'), # Not used with sqlite3.
-        'HOST': config.get('config', 'dbhost'),     # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': config.get('config', 'dbport'),     # Set to empty string for default. Not used with sqlite3.
-    },
-    #'postgres': {
-    #    'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    #    'NAME': config.get('config', 'post-db'),
-    #    'USER': config.get('config', 'post-user'),
-    #    'PASSWORD': config.get('config', 'post-pass'),
-    #    'HOST': config.get('config', 'post-host'),
-    #    'PORT': config.get('config', 'post-port')
-    #}
+   'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': config.get('config', 'post-db'),
+        'USER': config.get('config', 'post-user'),
+        'PASSWORD': config.get('config', 'post-pass'),
+        'HOST': config.get('config', 'post-host'),
+        'PORT': config.get('config', 'post-port'),
+        'CONN_MAX_AGE': 600,
+    }
 }
-
-# Internationalization
-# https://docs.djangoproject.com/en/1.6/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-#TIME_ZONE = 'UTC'
 TIME_ZONE = 'America/Chicago'
 
 USE_I18N = True
@@ -136,41 +118,56 @@ USE_L10N = True
 
 USE_TZ = False
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, 'espa_web', 'static/')
-
 STATIC_URL = '/static/'
 
 # Templates
-
-TEMPLATE_DIRS = (
+#EMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates"
     #or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(BASE_DIR, "espa_web/templates"),
-)
+#   os.path.join(BASE_DIR, "espa_web/templates"),
+#
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    'espa_web.context_processors.include_external_urls',
-)
+#EMPLATE_CONTEXT_PROCESSORS = (
+#   'django.core.context_processors.debug',
+#   'django.core.context_processors.i18n',
+#   'django.core.context_processors.media',
+#   'django.core.context_processors.static',
+#   'django.contrib.auth.context_processors.auth',
+#   'django.contrib.messages.context_processors.messages',
+#   'espa_web.context_processors.include_external_urls',
+#
 
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
+#TEMPLATE_LOADERS = (
+#   'django.template.loaders.filesystem.Loader',
+#   'django.template.loaders.app_directories.Loader',
+#
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [ os.path.join(BASE_DIR, 'espa_web/templates'),],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+                'espa_web.context_processors.include_external_urls',
+            ],
+        },
+    },
+]
 
 #ESPA Service URLS
-SERVICE_LOCATOR = {
+'''SERVICE_LOCATOR = {
     "sys": {
         "orderservice": "http://eedev.cr.usgs.gov/OrderWrapperServicedevsys/resources",
         "orderdelivery": "http://eedev.cr.usgs.gov/OrderDeliverydevsys/OrderDeliveryService?WSDL",
@@ -212,7 +209,7 @@ SERVICE_LOCATOR = {
         "forgot_login": "https://earthexplorer.usgs.gov/login/username"
     }
 }
-
+'''
 # add the EE Authentication Backend in addition to the ModelBackend
 # authentication stops at the first success... so this order does matter
 #leave the standard ModelBackend in first so the builtin admin account
@@ -227,13 +224,6 @@ LOGIN_URL = 'login'
 # to access /) then send them to the homepage
 LOGIN_REDIRECT_URL = 'index'
 
-# This is polluting the settings.py I know, but at the moment this is the
-# best place for this since it is needed in lta.py and in context_processors.py
-# ************t*************
-# NEVER CHANGE THIS TO ops IN dev OR tst UNLESS THE dev AND tst CRONS ARE OFF
-# *************************
-URL_FOR = lambda service_name: SERVICE_LOCATOR[ESPA_ENV][service_name]
-
 # Set up caching for Django.  Everything is pointed to our single memcache
 # cluster but each environment is going to separated out with the environment
 # value as a key prefix.
@@ -243,7 +233,7 @@ if ESPA_ENV is 'dev':
         'KEY_PREFIX' : ESPA_ENV,
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': [
-            'localhost:11211',
+            'l8srlscp20.cr.usgs.gov:11211',
         ]
     }
 }
@@ -259,9 +249,6 @@ else:
             ]
         }
     }
-
-# cache timeouts by usage (in seconds)
-SYSTEM_MESSAGE_CACHE_TIMEOUT = 60
 
 LOGDIR = os.environ.get('ESPA_LOG_DIR', '/var/log/uwsgi')
 
@@ -336,7 +323,19 @@ LOGGING = {
             'propagate': False,
             'handlers': ['standard']
         },
-        'ordering.models': {
+        'ordering.models.user': {
+            # To be used by the web system
+            'level': 'INFO',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.models.configuration': {
+            # To be used by the web system
+            'level': 'INFO',
+            'propagate': False,
+            'handlers': ['standard']
+        },
+        'ordering.models.order': {
             # To be used by the web system
             'level': 'INFO',
             'propagate': False,
@@ -388,38 +387,38 @@ LOGGING = {
 
 # List of hostnames to choose from for the access to the online cache
 # Runs over 10Gb line
-ESPA_CACHE_HOST_LIST = ['edclxs67p', 'edclxs140p']
+#ESPA_CACHE_HOST_LIST = ['edclxs67p', 'edclxs140p']
 
-EXTERNAL_CACHE_HOST = 'edclpdsftp.cr.usgs.gov'
+#EXTERNAL_CACHE_HOST = 'edclpdsftp.cr.usgs.gov'
 
 # filename extension for landsat input products
-LANDSAT_INPUT_FILENAME_EXTENSION = '.tar.gz'
+#LANDSAT_INPUT_FILENAME_EXTENSION = '.tar.gz'
 
 # Path to the MODIS Terra source data location
-TERRA_BASE_SOURCE_PATH = '/MOLT'
+#TERRA_BASE_SOURCE_PATH = '/MOLT'
 # Path to the MODIS Aqua source data location
-AQUA_BASE_SOURCE_PATH = '/MOLA'
+#AQUA_BASE_SOURCE_PATH = '/MOLA'
 
 # file extension for modis input products
-MODIS_INPUT_FILENAME_EXTENSION = '.hdf'
+#MODIS_INPUT_FILENAME_EXTENSION = '.hdf'
 
 # host for modis input checks
-MODIS_INPUT_CHECK_HOST = 'e4ftl01.cr.usgs.gov'
+#MODIS_INPUT_CHECK_HOST = 'e4ftl01.cr.usgs.gov'
 
 # port for modis input checks
-MODIS_INPUT_CHECK_PORT = 80
+#MODIS_INPUT_CHECK_PORT = 80
 
 # Path to the completed orders
-ESPA_REMOTE_CACHE_DIRECTORY = '/data/science_lsrd/LSRD/orders'
-ESPA_LOCAL_CACHE_DIRECTORY = 'LSRD/orders'
+#ESPA_REMOTE_CACHE_DIRECTORY = '/data/science_lsrd/LSRD/orders'
+#ESPA_LOCAL_CACHE_DIRECTORY = 'LSRD/orders'
 
-ESPA_EMAIL_ADDRESS = 'espa@usgs.gov'
+#ESPA_EMAIL_ADDRESS = 'espa@usgs.gov'
 
-ESPA_EMAIL_SERVER = 'gssdsflh01.cr.usgs.gov'
+#ESPA_EMAIL_SERVER = 'gssdsflh01.cr.usgs.gov'
 
 '''Resolves system-wide identification of sensor name based on three letter
    prefix
-'''
+
 
 SENSOR_INFO = {
     'LO8': {'name': 'oli', 'lta_name': 'LANDSAT_8'},
@@ -430,9 +429,10 @@ SENSOR_INFO = {
     'MYD': {'name': 'aqua'},
     'MOD': {'name': 'terra'}
 }
+'''
 
 '''Default pixel sizes based on the input products'''
-DEFAULT_PIXEL_SIZE = {
+'''DEFAULT_PIXEL_SIZE = {
     'meters': {
         '09A1': 500,
         '09GA': 500,
@@ -463,36 +463,11 @@ DEFAULT_PIXEL_SIZE = {
         'LT4': 0.0002695,
         'LT5': 0.0002695
         }
-}
+}'''
 
 ''' Constant dictionary to hold the cache keys used in Django
  caching/memcached'''
-CACHE_KEYS = {
-    'handle_orders_lock': {'key': 'handle_orders_lock',
-                           'timeout': 60 * 21},
-}
-
-''' SOAP client configuration parameters '''
-# timeout is in seconds
-SOAP_CLIENT_TIMEOUT = 60 * 30
-
-# location where the WSDLS should be cached
-SOAP_CACHE_LOCATION = '/tmp/suds'
-
-
-''' Dictionary containing retry timeouts in seconds'''
-RETRY = {
-    'http_errors': {'timeout': 60 * 15, 'retry_limit': 10},
-    'ftp_errors': {'timeout': 60 * 15, 'retry_limit': 10},
-    'gzip_errors': {'timeout': 60 * 60 * 6, 'retry_limit': 10},
-    'network_errors': {'timeout': 60 * 2, 'retry_limit': 5},
-    'db_lock_timeout': {'timeout': 60 * 5, 'retry_limit': 10},
-    'lta_soap_errors': {'timeout': 60 * 60, 'retry_limit': 12},
-    'missing_aux_data': {'timeout': 60 * 60 * 24, 'retry_limit': 5},
-    'retry_missing_l1': {'timeout': 60 * 60, 'retry_limit': 8},
-    'ssh_errors': {'timeout': 60 * 5, 'retry_limit': 3},
-    'sixs_errors': {'timeout': 60, 'retry_limit': 3}
-}
-
-
-
+#CACHE_KEYS = {
+#    'handle_orders_lock': {'key': 'handle_orders_lock',
+#                           'timeout': 60 * 21},
+#}

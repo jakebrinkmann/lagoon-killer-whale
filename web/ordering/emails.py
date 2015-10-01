@@ -6,15 +6,17 @@ Author: David V. Hill
 import logging
 import datetime
 import re
+
+from cStringIO import StringIO
+
 from email.mime.text import MIMEText
 from smtplib import SMTP
 
 from django.db import transaction
-from django.conf import settings
 
-from . import models
-from .models import Order
-from .models import Configuration
+from ordering import models
+from ordering.models.order import Order
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ logger = logging.getLogger(__name__)
 class Emails(object):
 
     def __init__(self):
-        self.status_base_url = Configuration().getValue('espa.status.url')
+        self.status_base_url = config.url_for('status_url')
 
     def __send(self, recipient, subject, body):
         return self.send_email(recipient=recipient, subject=subject, body=body)
@@ -53,9 +55,9 @@ class Emails(object):
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['To'] = to_header
-        msg['From'] = settings.ESPA_EMAIL_ADDRESS
-        s = SMTP(host=settings.ESPA_EMAIL_SERVER)
-        s.sendmail(settings.ESPA_EMAIL_ADDRESS, recipient, msg.as_string())
+        msg['From'] = config.get('email.espa_address')
+        s = SMTP(host=config.get('email.espa_server'))
+        s.sendmail(msg['From'], recipient, msg.as_string())
         s.quit()
 
         return True
@@ -81,7 +83,7 @@ class Emails(object):
         '''Sends an email to our people telling them to reprocess
            a bad gzip on the online cache'''
 
-        address_block = Configuration().getValue('corrupt.gzip.email.list')
+        address_block = config.get('email.corrupt_gzip_notification_list')
         addresses = address_block.split(',')
 
         subject = "Corrupt gzip detected: %s" % product_id
@@ -118,7 +120,7 @@ class Emails(object):
         elif isinstance(order, int):
             order = Order.objects.get(id=order)
 
-        if not isinstance(order, models.Order):
+        if not isinstance(order, Order):
             msg = 'order must be str, int or instance of models.Order'
             raise TypeError(msg)
 
@@ -158,7 +160,7 @@ class Emails(object):
         elif isinstance(order, int):
             order = Order.objects.get(id=order)
 
-        if not isinstance(order, models.Order):
+        if not isinstance(order, models.order.Order):
             msg = 'order must be str, int or instance of models.Order'
             raise TypeError(msg)
 
@@ -189,3 +191,61 @@ class Emails(object):
         subject = 'Processing for %s complete.' % order.orderid
 
         return self.__send(recipient=email, subject=subject, body=body)
+
+
+    def send_purge_report(self, start_capacity, end_capacity, orders):
+        buffer = StringIO()
+        for order in orders:
+            buffer.write('{0}\n'.format(order))
+        order_str = buffer.getvalue()
+        buffer.close()               
+
+        body = '''===================================
+        Disk usage before purge
+        Capacity:{start_capacity} Used:{start_used} Available:{start_available} Percent Free:{start_percent_free} 
+
+        ===================================
+        Disk usage after purge
+        Capacity:{end_capacity} Used:{end_used} Available:{end_available} Percent Free:{end_percent_free}
+
+        ===================================
+        Past 24 Hours
+        Orders Placed:not available
+        Orders Completed:not available
+        Scenes Placed:not available
+        Scenes Completed:not available
+
+        Past 7 Days
+        Orders Placed:not available
+        Orders Completed:not available
+        Scenes Placed:not available
+        Scenes Completed:not available
+
+        ===================================
+        Open orders:not available
+        Open scenes:not available
+
+        ===================================
+        Purged orders
+        {purged_orders}
+        ========== End of report ==========
+        '''.format(start_capacity=start_capacity['capacity'],
+                   start_used=start_capacity['used'],
+                   start_available=start_capacity['available'],
+                   start_percent_free=start_capacity['percent_free'],
+                   end_capacity=end_capacity['capacity'],
+                   end_used=end_capacity['used'],
+                   end_available=end_capacity['available'],
+                   end_percent_free=end_capacity['percent_free'],
+                   purged_orders=order_str)
+
+        now = datetime.datetime.now()
+        subject = 'Purged orders for {month}-{day}-{year}'.format(day=now.day,
+                                                                  month=now.month,
+                                                                  year=now.year)
+        recipients = config.get('email.purge_report_list')
+        return self.__send(recipient=recipients, subject=subject, body=body)
+
+def send_purge_report(start_capacity, end_capacity, orders):
+    return Emails().send_purge_report(start_capacity, end_capacity, orders)
+    

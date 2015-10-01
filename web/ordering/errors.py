@@ -11,10 +11,9 @@ import logging
 import collections
 import datetime
 
-from django.conf import settings
-
-from . import emails
-from . import sensor
+from ordering import emails
+from ordering import sensor
+from ordering.models.configuration import Configuration as config
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class Errors(object):
         self.conditions.append(self.night_scene)
         self.conditions.append(self.no_such_file_or_directory)
         self.conditions.append(self.oli_no_sr)
-        self.conditions.append(self.only_only_no_thermal)
+        self.conditions.append(self.oli_only_no_thermal)
         self.conditions.append(self.sixs_errors)
         self.conditions.append(self.ssh_errors)
         self.conditions.append(self.warp_errors)
@@ -49,10 +48,6 @@ class Errors(object):
         #construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
                                                  ['status', 'reason', 'extra'])
-
-        #set our internal retry dictionary to the settings.RETRY
-        #in the future, retrieve it from a database or elsewhere if necessary
-        self.retry = settings.RETRY
 
     def __find_error(self, error_message, keys, status, reason, extra=None):
         '''Logic to search the error_message and return the appropriate value
@@ -75,7 +70,7 @@ class Errors(object):
         resolution = None
 
         for key in keys:
-            
+
             if key.lower() in error_message.lower():
                 resolution = self.resolution(status, reason, extra)
                 break
@@ -94,10 +89,11 @@ class Errors(object):
         A dictionary with retry_after populated with the datetimestamp after
         which an operation should be retried.
         '''
-        timeout = self.retry[timeout_key]['timeout']
+        timeout = config.get('retry.{0}.timeout'.format(timeout_key))
         ts = datetime.datetime.now()
-        extras['retry_after'] = ts + datetime.timedelta(seconds=timeout)
-        extras['retry_limit'] = self.retry[timeout_key]['retry_limit']
+        extras['retry_after'] = ts + datetime.timedelta(seconds=int(timeout))
+        
+        extras['retry_limit'] = config.get('retry.{0}.retries'.format(timeout_key))
         return extras
 
     def ssh_errors(self, error_message):
@@ -153,8 +149,10 @@ class Errors(object):
                                        status,
                                        reason,
                                        extras)
-        is_landsat =  isinstance(sensor.instance(self.product_name),
-                                 sensor.Landsat)
+        is_landsat = False
+        if self.product_name is not None:
+            is_landsat =  isinstance(sensor.instance(self.product_name),
+                                     sensor.Landsat)
 
         if resolution is not None and is_landsat:
             emails.Emails().send_gzip_error_email(self.product_name)
@@ -203,7 +201,8 @@ class Errors(object):
     def network_errors(self, error_message):
         keys = ['Network is unreachable',
                 'Connection timed out',
-                'socket.timeout']
+                'socket.timeout',
+                'error: [Errno 111] Connection refused']
         status = 'retry'
         reason = 'Network error'
         extras = self.__add_retry('network_errors')
@@ -221,7 +220,7 @@ class Errors(object):
         reason = 'DSWE is not available for OLI/TIRS products'
         return self.__find_error(error_message, keys, status, reason)
 
-    def only_only_no_thermal(self, error_message):
+    def oli_only_no_thermal(self, error_message):
         keys = [('include_sr_thermal is an unavailable '
                  'product option for OLI-Only data')]
         status = 'unavailable'
