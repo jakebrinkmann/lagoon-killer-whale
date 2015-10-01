@@ -4,6 +4,7 @@ Author: David V. Hill
 '''
 
 import logging
+import datetime
 
 from django.contrib.auth.models import User
 
@@ -46,6 +47,7 @@ class EEAuthBackend(object):
                 user = User(username=username, password='this isnt used')
                 user.is_staff = False
                 user.is_superuser = False
+                user.last_login = datetime.datetime(year=1970, month=1, day=1)
                 user.save()
 
                 UserProfile(contactid=contactid, user=user).save()

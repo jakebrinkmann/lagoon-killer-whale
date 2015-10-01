@@ -808,6 +808,7 @@ def load_ee_orders():
                 user.is_staff = False
                 user.is_superuser = False
                 user.email = email_addr
+                user.last_login = datetime.datetime(year=1970, month=1, day=1)
                 user.save()
 
                 UserProfile(contactid=contactid, user=user).save()
