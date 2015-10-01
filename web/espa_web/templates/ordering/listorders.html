@@ -99,12 +99,11 @@ span.status-display {
 {% autoescape off %}
 
 function switchUrl() {
-    //this comes back encoded as fake%40.com
     var path = "{% url 'list_orders' 'fake@val.com' %}";
 
     var email_addr = document.getElementById('id_email');
 
-    path = path.replace('fake%40val.com', $.trim(email_addr.value));
+    path = path.replace('fake@val.com', $.trim(email_addr.value));
 
     window.location = path;
     
