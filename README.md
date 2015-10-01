@@ -56,7 +56,7 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
-###### Version 2.8.11 (September 2015)
+###### Version 2.8.11 (October 2015)
 * upgraded Django to 1.8
 * added ordering.tests directory with some simple unit tests
 * added psycopg to requirements, now using Postgres in lieu of Mysql
@@ -64,6 +64,7 @@ start the uWSGI server on boot.
 * rewrote core.py:get_products_to_process to use straight SQL (got queries down to only 1)
 * added load_config and dump_config to core.py, allowing configuration bootstrapping
 * conventionalized configuration keys minus a couple used by external scripts
+* auto_purge policy execution is now part of app instead of external shell script
 
 ###### Version 2.8.10 (August 2015)
 * updated project to rely on virtualenv for dependencies
