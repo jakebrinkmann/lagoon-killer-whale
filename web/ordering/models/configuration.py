@@ -32,6 +32,11 @@ class Configuration(models.Model):
             
         return str(value) if (value is not None and len(value) > 0) else str()
 
+    @staticmethod
+    def clear_cache(self):
+        for config in Configuration.objects.all():
+            cache.delete(config.key)
+
     def save(self, *args, **kwargs):
         ''' Override save.  Clear cached value if exists '''
         cache.delete(self.key)
