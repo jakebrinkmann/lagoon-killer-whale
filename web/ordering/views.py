@@ -61,11 +61,13 @@ class AbstractView(View):
 
     def _get_request_context(self,
                              request,
-                             params=dict(),
+                             params=None,
                              include_system_message=True):
 
         #context = RequestContext(request, params)
-        
+        if params is None:
+            params = {}
+
         if include_system_message == True:
             return self._display_system_message(params)
         else:
@@ -116,7 +118,6 @@ class TestAjax(AbstractView):
 
 
 class Index(AbstractView):
-    template = 'ordering/index.html'
 
     def get(self, request):
         '''Request handler for / and /index
@@ -127,8 +128,9 @@ class Index(AbstractView):
         Return:
         HttpResponse
         '''
+        logger.info('{0} hit the index page'.format(request.user))
         c = self._get_request_context(request)
-        t = loader.get_template(self.template)
+        t = loader.get_template('ordering/index.html')
         return HttpResponse(t.render(c, request))
 
 
@@ -223,8 +225,11 @@ class NewOrder(AbstractView):
         #c['optionstyle'] = self._get_option_style(request)
 
         t = loader.get_template(self.template)
-
-        return HttpResponse(t.render(c, request))
+        html = t.render(c, request)
+        logger.info('Rendering html from request:{0}'.format(request))
+        logger.info('... with context:{0}'.format(c))
+        #logger.info('... rendered html:{0}'.format(html))
+        return HttpResponse(html)
 
     def post(self, request):
         '''Request handler for new order submission

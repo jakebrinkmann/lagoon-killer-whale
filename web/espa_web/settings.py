@@ -87,8 +87,10 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
 )
 
 #where do we find the initial set of urls?
@@ -104,7 +106,7 @@ DATABASES = {
         'PASSWORD': config.get('config', 'post-pass'),
         'HOST': config.get('config', 'post-host'),
         'PORT': config.get('config', 'post-port'),
-        'CONN_MAX_AGE': 600,
+        'CONN_MAX_AGE': 30,
     }
 }
 
@@ -153,10 +155,9 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.debug',
-                'django.template.context_processors.i18n',
-                'django.template.context_processors.media',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
@@ -166,50 +167,6 @@ TEMPLATES = [
     },
 ]
 
-#ESPA Service URLS
-'''SERVICE_LOCATOR = {
-    "sys": {
-        "orderservice": "http://eedev.cr.usgs.gov/OrderWrapperServicedevsys/resources",
-        "orderdelivery": "http://eedev.cr.usgs.gov/OrderDeliverydevsys/OrderDeliveryService?WSDL",
-        "orderupdate": "http://eedev.cr.usgs.gov/OrderStatusServicedevsys/OrderStatusService?wsdl",
-        "massloader": "http://eedev.cr.usgs.gov/MassLoaderdevsys/MassLoader?wsdl",
-        "registration": "http://eedev.cr.usgs.gov/RegistrationServicedevsys/RegistrationService?wsdl",
-        "register_user": "https://eedev.cr.usgs.gov/devsys/register/",
-        "earthexplorer": "https://eedev.cr.usgs.gov/devsys",
-        "forgot_login": "https://eedev.cr.usgs.gov/devsys/login/username"
-    },
-    "dev": {
-        "orderservice": "http://eedevmast.cr.usgs.gov/OrderWrapperServicedevmast/resources",
-        "orderdelivery": "http://eedevmast.cr.usgs.gov/OrderDeliverydevmast/OrderDeliveryService?WSDL",
-        "orderupdate": "http://eedevmast.cr.usgs.gov/OrderStatusServicedevmast/OrderStatusService?wsdl",
-        "massloader": "http://eedevmast.cr.usgs.gov/MassLoaderdevmast/MassLoader?wsdl",
-        "registration": "http://eedevmast.cr.usgs.gov/RegistrationServicedevmast/RegistrationService?wsdl",
-        "register_user": "https://eedevmast.cr.usgs.gov/register",
-        "earthexplorer": "https://eedevmast.cr.usgs.gov",
-        "forgot_login": "https://eedevmast.cr.usgs.gov/login/username"
-    },
-    "tst": {
-        "orderservice": "http://edclxs152.cr.usgs.gov/OrderWrapperService/resources",
-        "orderdelivery": "http://edclxs152.cr.usgs.gov/OrderDeliveryService/OrderDeliveryService?WSDL",
-        "orderupdate": "http://edclxs152.cr.usgs.gov/OrderStatusService/OrderStatusService?wsdl",
-        "massloader": "http://edclxs152.cr.usgs.gov/MassLoader/MassLoader?wsdl",
-        "registration": "http://edclxs152.cr.usgs.gov/RegistrationService/RegistrationService?wsdl",
-        "register_user": "https://earthexplorer.usgs.gov/register",
-        "earthexplorer": "https://earthexplorer.usgs.gov",
-        "forgot_login": "https://earthexplorer.usgs.gov/login/username"
-    },
-    "ops": {
-        "orderservice": "http://edclxs152.cr.usgs.gov/OrderWrapperService/resources",
-        "orderdelivery": "http://edclxs152.cr.usgs.gov/OrderDeliveryService/OrderDeliveryService?WSDL",
-        "orderupdate": "http://edclxs152.cr.usgs.gov/OrderStatusService/OrderStatusService?wsdl",
-        "massloader": "http://edclxs152.cr.usgs.gov/MassLoader/MassLoader?wsdl",
-        "registration": "http://edclxs152.cr.usgs.gov/RegistrationService/RegistrationService?wsdl",
-        "register_user": "https://earthexplorer.usgs.gov/register",
-        "earthexplorer": "https://earthexplorer.usgs.gov",
-        "forgot_login": "https://earthexplorer.usgs.gov/login/username"
-    }
-}
-'''
 # add the EE Authentication Backend in addition to the ModelBackend
 # authentication stops at the first success... so this order does matter
 #leave the standard ModelBackend in first so the builtin admin account
@@ -384,90 +341,3 @@ LOGGING = {
         },
     }
 }
-
-# List of hostnames to choose from for the access to the online cache
-# Runs over 10Gb line
-#ESPA_CACHE_HOST_LIST = ['edclxs67p', 'edclxs140p']
-
-#EXTERNAL_CACHE_HOST = 'edclpdsftp.cr.usgs.gov'
-
-# filename extension for landsat input products
-#LANDSAT_INPUT_FILENAME_EXTENSION = '.tar.gz'
-
-# Path to the MODIS Terra source data location
-#TERRA_BASE_SOURCE_PATH = '/MOLT'
-# Path to the MODIS Aqua source data location
-#AQUA_BASE_SOURCE_PATH = '/MOLA'
-
-# file extension for modis input products
-#MODIS_INPUT_FILENAME_EXTENSION = '.hdf'
-
-# host for modis input checks
-#MODIS_INPUT_CHECK_HOST = 'e4ftl01.cr.usgs.gov'
-
-# port for modis input checks
-#MODIS_INPUT_CHECK_PORT = 80
-
-# Path to the completed orders
-#ESPA_REMOTE_CACHE_DIRECTORY = '/data/science_lsrd/LSRD/orders'
-#ESPA_LOCAL_CACHE_DIRECTORY = 'LSRD/orders'
-
-#ESPA_EMAIL_ADDRESS = 'espa@usgs.gov'
-
-#ESPA_EMAIL_SERVER = 'gssdsflh01.cr.usgs.gov'
-
-'''Resolves system-wide identification of sensor name based on three letter
-   prefix
-
-
-SENSOR_INFO = {
-    'LO8': {'name': 'oli', 'lta_name': 'LANDSAT_8'},
-    'LC8': {'name': 'olitirs', 'lta_name': 'LANDSAT_8'},
-    'LE7': {'name': 'etm', 'lta_name': 'LANDSAT_ETM_PLUS'},
-    'LT4': {'name': 'tm', 'lta_name': 'LANDSAT_TM'},
-    'LT5': {'name': 'tm', 'lta_name': 'LANDSAT_TM'},
-    'MYD': {'name': 'aqua'},
-    'MOD': {'name': 'terra'}
-}
-'''
-
-'''Default pixel sizes based on the input products'''
-'''DEFAULT_PIXEL_SIZE = {
-    'meters': {
-        '09A1': 500,
-        '09GA': 500,
-        '09GQ': 250,
-        '09Q1': 250,
-        '13Q1': 250,
-        '13A3': 1000,
-        '13A2': 1000,
-        '13A1': 500,
-        'LC8': 30,
-        'LO8': 30,
-        'LE7': 30,
-        'LT4': 30,
-        'LT5': 30
-    },
-    'dd': {
-        '09A1': 0.00449155,
-        '09GA': 0.00449155,
-        '09GQ': 0.002245775,
-        '09Q1': 0.002245775,
-        '13Q1': 0.002245775,
-        '13A3': 0.0089831,
-        '13A2': 0.0089831,
-        '13A1': 0.00449155,
-        'LC8': 0.0002695,
-        'LO8': 0.0002695,
-        'LE7': 0.0002695,
-        'LT4': 0.0002695,
-        'LT5': 0.0002695
-        }
-}'''
-
-''' Constant dictionary to hold the cache keys used in Django
- caching/memcached'''
-#CACHE_KEYS = {
-#    'handle_orders_lock': {'key': 'handle_orders_lock',
-#                           'timeout': 60 * 21},
-#}
