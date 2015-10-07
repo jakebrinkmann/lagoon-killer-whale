@@ -150,9 +150,7 @@ class Validator(object):
             self.validation_errors = {key: errs}
         elif key in self.validation_errors:
             errs = self.validation_errors[key]
-            if errs is None:
-                errs = list()
-            errs = errs.append(errmsg)
+            errs.append(errmsg)
             # do this to prevent the list from continuing to grow
             self.validation_errors[key] = list(set(errs))
         else:
