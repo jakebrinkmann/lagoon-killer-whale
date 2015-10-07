@@ -144,13 +144,13 @@ class Validator(object):
             msg = 'errmsg must be str or unicode, found:{0}'.format(t)
             raise TypeError(msg)
             
-        if not self.validation_errors:
+        if self.validation_errors is None:
             errs = list()
             errs.append(errmsg)
             self.validation_errors = {key: errs}
         elif key in self.validation_errors:
             errs = self.validation_errors[key]
-            errs = errs.append(errmsg)
+            errs.append(errmsg)
             # do this to prevent the list from continuing to grow
             self.validation_errors[key] = list(set(errs))
         else:
