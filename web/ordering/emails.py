@@ -202,11 +202,11 @@ class Emails(object):
 
         body = '''===================================
         Disk usage before purge
-        Capacity:{start_capacity} Used:{start_used} Available:{start_available} Percent Free:{start_percent_free} 
+        Capacity:{start_capacity} Used:{start_used} Available:{start_available} Percent Used:{start_percent_free} 
 
         ===================================
         Disk usage after purge
-        Capacity:{end_capacity} Used:{end_used} Available:{end_available} Percent Free:{end_percent_free}
+        Capacity:{end_capacity} Used:{end_used} Available:{end_available} Percent Used:{end_percent_free}
 
         ===================================
         Past 24 Hours
@@ -227,7 +227,7 @@ class Emails(object):
 
         ===================================
         Purged orders
-        {purged_orders}
+          {purged_orders}
         ========== End of report ==========
         '''.format(start_capacity=start_capacity['capacity'],
                    start_used=start_capacity['used'],
