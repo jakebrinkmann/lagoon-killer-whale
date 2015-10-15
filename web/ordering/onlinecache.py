@@ -48,7 +48,7 @@ class OnlineCache(object):
         logger.debug('Deleting {0} from online cache'.format(path))
 
         try:
-            result = self.client.execute('rm -r {0}'.format(path))
+            result = self.client.execute('rm -rf {0}'.format(path))
         except Exception, exception:
             raise OnlineCacheException(exception)
 
