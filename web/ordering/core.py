@@ -499,11 +499,17 @@ def get_products_to_process(record_limit=500,
 
                         logger.info('{0} for order {1} was oncache '
                                     'but now unavailable, reordering'
-                                    .format(scene.name,
-                                            scene.order.orderid))
+                                    #format(scene.name, scene.order.orderid))
+                                    .format(item['name'], item['orderid']))
 
-                        set_product_retry(scene.name,
-                                          scene.order.orderid,
+                        #set_product_retry(scene.name,
+                        #                  scene.order.orderid,
+                        #                  'get_products_to_process',
+                        #                  'product was not available',
+                        #                  'reorder missing level1 product',
+                        #                  after, limit)
+                        set_product_retry(item['name'],
+                                          item['orderid'],
                                           'get_products_to_process',
                                           'product was not available',
                                           'reorder missing level1 product',
@@ -512,10 +518,11 @@ def get_products_to_process(record_limit=500,
    
                         logger.info('Retry limit exceeded for {0} in '
                                     'order {1}... moving to error status.'
-                                    .format(scene.name,
-                                            scene.order.orderid))
+                                    #.format(scene.name, scene.order.orderid))
+                                    .format(item['name'], item['orderid']))
 
-                        set_product_error(scene.name, scene.order.orderid,
+                        #set_product_error(scene.name, scene.order.orderid,
+                        set_product_error(item['name'], item['orderid'],
                                           'get_products_to_process',
                                           ('level1 product data '
                                            'not available after EE call '

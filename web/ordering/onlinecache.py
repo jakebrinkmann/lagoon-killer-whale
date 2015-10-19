@@ -45,7 +45,7 @@ class OnlineCache(object):
 
         path = '/'.join([self.orderpath, orderid])
         # this should be the dir where the order is held
-        logger.debug('Deleting {0} from online cache'.format(path))
+        logger.info('Deleting {0} from online cache'.format(path))
 
         try:
             result = self.client.execute('rm -rf {0}'.format(path))
