@@ -1,0 +1,1 @@
+ select distinct u.username "User Name", u.email "Email", count(s.name) "Scenes Ordered" from auth_user u, ordering_order o, ordering_scene s where u.id = o.user_id and o.id = s.order_id and  o.order_date >= '2015-10-19' group by u.username, u.email order by "Scenes Ordered" DESC ;
