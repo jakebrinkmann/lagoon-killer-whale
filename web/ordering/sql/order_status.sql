@@ -1,1 +1,1 @@
-select status, count(status) from ordering_scene group by status;
+select status, count(status) from ordering_order group by status;
