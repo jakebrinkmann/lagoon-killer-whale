@@ -56,7 +56,10 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
-###### Verserion 2.8.13 (October 2015)
+###### Version 2.8.14 (November 2015)
+* restricted L8 surface reflectance based products from November 1st, 2015 onward (day 305)
+
+###### Version 2.8.13 (October 2015)
 * updated lsrd image list for index page
 
 ###### Version 2.8.12 (October 2015)
