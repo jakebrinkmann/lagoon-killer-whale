@@ -166,12 +166,13 @@ class LandsatProductListValidator(Validator):
                                   'include_sr_nbr', 'include_sr_nbr2']
 
                     for param in self.parameters.keys():
-                        if (param in restricted and self.parameters[param].lower() == 'true':
-                        for product in set(valid):
-                            if isinstance(product, sensor.LandsatOLITIRS):
-                                if (int(p.year) >= 2015 and int(p.doy) >= 305):
-                                    msg = ("Landsat 8 surface reflectance based products are not available "
-                                           "from November 1st, 2015 onward due to TIRS anomolies")
+                        if param in restricted and self.parameters[param].lower() == 'true':
+                            for product in set(valid):
+                                if isinstance(product, sensor.LandsatOLITIRS):
+                                    if (int(p.year) >= 2015 and int(p.doy) >= 305):
+                                        msg = ("Landsat 8 surface reflectance based products are not available "
+                                               "from November 1st, 2015 onward due to TIRS anomolies")
+                                        self.add_error('input_products', msg)
 
         return super(LandsatProductListValidator, self).errors()
 
