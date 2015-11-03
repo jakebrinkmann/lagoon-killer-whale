@@ -13,6 +13,46 @@ from ordering.models.order import Order
 
 logger = logging.getLogger(__name__)
 
+class ValidatorUtils(object):
+    def get_verified_landsat_input_product_set(self, products):
+        '''Returns a subset ( set() )  of products that are orderable
+        from Landsat
+
+        Keyword args:
+        products A list() of sensor.Landsat objects
+
+        Returns:
+        A set() of valid sensor.Landsat objects
+
+        Note:
+        This method duplicates type checks for sensor.Landsat from the
+        errors() method so it's usable by a caller outside the validators
+        module.
+        '''
+
+        valid_products = list()
+
+        if len(products) > 0:
+
+            request = list()
+
+            for p in products:
+
+                if isinstance(p, str):
+                    p = sensor.instance(p)
+
+                if isinstance(p, sensor.Landsat):
+                    request.append(p.product_id)
+
+            #these calls need to be cached
+            verified = lta.verify_scenes(request)
+
+            for product_name, valid in verified.iteritems():
+                if valid:
+                    valid_products.append(product_name)
+
+        return set(valid_products)
+
 
 class ModisProductListValidator(Validator):
     '''Validates that a scene list has been provided and it contains at
@@ -79,42 +119,9 @@ class LandsatProductListValidator(Validator):
     least one scene to process'''
 
     def get_verified_input_product_set(self, products):
-        '''Returns a subset ( set() )  of products that are orderable
-        from Landsat
-
-        Keyword args:
-        products A list() of sensor.Landsat objects
-
-        Returns:
-        A set() of valid sensor.Landsat objects
-
-        Note:
-        This method duplicates type checks for sensor.Landsat from the
-        errors() method so it's usable by a caller outside the validators
-        module.
-        '''
-
-        valid_products = list()
-
-        if len(products) > 0:
-
-            request = list()
-
-            for p in products:
-
-                if isinstance(p, str):
-                    p = sensor.instance(p)
-
-                if isinstance(p, sensor.Landsat):
-                    request.append(p.product_id)
-
-            verified = lta.verify_scenes(request)
-
-            for product_name, valid in verified.iteritems():
-                if valid:
-                    valid_products.append(product_name)
-
-        return set(valid_products)
+        ''' proxy method to validatorutils.  remove this once all calls are 
+            migrated '''
+        return ValidatorUtils().get_verified_landsat_input_product_set(products)
 
     def errors(self):
         '''Looks through the input_product_list if present and determines
@@ -140,11 +147,8 @@ class LandsatProductListValidator(Validator):
                     msg_parts.append(" in the Landsat inventory:\n")
 
                     for lp in landsat_products:
-
                         msg_parts.append("\t%s\n" % lp.product_id)
-
                     msg = ''.join(msg_parts)
-
                     self.add_error('input_products', msg)
                 else:
                     product_list = [s.product_id for s in landsat_products]
@@ -155,6 +159,19 @@ class LandsatProductListValidator(Validator):
                         for diff in difference:
                             msg = ("%s not found in Landsat inventory" % diff)
                             self.add_error('input_products', msg)
+
+                    # keep people from ordering SR products with an anomolous TIRS sensor
+                    restricted = ['include_sr', 'include_sr_ndvi', 'include_sr_evi',
+                                  'include_sr_savi', 'include_sr_msavi', 'include_sr_ndmi',
+                                  'include_sr_nbr', 'include_sr_nbr2']
+
+                    for param in self.parameters.keys():
+                        if (param in restricted and self.parameters[param].lower() == 'true':
+                        for product in set(valid):
+                            if isinstance(product, sensor.LandsatOLITIRS):
+                                if (int(p.year) >= 2015 and int(p.doy) >= 305):
+                                    msg = ("Landsat 8 surface reflectance based products are not available "
+                                           "from November 1st, 2015 onward due to TIRS anomolies")
 
         return super(LandsatProductListValidator, self).errors()
 
