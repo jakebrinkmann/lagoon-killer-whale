@@ -166,10 +166,25 @@ class LandsatProductListValidator(Validator):
                                   'include_sr_nbr', 'include_sr_nbr2']
 
                     for param in self.parameters.keys():
-                        if param in restricted and self.parameters[param].lower() == 'true':
+                        logger.info("Looking for paramter {0}".format(param))
+                        logger.info("{0} value is {1}".format(param, self.parameters[param]))
+                        logger.info("{0} in restricted: {1}".format(param, param in restricted))
+                        if (param in restricted and 
+                            self.parameters[param].lower() in ['true', 'on']):
+                            logger.info("Looking through submitted products")
                             for product in set(valid):
+
+                                logger.info("{0} is landsatolitirs:{1}".format(product, isinstance(product, sensor.LandsatOLITIRS)))
+
+                                if isinstance(product, str):
+                                    try:
+                                        product = sensor.instance(product)
+                                    except sensor.ProductNotImplemented:
+                                        pass
+
                                 if isinstance(product, sensor.LandsatOLITIRS):
-                                    if (int(p.year) >= 2015 and int(p.doy) >= 305):
+                                    logger.info("{0} year is {1}, day is {2}".format(product, product.year, product.doy))
+                                    if (int(product.year) >= 2015 and int(product.doy) >= 305):
                                         msg = ("Landsat 8 surface reflectance based products are not available "
                                                "from November 1st, 2015 onward due to TIRS anomolies")
                                         self.add_error('input_products', msg)

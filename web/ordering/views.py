@@ -16,6 +16,7 @@ from django.http import HttpResponseRedirect
 from django.http import Http404
 from django.template import loader
 from django.template import RequestContext
+from django.template.context_processors import csrf
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.views.generic import View
 import django.contrib.auth
@@ -67,6 +68,9 @@ class AbstractView(View):
         #context = RequestContext(request, params)
         if params is None:
             params = {}
+
+        #make sure theres always a csrf token
+        params.update(csrf(request))
 
         if include_system_message == True:
             return self._display_system_message(params)
