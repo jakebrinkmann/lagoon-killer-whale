@@ -3,7 +3,6 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic import View
-from django.views.generic.edit import FormView
 from django.http import Http404
 from django.http import HttpResponse
 from django.template import loader
@@ -14,14 +13,12 @@ class Report(View):
     report_template = 'reports/report.html'
     listing_template = 'reports/list.html'
     
-    def get(self, request, *args, **kwargs):
+    def get(self, request, name=None):
         user = User.objects.get(username=request.user.username)
         if not user.is_staff:
             return HttpResponseRedirect(reverse('login'))
 
         reporter = reports.Report()
-
-        name = kwargs.setdefault('name', None)
 
         if name is None:
             results = reporter.listing()
