@@ -1,0 +1,20 @@
+{% extends 'ordering/base.html' %}
+
+{% block title %} ESPA Reports {% endblock %}
+{% block header %} All Reports {% endblock %}
+
+{% block nav %}{% include 'ordering/bulk_ordering_nav.html' %}{% endblock %}
+
+{% block content %}
+
+<div class="wrapper">
+    <h4>ESPA Reports</h4>
+    {% for report in reports %}
+        <p>{{ report }}</p>
+    {% endfor %}
+
+
+</div>
+
+{% endblock %}
+
