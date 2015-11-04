@@ -340,6 +340,12 @@
 		    <input class="product custom_product" type="checkbox" id="include_sr_thermal" name="include_sr_thermal"></input>
 		    <label class="tooltip" title="Surface Reflectance Brightness Temperature" for="sr_thermal">Brightness Temperature</label>
 		</div>
+                {% if user.is_staff %}
+                    <div class="inputitem">
+                        <input class="product custom_product" type="checkout" id="include_lst" name="include_lst"></input>
+                        <label class="tooltip" title="Land Surface Temperature" for="include_lst">Land Surface Temperature</label>
+                    </div>
+                {% endif %}
 	    </div>
 	</div>
     

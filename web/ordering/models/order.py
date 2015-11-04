@@ -137,6 +137,7 @@ class Order(models.Model):
         o['include_sr_savi'] = False          # soil adjusted vegetation
         o['include_sr_msavi'] = False         # modified soil adjusted veg
         o['include_sr_evi'] = False           # enhanced vegetation
+        o['include_lst'] = False              # land surface temperature
         o['include_solr_index'] = False       # solr search index record
         o['include_cfmask'] = False           # (deprecated)
         o['include_statistics'] = False       # should we do stats & plots?
