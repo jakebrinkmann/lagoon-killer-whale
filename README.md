@@ -58,6 +58,7 @@ start the uWSGI server on boot.
 ## Change Notes
 ###### Version 2.9.0 (November 2015)
 * added envi-bip (band interleaved by pixel) as an output format
+* added land surface temperature to the staff role
 
 ###### Version 2.8.14 (November 2015)
 * restricted L8 surface reflectance based products from November 1st, 2015 onward (day 305)
