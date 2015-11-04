@@ -8,5 +8,6 @@ urlpatterns = patterns('',
         login_required(Report.as_view()), name='show_report'),
     url(r'^$',
         login_required(Report.as_view()), name='listreports')
+    url(r'^/$',
+        login_required(Report.as_view()), name='listreports')
     )
-

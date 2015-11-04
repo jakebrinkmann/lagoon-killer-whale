@@ -16,7 +16,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
                        url(r'^reports/',
-                           include('ordering.urls')),
+                           include('reports.urls')),
 
                        url(r'^ordering/',
                            include('ordering.urls')),
