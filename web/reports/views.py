@@ -27,8 +27,8 @@ class Report(View):
         else:
             # display the requested report or 404
             try:
-                results = reporter.run()
-                t = loader.get_template(self.template)
+                results = reporter.run(name)
+                t = loader.get_template(self.report_template)
                 html = t.render({'report': results}, request)
             except NotImplementedError:
                 raise Http404("Report {0} not found".format(name))
