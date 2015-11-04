@@ -215,7 +215,7 @@ class OutputFormatValidator(Validator):
 
     def errors(self):
               
-        valid_formats = ['gtiff', 'envi', 'hdf-eos2']
+        valid_formats = ['gtiff', 'envi', 'envi-bip', 'hdf-eos2']
 
         if 'output_format' not in self.parameters.keys():
             self.add_error('output_format',
