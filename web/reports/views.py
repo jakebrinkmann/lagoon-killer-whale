@@ -18,16 +18,18 @@ class Report(View):
         if not user.is_staff:
             return HttpResponseRedirect(reverse('login'))
 
+        reporter = reports.Report()
+
         name = kwargs.setdefault('name', None)
 
         if name is None:
-            results = reports.listing()
+            results = reporter.listing()
             t = loader.get_template(self.listing_template)
             html = t.render({'reports': results})
         else:
             # display the requested report or 404
             try:
-                results = reports.run()
+                results = reporter.run()
                 t = loader.get_template(self.template)
                 html = t.render({'report': results}, request)
             except NotImplementedError:
