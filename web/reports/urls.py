@@ -7,7 +7,7 @@ urlpatterns = patterns('',
     url(r'^generate/?P<name>/$',
         login_required(Report.as_view()), name='show_report'),
     url(r'^$',
-        login_required(Report.as_view()), name='listreports')
+        login_required(Report.as_view()), name='listreports'),
     url(r'^/$',
         login_required(Report.as_view()), name='listreports')
     )
