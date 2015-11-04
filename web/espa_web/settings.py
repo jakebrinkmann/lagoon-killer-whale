@@ -80,6 +80,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'ordering',
     'console',
+    'reports',
 )
 
 MIDDLEWARE_CLASSES = (
