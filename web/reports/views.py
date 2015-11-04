@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.views.generic import View
 from django.views.generic.edit import FormView
 from django.http import Http404
+from django.http import HttpResponse
 from django.template import loader
 
 import reports
