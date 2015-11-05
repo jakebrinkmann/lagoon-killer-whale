@@ -5,18 +5,22 @@ reports = {
     'scene_report': {
         'display_name': 'Current Scene Report',
         'description': 'Shows the total scenes currently in the system by user',
-        'query': r'''SELECT COUNT(s.name) "Total Scenes",
+        'query': r'''SELECT COUNT(s.name) "Total Active Scenes",
                    SUM(case when s.status in ('complete', 'unavailable') then 1 else 0 end) "Complete",
-                   SUM(case when s.status not in ('complete', 'unavailable') then 1 else 0 end) "Processing",
-                   u.email, u.first_name, u.last_name
+                   SUM(case when s.status not in ('processing', 'complete', 'unavailable') then 1 else 0 end) "Open",
+                   SUM(case when s.status = 'processing' then 1 else 0 end) "Processing",
+                   u.email "Email",
+                   u.first_name "First Name",
+                   u.last_name "Last Name",
+                   SUM(case when s.status = 'error' then 1 else 0 end) "Error",
+                   SUM(case when s.status = 'onorder' then 1 else 0 end) "On Order"
                    FROM ordering_scene s, ordering_order o, auth_user u
                    WHERE s.order_id = o.id 
                    AND o.user_id = u.id 
                    AND s.status != 'purged' 
                    GROUP BY u.email, u.first_name, u.last_name 
-                   ORDER BY "Total Scenes" DESC'''
+                   ORDER BY "Total Active Scenes" DESC'''
     },
-
     'order_report': {
         'display_name': 'Current Order Report',
         'description': 'Shows the total number of orders in the system grouped by user',
@@ -30,7 +34,13 @@ reports = {
               GROUP BY u.email, u.first_name, u.last_name
               ORDER BY "Total Orders" DESC'''
     },
-
+    'duplicate_scene_percentage": {
+        'display_name': 'Duplicate Scenes (Percentage)',
+        'description': 'Displays the percentage of scenes that have been requested more than once',
+        'query': r'''SELECT
+                     (1 - (count(distinct name)::float / count(name)::float)) * 100 "Cache Hit Ratio"
+                     FROM ordering_scene'''
+    }
 }
 
 
