@@ -64,7 +64,7 @@ reports = {
         '''select o.order_date "date ordered", o.orderid, o.priority, count(s.name) "scene count", SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "complete", SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "processing", u.username from ordering_scene s, ordering_order o, auth_user u where o.id = s.order_id and u.id = o.user_id and o.status = 'ordered' group by o.orderid, u.username, o.order_date, o.priority order by processing ASC, o.order_date ASC;''',
         
     },
-    'scenes_next_up': {
+    'scenes_selection': {
         'display_name': 'Scenes Selection Strategy',
         'description': 'Shows the order scenes are going to be submitted to the cluster',
         'query': r'''WITH order_queue AS
