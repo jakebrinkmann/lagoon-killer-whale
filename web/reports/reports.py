@@ -54,8 +54,8 @@ reports = {
     'orders_queued': {
         'display_name': 'Orders Currently Queued',
         'description': 'Shows order that have scenes in queued status',
-        'query': r'''SELECT o.order_date "Date Ordered",
-                     o.orderid "Order ID",
+        'query': r'''SELECT o.order_date "Date Ordered", 
+                     o.orderid "Order ID", 
                      count(s.name) "Scene Count" 
                      FROM ordering_order o, ordering_scene s 
                      WHERE o.id = s.order_id  
