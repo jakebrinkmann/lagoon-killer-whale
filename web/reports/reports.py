@@ -66,13 +66,14 @@ reports = {
     'order_position_in_line': {
         'display_name': 'Order Queue Position',
         'description': 'Shows orders and scenes with status and priority position',
-        'query': r'''SELECT o.order_date "date ordered",
-                     o.orderid "order id",
-                     o.priority "order priority",
-                     COUNT(s.name) "scene count",
-                     SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "complete",
-                     SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "processing",
-                     u.username "user name"
+        'query': r'''SELECT o.order_date "Date Ordered",
+                     o.orderid "Order ID",
+                     o.priority "Order Priority",
+                     COUNT(s.name) "Scene Count",
+                     SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "Complete",
+                     SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "Processing",
+                     SUM(CASE when s.status = 'error' then 1 ELSE 0 END) "Error",
+                     u.username "User Name"
                      FROM ordering_scene s, ordering_order o, auth_user u
                      WHERE o.id = s.order_id
                      AND u.id = o.user_id
