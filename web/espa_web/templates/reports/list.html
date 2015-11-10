@@ -9,9 +9,15 @@
 
 <div class="wrapper">
     <h4>ESPA Reports</h4>
-    {% for report in reports %}
-        <p>{{ report }}</p>
+    <table>
+    <tr><th>Report</th><th>Description</th></tr>
+    {% for k, v in reports.items %}
+       <tr>
+       <td><a href="{% url 'show_report' k %}">{{ v.display_name }}</a></td>
+       <td>{{ v.description }}</td>
+       </tr>
     {% endfor %}
+    </table>
 
 
 </div>
