@@ -41,7 +41,7 @@ reports = {
                      (1 - (count(distinct name)::float / count(name)::float) * 100) "Duplicate Scenes"
                      FROM ordering_scene'''
     },
-    'orders_running': {
+    'orders_processing': {
         'display_name': 'Orders Currently Processing',
         'description': 'Shows orders that have scenes which are currently processing', 
         'query': r'''SELECT o.order_date "Date Ordered", o.orderid "Order ID", count(s.name) "Scene Count" 
@@ -63,8 +63,29 @@ reports = {
                      GROUP BY o.orderid, o.order_date 
                      ORDER BY o.order_date, "Scene Count" DESC'''
     },
-    'scene_scheduling': {
-     'display_name': 'Scenes Selection Strategy',
+    'order_position_in_line': {
+        'display_name': 'Order Queue Position',
+        'description': 'Shows orders and scenes with status and priority position',
+        'query': r'''SELECT o.order_date "date ordered",
+                     o.orderid "order id",
+                     o.priority "order priority",
+                     COUNT(s.name) "scene count",
+                     SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "complete",
+                     SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "processing",
+                     u.username "user name"
+                     FROM ordering_scene s, ordering_order o, auth_user u
+                     WHERE o.id = s.order_id
+                     AND u.id = o.user_id
+                     AND o.status = 'ordered'
+                     GROUP BY
+                     o.orderid,
+                     u.username,
+                     o.order_date,
+                     o.priority
+                     ORDER BY o.order_date ASC''',
+    },
+    'scenes_selection': {
+        'display_name': 'Scenes Selection Strategy',
         'description': 'Shows the order scenes are going to be submitted to the cluster',
         'query': r'''WITH order_queue AS
                         (SELECT u.email "email", count(name) "running"
@@ -88,27 +109,8 @@ reports = {
                      AND q.email = u.email
                      ORDER BY q.running ASC, o.order_date ASC'''
      },
-     'order_queue_position': {
-     'display_name': 'Order Queue Position',
-        'description': 'Shows orders and scenes with status and priority position',
-        'query': r'''SELECT o.order_date "Date Ordered",
-                     o.orderid "Order ID",
-                     o.priority "Order Priority",
-                     COUNT(s.name) "Scene Count",
-                     SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "Complete",
-                     SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "Processing",
-                     u.username "User Name"
-                     FROM ordering_scene s, ordering_order o, auth_user u
-                     WHERE o.id = s.order_id
-                     AND u.id = o.user_id
-                     AND o.status = 'ordered'
-                     GROUP BY
-                     o.orderid,
-                     u.username,
-                     o.order_date,
-                     o.priority
-                     ORDER BY o.order_date ASC'''}
 }
+
 
 
 class Report(object):
