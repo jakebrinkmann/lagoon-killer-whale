@@ -408,6 +408,46 @@ def get_products_to_process(record_limit=500,
     logger.debug('Product types:{0}'.format(product_types))
     logger.debug('Encode urls:{0}'.format(encode_urls))
 
+    buff = StringIO()
+    buff.write('WITH order_queue AS ')
+    buff.write('(SELECT u.email "email", count(name) "running" ')
+    buff.write('FROM ordering_scene s ')
+    buff.write('JOIN ordering_order o ON o.id = s.order_id ')
+    buff.write('JOIN auth_user u ON u.id = o.user_id ')
+    buff.write('WHERE ')
+    buff.write('s.status in (\'queued\', \'processing\') ')
+    buff.write('GROUP BY u.email) ')
+    buff.write('SELECT ')
+    buff.write('p.contactid, ')
+    buff.write('s.name, ')
+    buff.write('s.sensor_type, ')
+    buff.write('o.orderid, ')
+    buff.write('o.product_options, ')
+    buff.write('o.priority, ')
+    buff.write('o.order_date, ')
+    buff.write('q.running ')
+    buff.write('FROM ordering_scene s ')
+    buff.write('JOIN ordering_order o ON o.id = s.order_id ')
+    buff.write('JOIN auth_user u ON u.id = o.user_id ')
+    buff.write('JOIN ordering_userprofile p ON u.id = p.user_id ')
+    buff.write('LEFT JOIN order_queue q ON q.email = u.email ')
+    buff.write('WHERE ')
+    buff.write('o.status = \'ordered\' ')
+    buff.write('AND s.status = \'oncache\' ')
+
+    if product_types is not None and len(product_types) > 0:
+        type_str = ','.join('\'{0}\''.format(x) for x in product_types)
+        buff.write('AND s.sensor_type IN ({0}) '.format(type_str))
+
+    if for_user is not None:
+        buff.write('AND u.username = \'{0}\' '.format(for_user))
+
+    if priority is not None:
+        buff.write('AND o.priority = \'{0}\' '.format(priority))
+
+    buff.write('ORDER BY q.running ASC, o.order_date ASC LIMIT {0}'.format(record_limit))
+
+    '''
     buffer = StringIO()
     buffer.write('SELECT ')
     buffer.write('p.contactid, s.name, s.sensor_type, ')
@@ -439,8 +479,10 @@ def get_products_to_process(record_limit=500,
 
     query = buffer.getvalue()
     buffer.close()
-
-    logger.debug("QUERY:{0}".format(query))
+    '''
+    query = buff.getvalue()
+    buff.close()
+    logger.info("QUERY:{0}".format(query))
 
     query_results = None
     cursor = connection.cursor()
