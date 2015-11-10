@@ -124,31 +124,6 @@ USE_TZ = False
 STATIC_ROOT = os.path.join(BASE_DIR, 'espa_web', 'static/')
 STATIC_URL = '/static/'
 
-# Templates
-#EMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates"
-    #or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-#   os.path.join(BASE_DIR, "espa_web/templates"),
-#
-
-#EMPLATE_CONTEXT_PROCESSORS = (
-#   'django.core.context_processors.debug',
-#   'django.core.context_processors.i18n',
-#   'django.core.context_processors.media',
-#   'django.core.context_processors.static',
-#   'django.contrib.auth.context_processors.auth',
-#   'django.contrib.messages.context_processors.messages',
-#   'espa_web.context_processors.include_external_urls',
-#
-
-# List of callables that know how to import templates from various sources.
-#TEMPLATE_LOADERS = (
-#   'django.template.loaders.filesystem.Loader',
-#   'django.template.loaders.app_directories.Loader',
-#
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -163,6 +138,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 'espa_web.context_processors.include_external_urls',
+                'espa_web.context_processors.scene_stats',
             ],
         },
     },

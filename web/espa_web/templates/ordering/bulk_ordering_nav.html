@@ -9,7 +9,6 @@
     <span class="navitemleft"><a href="http://landsat.usgs.gov/CDR_ECV.php">Product Information</a></span>
     <span class="navitemleft">|</span>
     <span class="navitemleft"><a href="http://landsat.usgs.gov/documents/espa_odi_userguide.pdf">User Guide</a></span>
-
     <span class="navitemright"><a href="{% url 'logout' %}">Logout</a></span>
     {% if user.is_staff %}
         <span class="navitemright">|</span>
@@ -17,7 +16,12 @@
     {% endif %}    
     <span class="navitemright">|</span>
     <span class="navitemright">{{ user.username}} ({{ user.email }})</span>
-    
+    <span class="navitemright">|</span>
+    <span class="navitemright">Scenes Completed Last Day: {{ stats_completed_last_day }}</span>
+    <span class="navitemright">|</span>
+    <span class="navitemright">Scene Backlog: {{ stats_current_backlog }}</span>
+
+ 
  </div> 
 
  
