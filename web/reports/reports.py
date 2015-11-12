@@ -2,6 +2,33 @@ from django.db import connection
 from ordering.utilities import dictfetchall
 
 reports = {
+    'users_by_capacity_share': {
+        'display_name': 'Users by Capacity Share',
+        'description': 'Shows users by number of open and running products',
+        'query': r'''SELECT u.username "Username",
+                     SUM(CASE WHEN s.status = 'processing'
+                         THEN 1 ELSE 0 END) "Processing",
+                     SUM(CASE WHEN s.status = 'queued'
+                         THEN 1 ELSE 0 END) "Queued",
+                     SUM(CASE WHEN s.status IN
+                         ('queued', 'processing')
+                         THEN 1 ELSE 0 END) "Total Running",
+                     SUM(CASE WHEN s.status IN
+                         ('queued', 'processing', 'onorder',
+                          'submitted', 'error', 'retry', 'oncache')
+                         THEN 1 ELSE 0 END) "Open Products",
+                     u.email "Email",
+                     u.first_name "First Name",
+                     u.last_name "Last Name"
+                     FROM ordering_scene s
+                     JOIN ordering_order o on o.id = s.order_id
+                     JOIN auth_user u on u.id = o.user_id
+                     WHERE s.status not in ('complete',
+                                            'unavailable',
+                                            'purged')
+                     GROUP BY u.username, u.email, u.first_name, u.last_name
+                     ORDER BY "Total Running" DESC'''
+    },
     'current_scenes': {
         'display_name': 'Current Scenes',
         'description': 'Shows the total scenes currently in the system by user',
@@ -15,10 +42,10 @@ reports = {
                    SUM(case when s.status = 'error' then 1 else 0 end) "Error",
                    SUM(case when s.status = 'onorder' then 1 else 0 end) "On Order"
                    FROM ordering_scene s, ordering_order o, auth_user u
-                   WHERE s.order_id = o.id 
-                   AND o.user_id = u.id 
-                   AND s.status != 'purged' 
-                   GROUP BY u.email, u.first_name, u.last_name 
+                   WHERE s.order_id = o.id
+                   AND o.user_id = u.id
+                   AND s.status != 'purged'
+                   GROUP BY u.email, u.first_name, u.last_name
                    ORDER BY "Total Active Scenes" DESC'''
     },
     'current_orders': {
@@ -29,7 +56,7 @@ reports = {
               SUM(case when o.status = 'ordered' then 1 else 0 end) "Open",
               u.email "Email", u.first_name "First Name", u.last_name "Last Name"
               FROM ordering_order o, auth_user u
-              WHERE o.user_id = u.id 
+              WHERE o.user_id = u.id
               AND o.status != 'purged'
               GROUP BY u.email, u.first_name, u.last_name
               ORDER BY "Total Orders" DESC'''
@@ -41,39 +68,42 @@ reports = {
                      (1 - (count(distinct name)::float / count(name)::float) * 100) "Duplicate Scenes"
                      FROM ordering_scene'''
     },
-    'orders_processing': {
-        'display_name': 'Orders Currently Processing',
-        'description': 'Shows orders that have scenes which are currently processing', 
-        'query': r'''SELECT o.order_date "Date Ordered", o.orderid "Order ID", count(s.name) "Scene Count" 
-                     FROM ordering_order o, ordering_scene s 
-                     WHERE o.id = s.order_id 
-                     AND s.status = 'processing' 
-                     GROUP BY o.orderid, o.order_date 
-                     ORDER BY o.order_date, "Scene Count" DESC'''
-    },
-    'orders_queued': {
-        'display_name': 'Orders Currently Queued',
-        'description': 'Shows order that have scenes in queued status',
-        'query': r'''SELECT o.order_date "Date Ordered", 
-                     o.orderid "Order ID", 
-                     count(s.name) "Scene Count" 
-                     FROM ordering_order o, ordering_scene s 
-                     WHERE o.id = s.order_id  
-                     AND s.status = 'queued' 
-                     GROUP BY o.orderid, o.order_date 
-                     ORDER BY o.order_date, "Scene Count" DESC'''
-    },
-    'order_position_in_line': {
-        'display_name': 'Order Queue Position',
-        'description': 'Shows orders and scenes with status and priority position',
+    'orders_by_product_status': {
+        'display_name': 'Orders By Product Status',
+        'description': 'Shows orders by product status',
         'query': r'''SELECT o.order_date "Date Ordered",
                      o.orderid "Order ID",
-                     o.priority "Order Priority",
+                     COUNT(s.name) "Scene Count",
+                     s.status "Status"
+                     FROM ordering_order o
+                     JOIN ordering_scene s ON o.id = s.order_id
+                     WHERE s.status IN ('processing', 'queued',
+                                        'oncache', 'onorder', 'error')
+                     GROUP BY o.orderid,
+                              o.order_date,
+                              s.status
+                     ORDER BY
+                         CASE s.status WHEN 'processing' then 1
+                                       WHEN 'queued' THEN 2
+                                       WHEN 'oncache' THEN 3
+                                       WHEN 'onorder' THEN 4
+                                       WHEN 'error' THEN 5
+                                       WHEN 'retry' THEN 6
+                                       WHEN 'submitted' THEN 7
+                                       ELSE 8 END,
+                         o.order_date ASC'''
+    },
+
+    'order_position_in_line': {
+        'display_name': 'Order Queue Position',
+        'description': 'Shows orders and scenes with status',
+        'query': r'''SELECT o.order_date "date ordered",
+                     o.orderid "Order ID",
                      COUNT(s.name) "Scene Count",
                      SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "Complete",
                      SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "Processing",
                      SUM(CASE when s.status = 'error' then 1 ELSE 0 END) "Error",
-                     u.username "User Name"
+                     u.username "user name"
                      FROM ordering_scene s, ordering_order o, auth_user u
                      WHERE o.id = s.order_id
                      AND u.id = o.user_id
@@ -81,8 +111,7 @@ reports = {
                      GROUP BY
                      o.orderid,
                      u.username,
-                     o.order_date,
-                     o.priority
+                     o.order_date 
                      ORDER BY o.order_date ASC''',
     },
     'scenes_selection': {
@@ -95,20 +124,42 @@ reports = {
                          u.id = o.user_id
                          AND o.id = s.order_id
                          AND s.status in ('queued', 'processing')
-                         GROUP BY u.email) 
+                         GROUP BY u.email)
                      SELECT
                      s.name "Scene",
                      o.order_date "Date Ordered",
                      o.orderid "Order ID",
-                     o.priority "Order Priority",
                      q.running "Currently Running Count"
-                     FROM ordering_scene s, ordering_order o, auth_user u, order_queue q
+                     FROM ordering_scene s,
+                          ordering_order o,
+                          auth_user u,
+                          order_queue q
                      WHERE u.id = o.user_id
                      AND o.id = s.order_id
                      AND o.status = 'ordered'
                      AND s.status = 'oncache'
                      AND q.email = u.email
                      ORDER BY q.running ASC, o.order_date ASC'''
+     },
+     'scenes_by_status': {
+         'display_name': 'Scene Status Counts',
+         'description': 'Displays all current status with counts for each',
+         'query': r'''SELECT status,
+                      COUNT(status)
+                      FROM ordering_scene
+                      GROUP BY status'''
+     },
+     'users_with_orders_count' :{
+         'display_name': 'Waiting User Count',
+         'description': 'Number of users that are waiting on products',
+         'query': r'''SELECT 
+                      COUNT(DISTINCT u.username) 
+                      FROM auth_user u 
+                      JOIN ordering_order o ON o.user_id = u.id 
+                      JOIN ordering_scene s ON s.order_id = o.id 
+                      WHERE s.status IN 
+                          ('queued', 'processing', 'oncache', 
+                          'onorder', 'error', 'retry', 'submitted')'''
      },
 }
 
@@ -122,7 +173,7 @@ class Report(object):
             if show_query is False:
                 value['query'] = ''
             result[key] = value
-       
+
         return result
 
     def run(self, name):

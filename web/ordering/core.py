@@ -445,7 +445,8 @@ def get_products_to_process(record_limit=500,
     if priority is not None:
         buff.write('AND o.priority = \'{0}\' '.format(priority))
 
-    buff.write('ORDER BY q.running ASC, o.order_date ASC LIMIT {0}'.format(record_limit))
+    buff.write('ORDER BY q.running ASC NULLS FIRST, ')
+    buff.write('o.order_date ASC LIMIT {0}'.format(record_limit))
 
     '''
     buffer = StringIO()
