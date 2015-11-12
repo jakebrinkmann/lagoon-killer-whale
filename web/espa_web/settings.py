@@ -107,7 +107,7 @@ DATABASES = {
         'PASSWORD': config.get('config', 'post-pass'),
         'HOST': config.get('config', 'post-host'),
         'PORT': config.get('config', 'post-port'),
-        'CONN_MAX_AGE': 30,
+        'CONN_MAX_AGE': 500,
     }
 }
 
