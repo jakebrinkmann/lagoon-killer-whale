@@ -149,6 +149,21 @@ reports = {
                       FROM ordering_scene
                       GROUP BY status'''
      },
+     'product_completion_log': {
+         'display_name': 'Product Completion Log',
+         'description': 'Show the last 100 products that have completed',
+         'query': r'''SELECT s.completion_date "Completion Date", 
+                      u.username "Username", 
+                      o.orderid "Order ID", 
+                      s.name "Product Name"
+                      FROM auth_user u 
+                      JOIN ordering_order o on u.id = o.user_id 
+                      JOIN ordering_scene s on o.id = s.order_id 
+                      WHERE s.completion_date IS NOT NULL 
+                      AND o.status != 'purged' 
+                      AND s.status != 'purged' 
+                      ORDER BY s.completion_date DESC LIMIT 100'''
+     },
      'users_with_orders_count' :{
          'display_name': 'Waiting User Count',
          'description': 'Number of users that are waiting on products',
@@ -160,6 +175,15 @@ reports = {
                       WHERE s.status IN 
                           ('queued', 'processing', 'oncache', 
                           'onorder', 'error', 'retry', 'submitted')'''
+     },
+     'machine_performance': {
+         'display_name': 'Machine Performance',
+         'description': 'Number of completions by machine past 24 hours',
+         'query': r'''SELECT processing_location, COUNT(*)
+                      FROM ordering_scene s 
+                      WHERE s.status = 'complete' 
+                      AND  completion_date > now() - interval '24 hours'  
+                      GROUP BY processing_location'''
      },
 }
 
