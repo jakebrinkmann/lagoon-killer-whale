@@ -725,7 +725,7 @@ class ImageExtentsValidator(Validator):
             if 'pixel_size' in P and utilities.is_number(P['pixel_size']):
                 ps = float(P['pixel_size'])
             elif 'pixel_size_units' in P:
-                if P['pixel_size_units'] = 'dd':
+                if P['pixel_size_units'] == 'dd':
                     ps = 0.0002695
                 else:
                     ps = 30
