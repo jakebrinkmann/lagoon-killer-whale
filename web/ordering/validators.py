@@ -119,7 +119,7 @@ class LandsatProductListValidator(Validator):
     least one scene to process'''
 
     def get_verified_input_product_set(self, products):
-        ''' proxy method to validatorutils.  remove this once all calls are 
+        ''' proxy method to validatorutils.  remove this once all calls are
             migrated '''
         return ValidatorUtils().get_verified_landsat_input_product_set(products)
 
@@ -169,7 +169,7 @@ class LandsatProductListValidator(Validator):
                         logger.info("Looking for paramter {0}".format(param))
                         logger.info("{0} value is {1}".format(param, self.parameters[param]))
                         logger.info("{0} in restricted: {1}".format(param, param in restricted))
-                        if (param in restricted and 
+                        if (param in restricted and
                             self.parameters[param].lower() in ['true', 'on']):
                             logger.info("Looking through submitted products")
                             for product in set(valid):
@@ -214,7 +214,7 @@ class OutputFormatValidator(Validator):
     '''Validates the requested output format'''
 
     def errors(self):
-              
+
         valid_formats = ['gtiff', 'envi', 'envi-bip', 'hdf-eos2']
 
         if 'output_format' not in self.parameters.keys():
@@ -223,7 +223,7 @@ class OutputFormatValidator(Validator):
         elif self.parameters['output_format'] not in valid_formats:
             self.add_error('output_format',
                            'Output format must be one of:%s' % valid_formats)
-                           
+
         return super(OutputFormatValidator, self).errors()
 
 
@@ -470,7 +470,7 @@ class ProjectionValidator(Validator):
 
             self.add_error("projection",
                            'projection must be one of {0}'
-                           .format(self.valid_projections))                             
+                           .format(self.valid_projections))
         else:
 
             if proj == 'aea':
@@ -722,6 +722,25 @@ class ImageExtentsValidator(Validator):
 
                     self.add_error('minx', m)
 
+            if 'pixel_size' in P and utilities.is_number(P['pixel_size']):
+                ps = float(P['pixel_size'])
+            elif 'pixel_size_units' in P:
+                if P['pixel_size_units'] = 'dd':
+                    ps = 0.0002695
+                else:
+                    ps = 30
+            else:
+                ps = 30
+
+            width =  abs(maxx - minx)
+            height = abs(maxy - miny)
+            pixel_count = (width * height) / (ps * ps)
+            max_pixels = (10000 * 10000) 
+
+            if pixel_count > max_pixels:
+                m = 'Image extents must be {0} pixels or less'.format(max_pixels)
+                self.add_error('image_extents', m)
+
 
         return super(ImageExtentsValidator, self).errors()
 
@@ -772,7 +791,7 @@ class NewOrderPostValidator(Validator):
                                                     name)
 
         self.add_child(ProductIsSelectedValidator(parameters))
-        
+
         self.add_child(OutputFormatValidator(parameters))
 
         if 'reproject' in parameters and parameters['reproject'] == 'on':
