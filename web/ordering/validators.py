@@ -13,7 +13,9 @@ from ordering.models.order import Order
 
 logger = logging.getLogger(__name__)
 
+
 class ValidatorUtils(object):
+
     def get_verified_landsat_input_product_set(self, products):
         '''Returns a subset ( set() )  of products that are orderable
         from Landsat
@@ -44,7 +46,7 @@ class ValidatorUtils(object):
                 if isinstance(p, sensor.Landsat):
                     request.append(p.product_id)
 
-            #these calls need to be cached
+            # these calls need to be cached
             verified = lta.verify_scenes(request)
 
             for product_name, valid in verified.iteritems():
@@ -160,21 +162,35 @@ class LandsatProductListValidator(Validator):
                             msg = ("%s not found in Landsat inventory" % diff)
                             self.add_error('input_products', msg)
 
-                    # keep people from ordering SR products with an anomolous TIRS sensor
-                    restricted = ['include_sr', 'include_sr_ndvi', 'include_sr_evi',
-                                  'include_sr_savi', 'include_sr_msavi', 'include_sr_ndmi',
-                                  'include_sr_nbr', 'include_sr_nbr2']
+                    # keep people from ordering SR products with an anomolous
+                    # TIRS sensor
+                    restricted = [
+                        'include_sr',
+                        'include_sr_ndvi',
+                        'include_sr_evi',
+                        'include_sr_savi',
+                        'include_sr_msavi',
+                        'include_sr_ndmi',
+                        'include_sr_nbr',
+                        'include_sr_nbr2']
 
                     for param in self.parameters.keys():
                         logger.info("Looking for paramter {0}".format(param))
-                        logger.info("{0} value is {1}".format(param, self.parameters[param]))
-                        logger.info("{0} in restricted: {1}".format(param, param in restricted))
-                        if (param in restricted and
-                            self.parameters[param].lower() in ['true', 'on']):
+                        logger.info(
+                            "{0} value is {1}".format(
+                                param, self.parameters[param]))
+                        logger.info(
+                            "{0} in restricted: {1}".format(
+                                param, param in restricted))
+                        if (param in restricted and self.parameters[
+                                param].lower() in ['true', 'on']):
                             logger.info("Looking through submitted products")
                             for product in set(valid):
 
-                                logger.info("{0} is landsatolitirs:{1}".format(product, isinstance(product, sensor.LandsatOLITIRS)))
+                                logger.info(
+                                    "{0} is landsatolitirs:{1}".format(
+                                        product, isinstance(
+                                            product, sensor.LandsatOLITIRS)))
 
                                 if isinstance(product, str):
                                     try:
@@ -183,10 +199,14 @@ class LandsatProductListValidator(Validator):
                                         pass
 
                                 if isinstance(product, sensor.LandsatOLITIRS):
-                                    logger.info("{0} year is {1}, day is {2}".format(product, product.year, product.doy))
-                                    if (int(product.year) >= 2015 and int(product.doy) >= 305):
-                                        msg = ("Landsat 8 surface reflectance based products are not available "
-                                               "from November 1st, 2015 onward due to TIRS anomolies")
+                                    logger.info(
+                                        "{0} year is {1}, day is {2}".format(
+                                            product, product.year, product.doy))
+                                    if (int(product.year) >= 2015 and int(
+                                            product.doy) >= 305):
+                                        msg = (
+                                            "Landsat 8 surface reflectance based products are not available "
+                                            "from November 1st, 2015 onward due to TIRS anomolies")
                                         self.add_error('input_products', msg)
 
         return super(LandsatProductListValidator, self).errors()
@@ -235,8 +255,8 @@ class FalseEastingValidator(Validator):
         if (not 'false_easting' in self.parameters
                 or not utilities.is_number(self.parameters['false_easting'])):
 
-                msg = "Please provide a valid false easting value"
-                self.add_error('false_easting', msg)
+            msg = "Please provide a valid false easting value"
+            self.add_error('false_easting', msg)
 
         return super(FalseEastingValidator, self).errors()
 
@@ -249,8 +269,8 @@ class FalseNorthingValidator(Validator):
         if (not 'false_northing' in self.parameters
                 or not utilities.is_number(self.parameters['false_northing'])):
 
-                msg = "Please provide a valid false northing value"
-                self.add_error('false_northing', msg)
+            msg = "Please provide a valid false northing value"
+            self.add_error('false_northing', msg)
 
         return super(FalseNorthingValidator, self).errors()
 
@@ -270,7 +290,7 @@ class CentralMeridianValidator(Validator):
         if ('central_meridian' in self.parameters
                 and utilities.is_number(self.parameters['central_meridian'])):
 
-                cm = float(self.parameters['central_meridian'])
+            cm = float(self.parameters['central_meridian'])
         else:
             self.add_error('central_meridian', msg)
 
@@ -282,6 +302,7 @@ class CentralMeridianValidator(Validator):
 
 class LatitudeTrueScaleValidator(Validator):
     '''Validates the latitude_true_scale parameter'''
+
     def errors(self):
         msg_parts = []
         msg_parts.append("Please provide a latitude true scale value ")
@@ -327,7 +348,7 @@ class LongitudinalPoleValidator(Validator):
 
         if ('longitude_pole' in self.parameters and
                 utilities.is_number(self.parameters['longitude_pole'])):
-                lp = float(self.parameters['longitude_pole'])
+            lp = float(self.parameters['longitude_pole'])
         else:
             self.add_error('longitude_pole', msg)
 
@@ -349,7 +370,7 @@ class StandardParallel1Validator(Validator):
         sp = None
         if ('std_parallel_1' in self.parameters and
                 utilities.is_number(self.parameters['std_parallel_1'])):
-                sp = float(self.parameters['std_parallel_1'])
+            sp = float(self.parameters['std_parallel_1'])
         else:
             self.add_error('std_parallel_1', msg)
 
@@ -371,7 +392,7 @@ class StandardParallel2Validator(Validator):
         sp = None
         if ('std_parallel_2' in self.parameters and
                 utilities.is_number(self.parameters['std_parallel_2'])):
-                sp = float(self.parameters['std_parallel_2'])
+            sp = float(self.parameters['std_parallel_2'])
         else:
             self.add_error('std_parallel_2', msg)
 
@@ -393,7 +414,7 @@ class OriginLatitudeValidator(Validator):
         lo = None
         if ('origin_lat' in self.parameters and
                 utilities.is_number(self.parameters['origin_lat'])):
-                lo = float(self.parameters['origin_lat'])
+            lo = float(self.parameters['origin_lat'])
         else:
             self.add_error('origin_lat', msg)
 
@@ -426,21 +447,22 @@ class UTMZoneValidator(Validator):
         if (not 'utm_zone' in self.parameters
                 or not str(self.parameters['utm_zone']).isdigit()
                 or not int(self.parameters['utm_zone']) in range(1, 61)):
-                msg = "Please provide a utm zone between 1 and 60"
-                self.add_error('utm_zone', msg)
+            msg = "Please provide a utm zone between 1 and 60"
+            self.add_error('utm_zone', msg)
 
         return super(UTMZoneValidator, self).errors()
 
 
 class UTMNorthSouthValidator(Validator):
     '''Validates utm_north_south for utm projection'''
+
     def errors(self):
 
         if (not 'utm_north_south' in self.parameters or not
                 self.parameters['utm_north_south'] in ('north', 'south')):
 
-                msg = "Please select north or south for the UTM zone"
-                self.add_error('utm_north_south', msg)
+            msg = "Please select north or south for the UTM zone"
+            self.add_error('utm_north_south', msg)
 
         return super(UTMNorthSouthValidator, self).errors()
 
@@ -571,6 +593,7 @@ class PolarStereographicValidator(Validator):
 
 class MeterPixelSizeValidator(Validator):
     '''Validates pixel sizes specified in meters'''
+
     def errors(self):
 
         msg = "Please enter a pixel size between 30 and 1000 meters"
@@ -684,9 +707,9 @@ class ImageExtentsValidator(Validator):
 
         if minx and miny and maxx and maxy:
 
-        # make sure values make some sort of sense
-        # once we go to decimal degree bounding boxes only (no meter values)
-        # then we can validate the values in the bounding box
+            # make sure values make some sort of sense
+            # once we go to decimal degree bounding boxes only (no meter values)
+            # then we can validate the values in the bounding box
             if minx >= maxx:
                 m = "Upper left x value must be less than lower right x value"
                 self.add_error('minx', m)
@@ -716,31 +739,42 @@ class ImageExtentsValidator(Validator):
                 m = ('Please specify extent coordinates in meters.')
 
                 if (minx >= -180.0 and minx <= 180.0 and
-                    maxx >= -180.0 and maxx <= 180.0 and
-                    miny >= -90.0 and miny <= 90.0 and
-                    maxy >= -90.0 and maxy <= 90.0):
+                        maxx >= -180.0 and maxx <= 180.0 and
+                        miny >= -90.0 and miny <= 90.0 and
+                        maxy >= -90.0 and maxy <= 90.0):
 
                     self.add_error('minx', m)
 
-            if 'pixel_size' in P and utilities.is_number(P['pixel_size']):
+            # account for pixel size in different units than image extents
+
+            if ('pixel_size' in P and
+                    utilities.is_number(P['pixel_size']) and
+                    'pixel_size_units' in P):
                 ps = float(P['pixel_size'])
-            elif 'pixel_size_units' in P:
-                if P['pixel_size_units'] == 'dd':
+                ps_units = P['pixel_size_units']
+            else:
+                if image_extents_units = 'dd':
                     ps = 0.0002695
+                    ps_units = 'dd'
                 else:
                     ps = 30
-            else:
-                ps = 30
+                    ps_units = 'meters'
 
-            width =  abs(maxx - minx)
+            if image_extents_units = 'dd' and ps_units = 'meters':
+                # convert pixel size to dd
+                ratio = 111317.254174397
+                ps = ps / ratio
+                ps_units = 'dd'
+
+            width = abs(maxx - minx)
             height = abs(maxy - miny)
             pixel_count = (width * height) / (ps * ps)
-            max_pixels = (10000 * 10000) 
+            max_pixels = (10000 * 10000)
 
             if pixel_count > max_pixels:
-                m = 'Image extents must be {0} pixels or less'.format(max_pixels)
+                m = 'Image extents must be {0} pixels or less'.format(
+                    max_pixels)
                 self.add_error('image_extents', m)
-
 
         return super(ImageExtentsValidator, self).errors()
 
