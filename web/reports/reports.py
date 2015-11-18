@@ -13,7 +13,8 @@ REPORTS = {
                      FROM ordering_scene s 
                      WHERE s.status = 'complete' 
                      AND completion_date > now() - interval '24 hours' 
-                     GROUP BY processing_location''' },
+                     GROUP BY processing_location'''
+    },
     'order_counts': {
         'display_name': 'Orders - Counts',
         'description': 'Orders and status per user',
@@ -27,7 +28,8 @@ REPORTS = {
                     WHERE o.user_id = u.id 
                     AND o.status != 'purged' 
                     GROUP BY u.email, u.first_name, u.last_name 
-                    ORDER BY "Total Orders" DESC''' },
+                    ORDER BY "Total Orders" DESC'''
+    },
     'orders_status': {
         'display_name': 'Orders - Status',
         'description': 'Shows orders by product status',
@@ -51,7 +53,8 @@ REPORTS = {
                                        WHEN 'retry' THEN 6 
                                        WHEN 'submitted' THEN 7 
                                        ELSE 8 END,
-                         o.order_date ASC''' },
+                         o.order_date ASC'''
+    },
     'order_product_status': {
         'display_name': 'Order-Product Status',
         'description': 'Shows orders and product counts by date',
@@ -91,7 +94,8 @@ REPORTS = {
                      AND o.user_id = u.id 
                      AND s.status != 'purged' 
                      GROUP BY u.email, u.first_name, u.last_name 
-                     ORDER BY "Total Active Scenes" DESC''' },
+                     ORDER BY "Total Active Scenes" DESC'''
+    },
     'product_completion_log': {
         'display_name': 'Products - Completion Log',
                         'description': 'Show the last 100 products that have completed',
@@ -106,14 +110,16 @@ REPORTS = {
                                      WHERE s.completion_date IS NOT NULL 
                                      AND o.status != 'purged' 
                                      AND s.status != 'purged' 
-                                     ORDER BY s.completion_date DESC LIMIT 100''' },
+                                     ORDER BY s.completion_date DESC LIMIT 100'''
+    },
     'aggregate_product_counts': {
         'display_name': 'Products - Aggregate Counts',
         'description': 'Displays current status counts for all products',
         'query': r'''SELECT status,
                      COUNT(status)
                      FROM ordering_scene
-                     GROUP BY status''' },
+                     GROUP BY status'''
+    },
     'scheduling_running': {
         'display_name': 'Scheduling - Running',
         'description': 'Shows scheduling information for user product requests',
@@ -142,7 +148,8 @@ REPORTS = {
                               u.email, 
                               u.first_name, 
                               u.last_name 
-                     ORDER BY "Total Running" DESC''' },
+                     ORDER BY "Total Running" DESC'''
+    },
     'scheduling_next_up': {
         'display_name': 'Scheduling - Next Up',
         'description': 'Shows products that will be scheduled to run next',
@@ -168,7 +175,9 @@ REPORTS = {
                      AND o.status = 'ordered' 
                      AND s.status = 'oncache' 
                      AND q.email = u.email 
-                     ORDER BY q.running ASC, o.order_date ASC''' } }
+                     ORDER BY q.running ASC, o.order_date ASC'''
+    }
+}
 
 
 class Report(object):
