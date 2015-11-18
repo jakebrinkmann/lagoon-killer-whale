@@ -30,7 +30,7 @@
     <tbody>
     {% for k, v in reports.items %}
        <tr>
-       <td><a href="{% url 'show_report' k %}">{{ v.display_name }}</a></td>
+       <td><a href="{% url 'reports.show_report' k %}">{{ v.display_name }}</a></td>
        <td>{{ v.description }}</td>
        </tr>
     {% endfor %}
