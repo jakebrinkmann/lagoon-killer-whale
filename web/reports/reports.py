@@ -33,6 +33,22 @@ REPORTS = {
                      GROUP BY processing_location 
                      ORDER BY processing_location'''
     },
+    'retry_error': {
+        'display_name': 'Retries & Errors',
+        'description': 'All items in retry and error status with user notes',
+        'query': r'''SELECT 
+                     s.name "Name", 
+                     o.orderid "Order ID", 
+                     s.processing_location "Machine", 
+                     s.status "Status", 
+                     s.note "Note" 
+                     FROM ordering_scene s 
+                     JOIN ordering_order o ON 
+                     o.id = s.order_id 
+                     WHERE s.status 
+                     IN ('retry', 'error') 
+                     ORDER BY s.name'''
+    },
     'order_counts': {
         'display_name': 'Orders - Counts',
         'description': 'Orders and status per user',
