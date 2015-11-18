@@ -212,8 +212,8 @@ class Report(object):
             return {}
 
 
-listing = Report().listing()
+listing = Report().listing
 
-run = lambda name: Report().run(name)
+run = lambda name: Report().run
 
 display_name = lambda name: REPORTS[name]['display_name']
