@@ -1,7 +1,9 @@
 from django.db import connection
 from ordering.utilities import dictfetchall
 
-reports = {
+class Report(object):
+    
+    reports = {
     'machine_performance': {
          'display_name': 'Machines - 24 Hour Performance',
          'description': 'Number of completions by machine past 24 hours',
@@ -165,15 +167,10 @@ reports = {
                      AND q.email = u.email
                      ORDER BY q.running ASC, o.order_date ASC'''
      }
-}
-
-
-
-class Report(object):
-
+    }
     def listing(self, show_query=False):
         result = {}
-        for key, value in reports.iteritems():
+        for key, value in self.reports.iteritems():
             if show_query is False:
                 value['query'] = ''
             result[key] = value
@@ -181,15 +178,13 @@ class Report(object):
         return result
 
     def run(self, name):
-        if name not in reports:
+        if name not in self.reports:
             raise NotImplementedError
 
-        query = reports[name]['query']
+        query = self.reports[name]['query']
         if query is not None and len(query) > 0:
             with connection.cursor() as cursor:
-                cursor.execute(query)
-                cursor.close()
-                cursor = None
+                cursor.execute(query)                
                 return dictfetchall(cursor)
         else:
             print("query was empty for {0}: {1}".format(name, query))
@@ -197,4 +192,4 @@ class Report(object):
 
 listing = lambda x=None: Report().listing()
 run = lambda name: Report().run(name)
-display_name = lambda name: reports[name]['display_name']
+display_name = lambda name: Report().reports[name]['display_name']
