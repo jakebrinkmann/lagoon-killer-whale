@@ -64,31 +64,6 @@ REPORTS = {
                     GROUP BY u.email, u.first_name, u.last_name 
                     ORDER BY "Total Orders" DESC'''
     },
-    'orders_status': {
-        'display_name': 'Orders - Status',
-        'description': 'Shows orders by product status',
-        'query': r'''SELECT o.order_date "Date Ordered", 
-                     o.orderid "Order ID", 
-                     COUNT(s.name) "Scene Count", 
-                     s.status "Status" 
-                     FROM ordering_order o 
-                     JOIN ordering_scene s ON o.id = s.order_id 
-                     WHERE s.status IN ('processing', 'queued',
-                                        'oncache', 'onorder', 'error') 
-                     GROUP BY o.orderid,
-                              o.order_date,
-                              s.status 
-                     ORDER BY 
-                         CASE s.status WHEN 'processing' then 1 
-                                       WHEN 'queued' THEN 2 
-                                       WHEN 'oncache' THEN 3 
-                                       WHEN 'onorder' THEN 4 
-                                       WHEN 'error' THEN 5 
-                                       WHEN 'retry' THEN 6 
-                                       WHEN 'submitted' THEN 7 
-                                       ELSE 8 END,
-                         o.order_date ASC'''
-    },
     'order_product_status': {
         'display_name': 'Orders - Product Status',
         'description': 'Shows orders and product counts by date',
@@ -97,7 +72,12 @@ REPORTS = {
                      COUNT(s.name) "Scene Count", 
                      SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "Complete", 
                      SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "Processing", 
-                     SUM(CASE when s.status = 'error' then 1 ELSE 0 END) "Error", 
+                     SUM(CASE when s.status = 'queued' then 1 ELSE 0 END) "Queued",
+                     SUM(CASE when s.status = 'oncache' then 1 ELSE 0 END) "On Cache",
+                     SUM(CASE when s.status = 'onorder' then 1 ELSE 0 END) "On Order",
+                     SUM(CASE when s.status = 'retry' then 1 ELSE 0 END) "Retry",
+                     SUM(CASE when s.status = 'error' then 1 ELSE 0 END) "Error",
+                     SUM(CASE when s.status = 'submitted' then 1 ELSE 0 END) "Submitted", 
                      u.username "User Name" 
                      FROM ordering_scene s,
                           ordering_order o,
