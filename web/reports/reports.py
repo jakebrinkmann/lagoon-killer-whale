@@ -190,7 +190,7 @@ class Report(object):
         # actual dict in this module
         _reports = copy.deepcopy(REPORTS)
 
-        for key, value in _reports:
+        for key, value in _reports.iteritems():
             if show_query is False:
                 value['query'] = ''
             result[key] = value
