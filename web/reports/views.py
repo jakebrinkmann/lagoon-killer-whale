@@ -14,18 +14,18 @@ class Report(View):
     listing_template = 'reports/list.html'
 
     def get(self, request, name=None):
-        user = User.objects.get(username=request.user.username)
-        if not user.is_staff:
-            return HttpResponseRedirect(reverse('login'))
+        #user = User.objects.get(username=request.user.username)
+        #if not user.is_staff:
+        #    return HttpResponseRedirect(reverse('login'))
 
         if name is None:
-            results = reports.listing()
+            results = reports.Report().listing()
             t = loader.get_template(self.listing_template)
             html = t.render({'reports': results}, request)
         else:
             # display the requested report or 404
             try:
-                results = reports.run(name)
+                results = reports.Report().run(name)
                 t = loader.get_template(self.report_template)
                 html = t.render({'report_name': reports.display_name(name), 
                                  'report': results}, request)
