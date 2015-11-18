@@ -9,16 +9,16 @@ urlpatterns = patterns('',
     url(r'^(?P<name>[A-Za-z0-9._-]+)/$',
         login_required(
             staff_member_required(Report.as_view(),
-                                  login_url='ordering:login')
+                                  login_url='login')
         ), name='show_report'),
     url(r'^$',
         login_required(
             staff_member_required(Report.as_view(),
-                                  login_url='ordering:login')
+                                  login_url='login')
         ), name='listreports'),
     url(r'^/$',
         login_required(
             staff_member_required(Report.as_view(),
-                                  login_url='ordering:login')
+                                  login_url='login')
         ), name='listreports')
     )
