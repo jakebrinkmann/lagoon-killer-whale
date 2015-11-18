@@ -196,7 +196,11 @@ def listing():
     return Report().listing()
 
 def run(name):
-    return Report().run(name)
+    report = Report()
+    results = report.run(name)
+    name = None
+    report = None
+    return results
 
 def display_name(name):
     return Report().reports[name]['display_name']
