@@ -185,14 +185,16 @@ class Report(object):
 
         if name is None or len(name) < 1:
             print("NAME IS NONE IN THE CLASS")
-            
-        query = self.reports[name]['query']
+
+        report = self.reports[name]
+        query = report['query']
         
         if query is not None and len(query) > 0:
             with connection.cursor() as cursor:
                 cursor.execute(query)                
                 return dictfetchall(cursor)
         else:
+            print("REPORT:{0}".format(report))
             print("QUERY WAS EMPTY FOR {0}: {1}".format(name, query))
             return {}
 
