@@ -753,14 +753,14 @@ class ImageExtentsValidator(Validator):
                 ps = float(P['pixel_size'])
                 ps_units = P['pixel_size_units']
             else:
-                if image_extents_units = 'dd':
+                if image_extents_units == 'dd':
                     ps = 0.0002695
                     ps_units = 'dd'
                 else:
                     ps = 30
                     ps_units = 'meters'
 
-            if image_extents_units = 'dd' and ps_units = 'meters':
+            if image_extents_units == 'dd' and ps_units == 'meters':
                 # convert pixel size to dd
                 ratio = 111317.254174397
                 ps = ps / ratio
