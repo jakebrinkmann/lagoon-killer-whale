@@ -9,7 +9,8 @@ REPORTS = {
     'machine_performance': {
         'display_name': 'Machines - 24 Hour Performance',
         'description': 'Number of completions by machine past 24 hours',
-        'query': r'''SELECT processing_location, COUNT(*) 
+        'query': r'''SELECT processing_location "Machine", 
+                     COUNT(*) "Count" 
                      FROM ordering_scene s 
                      WHERE s.status = 'complete' 
                      AND completion_date > now() - interval '24 hours' 
@@ -18,18 +19,18 @@ REPORTS = {
     'machine_product_status': {
         'display_name': 'Machines - Product Status',
         'description': 'Product status counts by machine',
-        'query': r'''SELECT
-                     processing_location 'Machine',
-                     SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) "Processing",
-                     SUM(CASE WHEN status = 'complete' THEN 1 ELSE 0 END) "Complete",
-                     SUM(CASE WHEN status='error' THEN 1 ELSE 0 END) "Error",
-                     SUM(CASE WHEN status='retry' THEN 1 ELSE 0 END) "Retry"
-                     FROM ordering_scene
-                     WHERE status IN ('processing',
-                                      'complete',
-                                      'error',
-                                      'retry')
-                     GROUP BY processing_location
+        'query': r'''SELECT 
+                     processing_location "Machine", 
+                     SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) "Processing", 
+                     SUM(CASE WHEN status = 'complete' THEN 1 ELSE 0 END) "Complete", 
+                     SUM(CASE WHEN status='error' THEN 1 ELSE 0 END) "Error", 
+                     SUM(CASE WHEN status='retry' THEN 1 ELSE 0 END) "Retry" 
+                     FROM ordering_scene 
+                     WHERE status IN ('processing', 
+                                      'complete', 
+                                      'error', 
+                                      'retry') 
+                     GROUP BY processing_location 
                      ORDER BY processing_location'''
     },
     'order_counts': {
