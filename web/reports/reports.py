@@ -179,16 +179,21 @@ class Report(object):
         return result
 
     def run(self, name):
+
         if name not in self.reports:
             raise NotImplementedError
 
+        if name is None or len(name) < 1:
+            print("NAME IS NONE IN THE CLASS")
+            
         query = self.reports[name]['query']
+        
         if query is not None and len(query) > 0:
             with connection.cursor() as cursor:
                 cursor.execute(query)                
                 return dictfetchall(cursor)
         else:
-            print("query was empty for {0}: {1}".format(name, query))
+            print("QUERY WAS EMPTY FOR {0}: {1}".format(name, query))
             return {}
 
 
@@ -196,6 +201,9 @@ def listing():
     return Report().listing()
 
 def run(name):
+    if name is None or len(name) < 1:
+        print("NAME WAS NONE IN THE MODULE METHOD")
+        
     report = Report()
     results = report.run(name)
     name = None
