@@ -399,7 +399,8 @@ class LogOut(AbstractView):
 
         c = self._get_request_context(request, include_system_message=False)
 
-        return HttpResponse(t.render(c, request))
+        #return HttpResponse(t.render(c, request))
+        return redirect('login')
 
 
 class ListOrdersForm(forms.Form):
