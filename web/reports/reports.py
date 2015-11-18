@@ -188,6 +188,8 @@ class Report(object):
         if query is not None and len(query) > 0:
             with connection.cursor() as cursor:
                 cursor.execute(query)
+                cursor.close()
+                cursor = None
                 return dictfetchall(cursor)
         else:
             print("query was empty for {0}: {1}".format(name, query))
