@@ -14,6 +14,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import Http404
+from django.shortcuts import redirect
 from django.template import loader
 from django.template import RequestContext
 from django.template.context_processors import csrf
