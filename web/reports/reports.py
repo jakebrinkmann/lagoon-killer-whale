@@ -61,13 +61,6 @@ reports = {
               GROUP BY u.email, u.first_name, u.last_name
               ORDER BY "Total Orders" DESC'''
     },
-    'duplicate_scene_percentage': {
-        'display_name': 'Duplicate Scenes (Percentage)',
-        'description': 'Displays the percentage of scenes that have been requested more than once',
-        'query': r'''SELECT
-                     (1 - (count(distinct name)::float / count(name)::float) * 100) "Duplicate Scenes"
-                     FROM ordering_scene'''
-    },
     'orders_by_product_status': {
         'display_name': 'Orders By Product Status',
         'description': 'Shows orders by product status',
