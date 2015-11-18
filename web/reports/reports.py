@@ -15,6 +15,23 @@ REPORTS = {
                      AND completion_date > now() - interval '24 hours' 
                      GROUP BY processing_location'''
     },
+    'machine_product_status': {
+        'display_name': 'Machines - Product Status',
+        'description': 'Product status counts by machine',
+        'query': r'''SELECT
+                     processing_location 'Machine',
+                     SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) "Processing",
+                     SUM(CASE WHEN status = 'complete' THEN 1 ELSE 0 END) "Complete",
+                     SUM(CASE WHEN status='error' THEN 1 ELSE 0 END) "Error",
+                     SUM(CASE WHEN status='retry' THEN 1 ELSE 0 END) "Retry"
+                     FROM ordering_scene
+                     WHERE status IN ('processing',
+                                      'complete',
+                                      'error',
+                                      'retry')
+                     GROUP BY processing_location
+                     ORDER BY processing_location'''
+    },
     'order_counts': {
         'display_name': 'Orders - Counts',
         'description': 'Orders and status per user',
@@ -212,8 +229,8 @@ class Report(object):
             return {}
 
 
-listing = lambda x=None:Report().listing()
+listing = Report().listing
 
-run = lambda name: Report().run(name)
+run = lambda name: Report().run
 
 display_name = lambda name: REPORTS[name]['display_name']
