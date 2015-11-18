@@ -39,3 +39,9 @@ Created on Fri Nov 13 10:07:52 2015
 #                          ('queued', 'processing', 'oncache',
 #                          'onorder', 'error', 'retry', 'submitted')'''
 #     },
+
+
+#This would need to be a report since it could display something other than a value
+#Products added since (or between)
+#add flag for 'summary'.  If no 'summary' then display all the values (name, orderid, time ordered)
+#select count(s.name) from ordering_scene s join ordering_order o on o.id = s.order_id where o.order_date >= '2015-11-18:00:00.00' and o.order_date <= '2015-11-19:00:00.00'
