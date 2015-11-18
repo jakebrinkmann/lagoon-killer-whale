@@ -1,8 +1,7 @@
 from django.db import connection
 from ordering.utilities import dictfetchall
-from collections import OrderedDict
 
-reports = OrderedDict({
+reports = {
     'machine_performance': {
          'display_name': 'Machines - 24 Hour Performance',
          'description': 'Number of completions by machine past 24 hours',
@@ -166,7 +165,7 @@ reports = OrderedDict({
                      AND q.email = u.email
                      ORDER BY q.running ASC, o.order_date ASC'''
      }
-})
+}
 
 
 
