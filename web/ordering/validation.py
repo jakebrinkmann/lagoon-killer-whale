@@ -155,7 +155,7 @@ class Validator(object):
             self.validation_errors[key] = list(set(errs))
         else:
             # the key was in in validation errors, add it and the msg
-            self.validation_errors[key] = errmsg
+            self.validation_errors[key] = [errmsg]
 
     def errors(self):
         if self.has_children():

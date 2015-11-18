@@ -6,13 +6,15 @@ from django.views.generic import View
 from django.http import Http404
 from django.http import HttpResponse
 from django.template import loader
+from django.contrib.admin.views.decorators import staff_member_required
 
 import reports
 
 class Report(View):
     report_template = 'reports/report.html'
     listing_template = 'reports/list.html'
-    
+
+    @staff_member_required
     def get(self, request, name=None):
         user = User.objects.get(username=request.user.username)
         if not user.is_staff:
