@@ -90,7 +90,7 @@ REPORTS = {
                          o.order_date ASC'''
     },
     'order_product_status': {
-        'display_name': 'Order-Product Status',
+        'display_name': 'Orders - Product Status',
         'description': 'Shows orders and product counts by date',
         'query': r'''SELECT o.order_date "Date Ordered", 
                      o.orderid "Order ID", 
