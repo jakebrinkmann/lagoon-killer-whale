@@ -168,6 +168,7 @@ class Report(object):
                      ORDER BY q.running ASC, o.order_date ASC'''
      }
     }
+    
     def listing(self, show_query=False):
         result = {}
         for key, value in self.reports.iteritems():
@@ -190,6 +191,17 @@ class Report(object):
             print("query was empty for {0}: {1}".format(name, query))
             return {}
 
-listing = lambda x=None: Report().listing()
-run = lambda name: Report().run(name)
-display_name = lambda name: Report().reports[name]['display_name']
+
+def listing():
+    return Report().listing()
+
+def run(name):
+    return Report().run(name)
+
+def display_name(name):
+    return Report().reports[name]['display_name']
+
+
+#listing = Report().listing()
+#run = lambda name: Report().run(name)
+#display_name = lambda name: Report().reports[name]['display_name']

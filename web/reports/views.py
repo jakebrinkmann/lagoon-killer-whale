@@ -19,13 +19,13 @@ class Report(View):
         #    return HttpResponseRedirect(reverse('login'))
 
         if name is None:
-            results = reports.Report().listing()
+            results = reports.listing()
             t = loader.get_template(self.listing_template)
             html = t.render({'reports': results}, request)
         else:
             # display the requested report or 404
             try:
-                results = reports.Report().run(name)
+                results = reports.run(name)
                 t = loader.get_template(self.report_template)
                 html = t.render({'report_name': reports.display_name(name), 
                                  'report': results}, request)
