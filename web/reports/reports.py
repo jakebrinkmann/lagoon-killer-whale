@@ -2,7 +2,7 @@ from django.db import connection
 from ordering.utilities import dictfetchall
 
 class Report(object):
-    
+
     reports = {
     'machine_performance': {
          'display_name': 'Machines - 24 Hour Performance',
@@ -173,9 +173,8 @@ class Report(object):
         result = {}
         for key, value in self.reports.iteritems():
             if show_query is False:
-                value['query'] = ''
+                value['query'] = 'Shazamm'
             result[key] = value
-
         return result
 
     def run(self, name):
@@ -199,23 +198,6 @@ class Report(object):
             return {}
 
 
-def listing():
-    return Report().listing()
-
-def run(name):
-    if name is None or len(name) < 1:
-        print("NAME WAS NONE IN THE MODULE METHOD")
-        
-    report = Report()
-    results = report.run(name)
-    name = None
-    report = None
-    return results
-
-def display_name(name):
-    return Report().reports[name]['display_name']
-
-
-#listing = Report().listing()
-#run = lambda name: Report().run(name)
-#display_name = lambda name: Report().reports[name]['display_name']
+listing = Report().listing()
+run = lambda name: Report().run(name)
+display_name = lambda name: Report().reports[name]['display_name']
