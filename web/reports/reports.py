@@ -1,16 +1,18 @@
+import logging
 from django.db import connection
 from ordering.utilities import dictfetchall
+import copy
 
-class Report(object):
+logger = logging.getLogger(__name__)
 
     reports = {
     'machine_performance': {
          'display_name': 'Machines - 24 Hour Performance',
          'description': 'Number of completions by machine past 24 hours',
          'query': r'''SELECT processing_location, COUNT(*)
-                      FROM ordering_scene s 
-                      WHERE s.status = 'complete' 
-                      AND  completion_date > now() - interval '24 hours'  
+                      FROM ordering_scene s
+                      WHERE s.status = 'complete'
+                      AND  completion_date > now() - interval '24 hours'
                       GROUP BY processing_location'''
      },
     'order_counts': {
@@ -68,7 +70,7 @@ class Report(object):
                      GROUP BY
                      o.orderid,
                      u.username,
-                     o.order_date 
+                     o.order_date
                      ORDER BY o.order_date ASC''',
     },
     'product_counts': {
@@ -93,16 +95,16 @@ class Report(object):
     'product_completion_log': {
          'display_name': 'Products - Completion Log',
          'description': 'Show the last 100 products that have completed',
-         'query': r'''SELECT s.completion_date "Completion Date", 
-                      u.username "Username", 
-                      o.orderid "Order ID", 
+         'query': r'''SELECT s.completion_date "Completion Date",
+                      u.username "Username",
+                      o.orderid "Order ID",
                       s.name "Product Name"
-                      FROM auth_user u 
-                      JOIN ordering_order o on u.id = o.user_id 
-                      JOIN ordering_scene s on o.id = s.order_id 
-                      WHERE s.completion_date IS NOT NULL 
-                      AND o.status != 'purged' 
-                      AND s.status != 'purged' 
+                      FROM auth_user u
+                      JOIN ordering_order o on u.id = o.user_id
+                      JOIN ordering_scene s on o.id = s.order_id
+                      WHERE s.completion_date IS NOT NULL
+                      AND o.status != 'purged'
+                      AND s.status != 'purged'
                       ORDER BY s.completion_date DESC LIMIT 100'''
      },
      'aggregate_product_counts': {
@@ -168,10 +170,18 @@ class Report(object):
                      ORDER BY q.running ASC, o.order_date ASC'''
      }
     }
-    
+
+class Report(object):
+
     def listing(self, show_query=False):
+
         result = {}
-        for key, value in self.reports.iteritems():
+
+        #make a copy of this as we dont want to modify the
+        #actual dict in this module
+        _reports = copy.deepcopy(self.reports)
+
+        for key, value in _reports:
             if show_query is False:
                 value['query'] = 'Shazamm'
             result[key] = value
@@ -182,22 +192,19 @@ class Report(object):
         if name not in self.reports:
             raise NotImplementedError
 
-        if name is None or len(name) < 1:
-            print("NAME IS NONE IN THE CLASS")
+        query = self.reports[name]['query']
 
-        report = self.reports[name]
-        query = report['query']
-        
         if query is not None and len(query) > 0:
             with connection.cursor() as cursor:
-                cursor.execute(query)                
+                cursor.execute(query)
                 return dictfetchall(cursor)
         else:
-            print("REPORT:{0}".format(report))
-            print("QUERY WAS EMPTY FOR {0}: {1}".format(name, query))
+            logger.error("Query was empty for {0}: {1}".format(name, query))
             return {}
 
 
 listing = Report().listing()
+
 run = lambda name: Report().run(name)
+
 display_name = lambda name: Report().reports[name]['display_name']

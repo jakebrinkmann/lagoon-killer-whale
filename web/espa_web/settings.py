@@ -221,7 +221,6 @@ LOGGING = {
     },
     'loggers': {
        'django.request': {
-            # To be used by django
             'level': 'ERROR',
             'propagate': False,
             'handlers': ['requests'],
@@ -232,7 +231,6 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.core': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
@@ -258,19 +256,16 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.models.user': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.models.configuration': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.models.order': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
@@ -306,12 +301,11 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.views': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
-        'ordering.utilities': {
+        'reports.reports': {
             'level': 'INFO',
             'propagate':False,
             'handlers': ['standard']
