@@ -9,13 +9,14 @@ from django.template import loader
 
 import reports
 
+
 class Report(View):
     report_template = 'reports/report.html'
     listing_template = 'reports/list.html'
 
     def get(self, request, name=None):
         #user = User.objects.get(username=request.user.username)
-        #if not user.is_staff:
+        # if not user.is_staff:
         #    return HttpResponseRedirect(reverse('login'))
 
         if name is None:
@@ -27,11 +28,9 @@ class Report(View):
             try:
                 results = reports.run(name)
                 t = loader.get_template(self.report_template)
-                html = t.render({'report_name': reports.display_name(name), 
+                html = t.render({'report_name': reports.display_name(name),
                                  'report': results}, request)
             except NotImplementedError:
                 raise Http404("Report {0} not found".format(name))
-            
+
         return HttpResponse(html)
-            
-        
