@@ -6,6 +6,46 @@ import copy
 logger = logging.getLogger(__name__)
 
 REPORTS = {
+    'backlog_request_completions': {
+        'display_name': 'Backlog - Requests and Completions',
+        'description': 'Shows the number of products requested and completed by day',
+        'query':r'''WITH completed_products AS
+                        (SELECT completion_date::date "date",
+                        COUNT(name) "count"
+                        FROM ordering_scene
+                        WHERE completion_date >= now() - interval '2 months'
+                        GROUP BY completion_date::date
+                        ORDER BY completion_date::date)
+                    SELECT
+                    o.order_date::date "Date",
+                    COUNT(s.name) "Products Ordered",
+                    cp.count "Products Completed",
+                    COUNT(s.name) - cp.count "Difference" 
+                    FROM ordering_scene s,
+                    completed_products cp,
+                    ordering_order o
+                    WHERE o.id = s.order_id
+                    AND o.order_date::date = cp.date
+                    AND o.order_date >= now() - interval '2 months'
+                    GROUP BY o.order_date::date, cp.count
+                    ORDER BY o.order_date::date'''
+    },
+    'backlog_input_product_types': {
+        'display_name': 'Backlog - Input Types',
+        'description': 'Input product type counts',
+        'query': r'''SELECT
+                     COUNT(*) "Total",
+                     SUM(CASE WHEN name LIKE 'LC8%' THEN 1 ELSE 0 END) "OLI/TIRS",
+                     SUM(CASE WHEN name LIKE 'LO8%' THEN 1 ELSE 0 END) "OLI",
+                     SUM(CASE WHEN name LIKE 'LE7%' THEN 1 ELSE 0 END) "ETM",
+                     SUM(CASE WHEN name LIKE 'LT%' THEN 1 ELSE 0 END) "TM",
+                     SUM(CASE WHEN name LIKE 'MOD09%' THEN 1 ELSE 0 END) "MOD09",
+                     SUM(CASE WHEN name LIke 'MYD09%' THEN 1 ELSE 0 END) "MYD09",
+                     SUM(CASE WHEN name LIKE 'MOD13%' THEN 1 ELSE 0 END) "MOD13",
+                     SUM(CASE WHEN name LIKE 'MYD13%' THEN 1 ELSE 0 END) "MYD13" 
+                     FROM ordering_scene
+                     WHERE status != 'purged''''
+    },
     'machine_performance': {
         'display_name': 'Machines - 24 Hour Performance',
         'description': 'Number of completions by machine past 24 hours',
@@ -41,7 +81,8 @@ REPORTS = {
                      o.orderid "Order ID", 
                      s.processing_location "Machine", 
                      s.status "Status", 
-                     s.note "Note" 
+                     s.note "Note" ,
+                     s.retry_after "Retry After" 
                      FROM ordering_scene s 
                      JOIN ordering_order o ON 
                      o.id = s.order_id 
@@ -112,19 +153,20 @@ REPORTS = {
     },
     'product_completion_log': {
         'display_name': 'Products - Completion Log',
-                        'description': 'Show the last 100 products that have completed',
-                        'query': r'''SELECT
-                                     s.completion_date "Completion Date", 
-                                     u.username "Username",
-                                     o.orderid "Order ID", 
-                                     s.name "Product Name" 
-                                     FROM auth_user u 
-                                     JOIN ordering_order o on u.id = o.user_id 
-                                     JOIN ordering_scene s on o.id = s.order_id 
-                                     WHERE s.completion_date IS NOT NULL 
-                                     AND o.status != 'purged' 
-                                     AND s.status != 'purged' 
-                                     ORDER BY s.completion_date DESC LIMIT 100'''
+        'description': 'Show the last 100 products that have completed',
+        'query': r'''SELECT
+                     s.completion_date "Completion Date", 
+                     u.username "Username",
+                     o.orderid "Order ID", 
+                     s.name "Product Name",
+                     s.status "Final Status" 
+                     FROM auth_user u 
+                     JOIN ordering_order o on u.id = o.user_id 
+                     JOIN ordering_scene s on o.id = s.order_id 
+                     WHERE s.completion_date IS NOT NULL 
+                     AND o.status != 'purged' 
+                     AND s.status != 'purged' 
+                     ORDER BY s.completion_date DESC LIMIT 100'''
     },
     'aggregate_product_counts': {
         'display_name': 'Products - Aggregate Counts',
