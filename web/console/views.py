@@ -11,16 +11,33 @@ from django.views.generic.edit import FormView
 from forms import StatusMessageForm
 from ordering.models.configuration import Configuration
 
+from reporting import stats
+
 class Index(View):
     template = 'console/index.html'
 
     def get(self, request, *args, **kwargs):
+
         user = User.objects.get(username=request.user.username)
+
         if not user.is_staff:
             return HttpResponseRedirect(reverse('login'))
 
+        ctx = {}
         
-        return render(request, self.template)
+        listing = stats.listing()
+
+        for key, value in listing.iteritems():
+            stat = stats.get(key)
+            ctx[value['display_name']] = {
+                'description': value['description'],
+                'statistic': stat
+            }
+        
+        
+        return render(request=request,
+                      template=self.template,
+                      context={'stats': ctx})
 
 class StatusMessage(SuccessMessageMixin, FormView):
     template_name = 'console/statusmsg.html'

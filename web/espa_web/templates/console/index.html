@@ -19,6 +19,19 @@
         <a href="{% url 'reports.listreports' %}">Reports</a>
     </p>
 
+    <h4>Statistics</h4>
+    <table id='statistics' class='display' width=100%>
+    <thead><tr><th>Name</th><th>Value</th></thead>
+    <tbody>
+    {% for k, v in stats.items %}
+        <tr>
+        <td>k</td>
+        <td>v</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
 </div>
 
 {% endblock %}

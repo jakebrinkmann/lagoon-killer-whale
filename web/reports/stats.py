@@ -1,47 +1,113 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov 13 10:07:52 2015
+from django.core.cache import cache
+import logging
+from django.db import connection
+from ordering.utilities import dictfetchall
+import copy
 
-@author: dhill
-"""
+logger = logging.getLogger(__name__)
 
-# a stat is a single value item.
-# multi-value items belong in reports.
+STATS = {
+    'stat_open_orders': {
+        'display_name': 'Open Orders',
+        'description': 'Number of open orders in the system',
+        'query': r'''SELECT 
+                     COUNT(orderid) \"statistic\"
+                     FROM ordering_order 
+                     WHERE status = 'ordered' '''
+    },
+    'stat_waiting_users': {
+        'display_name': 'Waiting Users',
+        'description': 'Number of users with open orders in the system',
+        'query': r'''SELECT 
+                     COUNT(DISTINCT user_id) \"statistic\"
+                     FROM ordering_order 
+                     WHERE status = 'ordered'  '''
+    },
+    'stat_backlog_depth': {
+        'display_name': 'Backlog Depth',
+        'description': 'Number of products to be fulfilled',
+        'query': r'''SELECT COUNT(*) \"statistic\" 
+                     FROM ordering_scene 
+                     WHERE status 
+                     NOT IN ('purged', 'complete', 'unavailable')'''
+    },
+    'stat_products_complete_24_hrs': {
+        'display_name': 'Products Complete 24hrs',
+        'description': 'Number of products completed last 24 hrs',
+        'query': r'''SELECT COUNT(*) \"statistic\"
+                     FROM ordering_scene s 
+                     WHERE s.status = 'complete' 
+                     AND completion_date > now() - interval '24 hours' '''
+    },
+    'stat_duplicate_active_products': {
+        'display_name': 'Duplicate Active Product Pct',
+        'description': 'Percentage of active product duplication',
+        'query': r'''SELECT 
+                     (1 - (count(distinct name)::float / count(name)::float) * 100) "statistic" 
+                      FROM ordering_scene'''
+    },
+}
 
-# show disk space on cache
-# show number of users with open orders
-#'''SELECT COUNT(DISTINCT user_id) FROM ordering_order o WHERE o.status = 'ordered' '''
-# show number of open orders
-#'''SELECT COUNT(orderid) FROM ordering_order WHERE status = 'ordered' '''
-# show backlog depth
-#'''SELECT COUNT(*) FROM ordering_scene WHERE status NOT IN ('purged', 'complete', 'unavailable')'''
-# show products completed 24 hrs
-#'''SELECT COUNT(*) FROM ordering_scene s WHERE s.status = 'complete'  AND  completion_date > now() - interval '24 hours' '''
 
-# show duplicate scene count
-#'duplicate_scene_percentage': {
-#                'display_name': 'Duplicate Scenes (Percentage)',
-#                        'description': 'Displays the percentage of scenes that have been requested more than once',
-#                                'query': r'''SELECT
-#                                                     (1 - (count(distinct name)::float / count(name)::float) * 100) "Duplicate Scenes"
-# FROM ordering_scene'''
+#def scene_stats(request):
+#    '''Includes stats for scene backlog and completed 24 hrs'''
+#    context = {}
+#    cutoff = datetime.now() - timedelta(hours=24)
+#    stats = {'stats_current_backlog': "select count(*) \"count\" from ordering_scene where status not in ('purged', 'complete', 'unavailable')",
+#             'stats_completed_last_day': "select count(*) \"count\" from ordering_scene where completion_date >= now()::date - interval '24 hours'"}
 
-
-#'users_with_orders_count' :{
-#         'display_name': 'Users - Open Order Count',
-#         'description': 'Number of users that are waiting on products',
-#         'query': r'''SELECT
-#                      COUNT(DISTINCT u.username)
-#                      FROM auth_user u
-#                      JOIN ordering_order o ON o.user_id = u.id
-#                      JOIN ordering_scene s ON s.order_id = o.id
-#                      WHERE s.status IN
-#                          ('queued', 'processing', 'oncache',
-#                          'onorder', 'error', 'retry', 'submitted')'''
-#     },
+#    for key in stats.keys():
+#        count = cache.get(key)
+#        if count is None:
+#        with connection.cursor() as cursor:
+#            cursor.execute(stats[key])
+#            count = dictfetchall(cursor)[0]['count']
+#            if count is None or count < 0:
+#                count = 0
+#                cache.set(key, count, 120)
+#                context[key] = count
+#                return context
 
 
-#This would need to be a report since it could display something other than a value
-#Products added since (or between)
-#add flag for 'summary'.  If no 'summary' then display all the values (name, orderid, time ordered)
-#select count(s.name) from ordering_scene s join ordering_order o on o.id = s.order_id where o.order_date >= '2015-11-18:00:00.00' and o.order_date <= '2015-11-19:00:00.00'
+class Statistics(object):
+
+    def listing(self, show_query=False):
+
+        # make a copy of this as we dont want to modify the
+        # actual dict in this module
+        _stats = copy.deepcopy(STATS)
+
+        for key, value in _stats.iteritems():
+            if show_query is False:
+                value.pop('query')
+        return _stats
+
+    def get(self, name, skip_cache=False):
+
+        if name not in STATS:
+            raise NotImplementedError
+
+        if skip_cache is False:
+            value = cache.get(name)
+            if value is not None and len(value) > 0:
+                return value
+  
+        query = STATS[name]['query']
+
+        if query is not None and len(query) > 0:
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                result = dictfetchall(cursor)
+                stat = result['statistic']
+                cache.put(name, stat, 120)
+                return stat
+        else:
+            logger.error("Query was empty for {0}: {1}".format(name, query))
+            return None
+
+
+listing = Statistics().listing
+
+get = lambda name, skip_cache=False: Statistics().get(name, skip_cache)
+
+display_name = lambda name: STATS[name]['display_name']
