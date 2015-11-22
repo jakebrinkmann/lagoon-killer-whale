@@ -12,7 +12,7 @@
     <span class="navitemright"><a href="{% url 'logout' %}">Logout</a></span>
     {% if user.is_staff %}
         <span class="navitemright">|</span>
-        <span class="navitemright"><a href="{% url 'consoleindex' %}">Console</a></span>
+        <span class="navitemright"><a href="{% url 'console_index' %}">Console</a></span>
     {% endif %}    
     <span class="navitemright">|</span>
     <span class="navitemright">{{ user.username}} ({{ user.email }})</span>

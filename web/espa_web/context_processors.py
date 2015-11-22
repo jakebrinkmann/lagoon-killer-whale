@@ -1,5 +1,5 @@
 from ordering.models.configuration import Configuration as config
-from reporting import stats
+from reports import stats
 
 def scene_stats(request):
     '''Includes stats for scene backlog and completed 24 hrs'''

@@ -44,7 +44,7 @@ REPORTS = {
                      SUM(CASE WHEN name LIKE 'MOD13%' THEN 1 ELSE 0 END) "MOD13",
                      SUM(CASE WHEN name LIKE 'MYD13%' THEN 1 ELSE 0 END) "MYD13" 
                      FROM ordering_scene
-                     WHERE status != 'purged''''
+                     WHERE status != 'purged' '''
     },
     'machine_performance': {
         'display_name': 'Machines - 24 Hour Performance',
