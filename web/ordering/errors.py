@@ -185,7 +185,7 @@ class Errors(object):
         keys = ['Verify the missing auxillary data products',
                 'Warning: main : Could not find auxnm data file']
         status = 'retry'
-        reason = 'Auxillary data not yet available for this date'
+        reason = 'Auxiliary data not yet available for this date'
         extras = self.__add_retry('missing_aux_data')
         return self.__find_error(error_message, keys, status, reason, extras)
 
@@ -288,7 +288,7 @@ def resolve(error_message, name):
     'retry'
 
     print(result.reason)
-    'Auxillary data not yet available for this date'
+    'Auxiliary data not yet available for this date'
 
     print(result.extra)
     {
