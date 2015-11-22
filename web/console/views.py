@@ -11,7 +11,7 @@ from django.views.generic.edit import FormView
 from forms import StatusMessageForm
 from ordering.models.configuration import Configuration
 
-from reporting import stats
+from reports import stats
 
 class Index(View):
     template = 'console/index.html'
