@@ -2,6 +2,7 @@
 cache '''
 
 import logging
+import re
 from ordering import sshcmd
 from ordering.models.configuration import Configuration
 
@@ -18,7 +19,7 @@ class OnlineCache(object):
     __order_path_key = 'online_cache_orders_dir'
 
     def __init__(self, host=None, user=None, pw=None):
-        
+
         if host is None:
             host = Configuration.get('landsatds.host')
         if user is None:
@@ -27,7 +28,7 @@ class OnlineCache(object):
             pw = Configuration.get('landsatds.password')
 
         self.client = sshcmd.RemoteHost(host, user, pw, debug=False)
-        
+
         try:
             self.orderpath = Configuration.get(self.__order_path_key)
         except Configuration.DoesNotExist:
@@ -43,12 +44,20 @@ class OnlineCache(object):
     def delete(self, orderid):
         ''' Removes an order from physical online cache disk '''
 
+        # centrally locate this in the settings and pull in here plus urls.py
+        espa_order = r'[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}-[0-9]{6,8}-[0-9]{3,6}'
+        ee_order = r'[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}-[0-9]{13}'
+
+        if not (re.match(espa_order, orderid) or re.match(ee_order, orderid)):
+            raise OnlineCacheException('invalid orderid parameter specified:{0}'.format(orderid))
+
         path = '/'.join([self.orderpath, orderid])
+
         # this should be the dir where the order is held
         logger.info('Deleting {0} from online cache'.format(path))
 
         try:
-            result = self.client.execute('rm -rf {0}'.format(path))
+            result = self.client.execute('sudo chattr -R -i {0};rm -rf {0}'.format(path))
         except Exception, exception:
             raise OnlineCacheException(exception)
 
@@ -82,6 +91,6 @@ class OnlineCache(object):
 
 def delete(orderid):
     return OnlineCache().delete(orderid)
-    
+
 def capacity():
     return OnlineCache().capacity()
