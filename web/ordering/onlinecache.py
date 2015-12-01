@@ -57,7 +57,7 @@ class OnlineCache(object):
         logger.info('Deleting {0} from online cache'.format(path))
 
         try:
-            result = self.client.execute('sudo chattr -R -i {0};rm -rf {0}'.format(path))
+            result = self.client.execute('sudo chattr -fR -i {0};rm -rf {0}'.format(path))
         except Exception, exception:
             raise OnlineCacheException(exception)
 
