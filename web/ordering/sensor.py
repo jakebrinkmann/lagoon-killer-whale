@@ -54,12 +54,6 @@ class SensorProduct(object):
     # this is a dictionary
     default_pixel_size = {}
     
-    config = {
-    
-    
-    
-    }
-
     def __init__(self, product_id):
         '''Constructor for the SensorProduct base class
 
