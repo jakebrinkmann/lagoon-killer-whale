@@ -56,9 +56,21 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
+<<<<<<< HEAD
 
 ###### Version 2.8.15 (November 2015)
 * added equal access scheduling 
+=======
+###### Version 2.9.0 (November 2015)
+* added staff only products for evaluation
+  * envi-bip format
+  * lst
+* added staff views for reporting
+* updated images
+* added extended attribute addition/removal for distributed files as a failsafe to prevent data loss
+* enforced maximum size on bounding box for image extents
+* clearing note field on products after they leave retry status
+>>>>>>> add_reports
 
 ###### Version 2.8.14 (November 2015)
 * restricted L8 surface reflectance based products from November 1st, 2015 onward (day 305)

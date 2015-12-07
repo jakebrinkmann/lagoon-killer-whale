@@ -33,7 +33,14 @@ class Configuration(models.Model):
         return str(value) if (value is not None and len(value) > 0) else str()
 
     @staticmethod
-    def clear_cache(self):
+    def listing():
+        result = {}
+        for config in Configuration.objects.all():
+            result[config.key] = config.value
+        return result
+
+    @staticmethod
+    def clear_cache():
         for config in Configuration.objects.all():
             cache.delete(config.key)
 

@@ -80,6 +80,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'ordering',
     'console',
+    'reports',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -106,7 +107,7 @@ DATABASES = {
         'PASSWORD': config.get('config', 'post-pass'),
         'HOST': config.get('config', 'post-host'),
         'PORT': config.get('config', 'post-port'),
-        'CONN_MAX_AGE': 30,
+        'CONN_MAX_AGE': 500,
     }
 }
 
@@ -123,31 +124,6 @@ USE_TZ = False
 STATIC_ROOT = os.path.join(BASE_DIR, 'espa_web', 'static/')
 STATIC_URL = '/static/'
 
-# Templates
-#EMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates"
-    #or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-#   os.path.join(BASE_DIR, "espa_web/templates"),
-#
-
-#EMPLATE_CONTEXT_PROCESSORS = (
-#   'django.core.context_processors.debug',
-#   'django.core.context_processors.i18n',
-#   'django.core.context_processors.media',
-#   'django.core.context_processors.static',
-#   'django.contrib.auth.context_processors.auth',
-#   'django.contrib.messages.context_processors.messages',
-#   'espa_web.context_processors.include_external_urls',
-#
-
-# List of callables that know how to import templates from various sources.
-#TEMPLATE_LOADERS = (
-#   'django.template.loaders.filesystem.Loader',
-#   'django.template.loaders.app_directories.Loader',
-#
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -162,6 +138,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 'espa_web.context_processors.include_external_urls',
+                'espa_web.context_processors.scene_stats',
             ],
         },
     },
@@ -244,7 +221,6 @@ LOGGING = {
     },
     'loggers': {
        'django.request': {
-            # To be used by django
             'level': 'ERROR',
             'propagate': False,
             'handlers': ['requests'],
@@ -255,7 +231,6 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.core': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
@@ -281,19 +256,16 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.models.user': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.models.configuration': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
         'ordering.models.order': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
@@ -329,12 +301,11 @@ LOGGING = {
             'handlers': ['standard']
         },
         'ordering.views': {
-            # To be used by the web system
             'level': 'INFO',
             'propagate': False,
             'handlers': ['standard']
         },
-        'ordering.utilities': {
+        'reports.reports': {
             'level': 'INFO',
             'propagate':False,
             'handlers': ['standard']

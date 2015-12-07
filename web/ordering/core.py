@@ -169,6 +169,7 @@ def handle_onorder_landsat_products():
     }
     updates = {
         'status': 'oncache',
+        'note': ''
     }
 
     if len(available) > 0:
@@ -268,19 +269,19 @@ def handle_submitted_landsat_products():
                 'order__user__userprofile__contactid': contact_id
             }
 
-            update_args = {'status': 'oncache'}
+            update_args = {'status': 'oncache', 'note': ''}
 
             Scene.objects.filter(**filter_args).update(**update_args)
 
         if 'ordered' in results and len(results['ordered']) > 0:
-            #response = lta.order_scenes(orderable, contact_id)
 
             filter_args = {'status': 'submitted',
                            'name__in': results['ordered'],
                            'order__user__userprofile__contactid': contact_id}
 
             update_args = {'status': 'onorder',
-                           'tram_order_id': results['lta_order_id']}
+                           'tram_order_id': results['lta_order_id'],
+                           'note': ''}
 
             Scene.objects.filter(**filter_args).update(**update_args)
 
@@ -445,44 +446,12 @@ def get_products_to_process(record_limit=500,
     if priority is not None:
         buff.write('AND o.priority = \'{0}\' '.format(priority))
 
-    buff.write('ORDER BY q.running ASC NULLS FIRST, o.order_date ASC LIMIT {0}'.format(record_limit))
+    buff.write('ORDER BY q.running ASC NULLS FIRST, ')
+    buff.write('o.order_date ASC LIMIT {0}'.format(record_limit))
 
-    '''
-    buffer = StringIO()
-    buffer.write('SELECT ')
-    buffer.write('p.contactid, s.name, s.sensor_type, ')
-    buffer.write('o.orderid, o.product_options, o.priority ')
-    buffer.write('FROM ')
-    buffer.write('ordering_order o, ')
-    buffer.write('ordering_scene s, ')
-    buffer.write('ordering_userprofile p, ')
-    buffer.write('auth_user u ')
-    buffer.write('WHERE ')
-    buffer.write('o.user_id = u.id AND ')
-    buffer.write('s.order_id = o.id AND ')
-    buffer.write('u.id = p.user_id AND ')
-    buffer.write('s.status = \'oncache\' ')
-
-    if product_types is not None and len(product_types) > 0:
-        type_str = ','.join('\'{0}\''.format(x) for x in product_types)
-        buffer.write('AND s.sensor_type IN ({0}) '.format(type_str))
-
-    if for_user is not None:
-        buffer.write('AND u.username = \'{0}\' '.format(for_user))
-
-    if priority is not None:
-        buffer.write('AND o.priority = \'{0}\' '.format(priority))
-
-    buffer.write('ORDER BY ')
-    buffer.write('o.order_date ')
-    buffer.write('LIMIT {0}'.format(record_limit))
-
-    query = buffer.getvalue()
-    buffer.close()
-    '''
     query = buff.getvalue()
     buff.close()
-    logger.info("QUERY:{0}".format(query))
+    logger.debug("QUERY:{0}".format(query))
 
     query_results = None
     cursor = connection.cursor()
@@ -518,19 +487,19 @@ def get_products_to_process(record_limit=500,
         interval = stop - start
         logger.debug('Retrieving download urls took {0} seconds'
                      .format(interval.seconds))
-        logger.info('Retrieved {0} landat urls for cid:{1}'.format(len(landsat_urls), cid))
+        logger.debug('Retrieved {0} landsat urls for cid:{1}'.format(len(landsat_urls), cid))
 
         modis = [item['name'] for item in cid_items if item['sensor_type'] == 'modis']
         modis_urls = lpdaac.get_download_urls(modis)
 
-        logger.info('Retrieved {0} urls for cid:{1}'.format(len(modis_urls), cid))
+        logger.debug('Retrieved {0} urls for cid:{1}'.format(len(modis_urls), cid))
 
         for item in cid_items:
             dload_url = None
             if item['sensor_type'] == 'landsat':
-               
+
                  # check to see if the product is still available
-                
+
                 if ('status' in landsat_urls[item['name']] and
                         landsat_urls[item['name']]['status'] != 'available'):
                     try:
@@ -541,15 +510,8 @@ def get_products_to_process(record_limit=500,
 
                         logger.info('{0} for order {1} was oncache '
                                     'but now unavailable, reordering'
-                                    #format(scene.name, scene.order.orderid))
                                     .format(item['name'], item['orderid']))
 
-                        #set_product_retry(scene.name,
-                        #                  scene.order.orderid,
-                        #                  'get_products_to_process',
-                        #                  'product was not available',
-                        #                  'reorder missing level1 product',
-                        #                  after, limit)
                         set_product_retry(item['name'],
                                           item['orderid'],
                                           'get_products_to_process',
@@ -557,13 +519,11 @@ def get_products_to_process(record_limit=500,
                                           'reorder missing level1 product',
                                           after, limit)
                     except Exception:
-   
+
                         logger.info('Retry limit exceeded for {0} in '
                                     'order {1}... moving to error status.'
-                                    #.format(scene.name, scene.order.orderid))
                                     .format(item['name'], item['orderid']))
 
-                        #set_product_error(scene.name, scene.order.orderid,
                         set_product_error(item['name'], item['orderid'],
                                           'get_products_to_process',
                                           ('level1 product data '
@@ -692,6 +652,7 @@ def queue_products(order_name_tuple_list, processing_location, job_name):
         update_args = {'status': 'queued',
                        'processing_location': processing_location,
                        'log_file_contents': '',
+                       'note': '',
                        'job_name': job_name}
 
         Scene.objects.filter(**filter_args).update(**update_args)
@@ -717,7 +678,7 @@ def mark_product_complete(name,
     product.completion_date = datetime.datetime.now()
     product.cksum_distro_location = destination_cksum_file
     product.log_file_contents = log_file_contents
-    product.note = '' 
+    product.note = ''
 
     base_url = config.url_for('distribution.cache')
 
@@ -1098,7 +1059,7 @@ def dump_config(filepath):
         for item in items:
             entry = '{0}={1}\n'.format(item.key.strip(), item.value.strip())
             output.write(entry)
-    
+
     os.chmod(filepath, 0444)
 
 
@@ -1143,7 +1104,7 @@ def load_config(filepath, delete_existing=False):
 
                 logger.info("Loading {0}:{1} into Configuration()"
                        .format(key, val))
-                
+
                 config.objects.update_or_create(key=key,
                                                 defaults={'key':key, 'value':val})
 

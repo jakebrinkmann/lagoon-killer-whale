@@ -14,6 +14,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import Http404
+from django.shortcuts import redirect
 from django.template import loader
 from django.template import RequestContext
 from django.template.context_processors import csrf
@@ -399,7 +400,8 @@ class LogOut(AbstractView):
 
         c = self._get_request_context(request, include_system_message=False)
 
-        return HttpResponse(t.render(c, request))
+        #return HttpResponse(t.render(c, request))
+        return redirect('login')
 
 
 class ListOrdersForm(forms.Form):

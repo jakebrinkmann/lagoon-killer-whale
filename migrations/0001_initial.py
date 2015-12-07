@@ -10,6 +10,7 @@ def bootstrap_config(apps, schema_editor):
         'cache.ttl': {'default':7 * 24 * 60 * 60, 'units':'seconds'},
         'cache.key.handle_orders_lock_timeout': {'default':21 * 60,
                                                  'units':'seconds'},
+        'cache.stat.ttl': {'default': 600, 'units':'seconds'},
 
         'email.espa_address': {'default':'espa@usgs.gov', 'units':''},
         'email.espa_server': {'default':'gssdsflh01.cr.usgs.gov', 'units':''},

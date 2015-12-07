@@ -15,6 +15,9 @@ URL module for the main espa_web project
 admin.autodiscover()
 
 urlpatterns = patterns('',
+                       url(r'^reports/',
+                           include('reports.urls')),
+
                        url(r'^ordering/',
                            include('ordering.urls')),
 

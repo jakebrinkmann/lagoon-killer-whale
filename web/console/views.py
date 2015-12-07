@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
+from django.http import Http404
+
 from django.shortcuts import render
 from django.views.generic import View
 from django.views.generic.edit import FormView
@@ -11,16 +14,63 @@ from django.views.generic.edit import FormView
 from forms import StatusMessageForm
 from ordering.models.configuration import Configuration
 
+from reports import stats
+
+import json
+
+def render_to_json_response(context, **response_kwargs):
+        data = json.dumps(context, indent=4, sort_keys=True)
+        response_kwargs['content_type'] = 'application/json'
+        return HttpResponse(data, **response_kwargs)
+
+class Config(View):
+    # need to be able to view the cache keys and clear them
+    actions = ['view', 'clear_cache']
+
+
+    def get(self, request, key='all'):
+        action = request.GET.get('action', 'view')
+        if action == 'view':
+            if key == 'all':
+                listing = Configuration.listing()
+                return render_to_json_response(listing)
+            else:
+                value = Configuration.get(key)
+                if value == '' or len(value) == 0:
+                    return Http404
+                else:
+                    return render_to_json_response({key:value})
+        elif action == 'clear_cache':
+            Configuration.clear_cache()
+            return render_to_json_response({'result': 'ok'})
+        else:
+            return render_to_json_response({'valid_actions': self.actions})
+
 class Index(View):
     template = 'console/index.html'
 
     def get(self, request, *args, **kwargs):
+
         user = User.objects.get(username=request.user.username)
+
         if not user.is_staff:
             return HttpResponseRedirect(reverse('login'))
 
+        ctx = {}
         
-        return render(request, self.template)
+        listing = stats.listing()
+
+        for key, value in listing.iteritems():
+            stat = stats.get(key)
+            ctx[value['display_name']] = {
+                'description': value['description'],
+                'statistic': stat
+            }
+        
+        
+        return render(request=request,
+                      template_name=self.template,
+                      context={'stats': ctx})
 
 class StatusMessage(SuccessMessageMixin, FormView):
     template_name = 'console/statusmsg.html'

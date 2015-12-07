@@ -10,11 +10,31 @@
 <div class="wrapper">
 
     <h4>ESPA Console</h4>
+    <div>
+    <span style='margin-right:10px;'><a href="{% url 'console_statusmsg' %}">Status Message</a></span>
+    <span><a href="{% url 'reports.listreports' %}">Reports</a></span>
+    </div>
 
-    <p>
-        <a href="{% url 'statusmsg' %}">Status Message</a>
-    </p>
+    <div style='margin-top:30px;'>
+    <h4>Summary Stats</h4>
+    <table id='statistics' class='display' width=100%>
+    <thead><tr><th>Name</th><th>Value</th></thead>
+    <tbody>
+    {% for k, v in stats.items %}
+        <tr>
+        <td>{{ k }}</td>
+        <td>{{ v.statistic }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div>
 
+    <div style='margin-top:30px;'>
+    <h4>Configuration</h4>
+    <div><a href="{% url 'console_config_listing' %}?action=clear_cache">Clear Configuration Cache</a></div>
+    <div style='margin-top:15px'><a href="{% url 'console_config_listing' %}">Show Configuration Values</a></div>
+    </div>
 </div>
 
 {% endblock %}
