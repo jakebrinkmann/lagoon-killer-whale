@@ -209,7 +209,7 @@ class Errors(object):
         return self.__find_error(error_message, keys, status, reason, extras)
 
     def no_such_file_or_directory(self, error_message):
-        keys = ['No such file or directory']
+        keys = ['BLOCK, COMING FROM LST AS WELL: No such file or directory']
         status = 'submitted'
         reason = 'Reordered due to online cache purge'
         return self.__find_error(error_message, keys, status, reason)
