@@ -61,6 +61,8 @@ start the uWSGI server on boot.
 * added additional reports
 * adjusted max extent pixels to 200,000,000
 * removed bug in onlinecache by stripping empty list elementsr
+* added cfmask as a standalone orderable product
+* removed original source input data
 
 ###### Version 2.9.0 (December 2015)
 * added staff only products for evaluation
