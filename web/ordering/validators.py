@@ -769,7 +769,12 @@ class ImageExtentsValidator(Validator):
             width = abs(maxx - minx)
             height = abs(maxy - miny)
             pixel_count = (width * height) / (ps * ps)
-            max_pixels = (10000 * 10000)
+
+            # this is the max that the backend hadoop system is tuned for.
+            # don't adjust this higher or the processing nodes will run
+            # out of disk space
+            # 200,000,000 pan band pixels (8 bytes) == 1.6Gig
+            max_pixels = 200000000
 
             if pixel_count > max_pixels:
                 m = 'Image extents must be {0} pixels or less'.format(

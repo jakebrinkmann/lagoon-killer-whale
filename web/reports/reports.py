@@ -105,6 +105,19 @@ REPORTS = {
                     GROUP BY u.email, u.first_name, u.last_name 
                     ORDER BY "Total Orders" DESC'''
     },
+    'order_expiration': {
+        'display_name': 'Orders - Expiration',
+        'description': 'Expiring orders by date',
+        'query': r'''SELECT 
+                     (o.completion_date + interval '10 days') "Expires", 
+                     o.orderid "Order", 
+                     count(s.name) "Product Count" 
+                     FROM ordering_order o 
+                     JOIN ordering_scene s ON o.id = s.order_id 
+                     WHERE o.status = 'complete' 
+                     GROUP BY o.orderid, o.completion_date 
+                     ORDER BY "Expires"'''
+    },
     'order_product_status': {
         'display_name': 'Orders - Product Status',
         'description': 'Shows orders and product counts by date',
@@ -150,6 +163,18 @@ REPORTS = {
                      AND s.status != 'purged' 
                      GROUP BY u.email, u.first_name, u.last_name 
                      ORDER BY "Total Active Scenes" DESC'''
+    },
+    'product_expiration_counts': {
+        'display_name': 'Products - Expiration Counts',
+        'description': 'Quantities of expiring products by date',
+        'query': r'''SELECT
+                     (o.completion_date::date + interval '10 days') "Expiration", 
+                     count(s.name) "Quantity" 
+                     FROM ordering_order o 
+                     JOIN ordering_scene s on o.id = s.order_id 
+                     WHERE o.status = 'complete' 
+                     GROUP BY "Expiration" 
+                     ORDER BY "Expiration"'''
     },
     'product_completion_log': {
         'display_name': 'Products - Completion Log',

@@ -200,19 +200,21 @@ $(document).ready(function(){
     var source_products = {
         'include_source_data': 'original input products',
         'include_source_metadata': 'original input metadata',
-        'include_customized_source_data': 'customized input products'
+        'include_customized_source_data': 'input products'
     };
 
     var products = {'include_sr': 'surface reflectance',
                     'include_sr_toa':'top of atmosphere',
+                    'include_cfmask': 'cfmask',
+                    'include_lst': 'land surface temperature',
                     'include_sr_thermal': 'brightness temperature',
                     'include_statistics': 'plots & statistics',
                     'include_dswe': 'dynamic surface water extent'};
 
-    var indices = {'include_sr_evi': 'EVI', 'include_sr_msavi': 'MSAVI',
-                   'include_sr_nbr': 'NBR', 'include_sr_nbr2': 'NBR2',
-                   'include_sr_ndmi': 'NDMI', 'include_sr_ndvi': 'NDVI',
-                   'include_sr_savi': 'SAVI'};
+    var indices = {'include_sr_evi': 'evi', 'include_sr_msavi': 'msavi',
+                   'include_sr_nbr': 'nbr', 'include_sr_nbr2': 'nbr2',
+                   'include_sr_ndmi': 'ndmi', 'include_sr_ndvi': 'ndvi',
+                   'include_sr_savi': 'savi'};
 
     var customization = {'reproject': 'reproject',
                          'resize': 'resize',

@@ -81,10 +81,13 @@ class OnlineCache(object):
         logger.debug('call to {0} returned {1}'.format(cmd, result['stdout']))
 
         line = result['stdout'][1].split(' ')
-        results = {'capacity':line[2],
-                   'used':line[5],
-                   'available':line[8],
-                   'percent_free':line[10]}
+        
+        clean = [l for l in line if len(l) > 0]
+        
+        results = {'capacity':clean[1],
+                   'used':clean[2],
+                   'available':clean[3],
+                   'percent_free':clean[4]}
         return results
 
 # Below here should be considered to be the public interface for this module

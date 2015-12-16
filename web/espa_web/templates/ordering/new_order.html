@@ -300,21 +300,22 @@
 	    </div>
 	    <div class="product_boxbody">
 		
-		<div class="inputitem">
+		<!--<div class="inputitem">
 		    <input class="product" type="checkbox" id="include_source_data" name="include_source_data">
 		    <label class="tooltip" title="Deliver Unmodified Input Products" for="source_products">Original Input Products</label>
+		</div>-->
+		
+                <div class="inputitem">
+		    <input class="product custom_product" type="checkbox" id="include_customized_source_data" name="include_customized_source_data">
+		    <label class="tooltip" title="Input Products (as ESPA product)">Input Products</label>
 		</div>
 		
 		<div class="inputitem">
 		    <input class="product" type="checkbox" id="include_source_metadata" name="include_source_metadata">
-		    <label class="tooltip" title="Deliver Unmodified Input Product Metadata">Original Input Metadata</label>
+		    <label class="tooltip" title="Deliver Unmodified Input Product Metadata">Input Product Metadata</label>
 		</div>
 
-           <div class="inputitem">
-		    <input class="product custom_product" type="checkbox" id="include_customized_source_data" name="include_customized_source_data">
-		    <label class="tooltip" title="Apply ESPA Customizations to Input Products">Customized Input Products</label>
-		</div>
-		
+    
 	    </div>
 	</div>
 	
@@ -330,16 +331,22 @@
 		    <input class="product custom_product" type="checkbox" id="include_sr_toa" name="include_sr_toa"></input>
 		    <label class="tooltip" title="Top of Atmosphere Reflectance " for="toa_reflectance">Top of Atmosphere Reflectance</label>
 		</div>
+
+		<div class="inputitem">
+		    <input class="product custom_product" type="checkbox" id="include_sr_thermal" name="include_sr_thermal"></input>
+		    <label class="tooltip" title="Surface Reflectance Brightness Temperature" for="sr_thermal">Brightness Temperature</label>
+		</div>
+
+		<div class="inputitem">
+		    <input class="product custom_product" type="checkbox" id="include_cfmask" name="include_cfmask"></input>
+		    <label class="tooltip" title="CFMask" for="sr_thermal">CFMask</label>
+		</div>
 		
 		<div class="inputitem">
 		    <input class="product custom_product" type="checkbox" id="include_sr" name="include_sr"></input>
 		    <label class="tooltip" title="Surface Reflectance" for="surface_reflectance">Surface Reflectance</label>
 		</div>
-		
-		<div class="inputitem">
-		    <input class="product custom_product" type="checkbox" id="include_sr_thermal" name="include_sr_thermal"></input>
-		    <label class="tooltip" title="Surface Reflectance Brightness Temperature" for="sr_thermal">Brightness Temperature</label>
-		</div>
+				
                 {% if user.is_staff %}
                     <div class="inputitem">
                         <input class="product custom_product" type="checkbox" id="include_lst" name="include_lst"></input>
