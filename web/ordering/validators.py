@@ -607,7 +607,7 @@ class MeterPixelSizeValidator(Validator):
         else:
             self.add_error('pixel_size', msg)
 
-        if ps and not (ps >= 30.0 or ps <= 1000.0):
+        if ps is not None and (ps < 30.0 or ps > 1000.0):
             self.add_error('pixel_size', msg)
 
         return super(MeterPixelSizeValidator, self).errors()
