@@ -175,7 +175,9 @@ class NewOrder(AbstractView):
 
         if not self.input_product_list:
             if 'input_product_list' in request.FILES:
-                _ipl = request.FILES['input_product_list'].read().split('\n')
+                _ipl_str = request.FILES['input_product_list'].read()
+                _splitter = "\n" if "\n" in _ipl_str else "\r"
+                _ipl = _ipl_str.split(_splitter)
                 self.input_product_list = _ipl
 
         retval = collections.namedtuple("InputProductListResult",
