@@ -170,6 +170,7 @@ CACHES = {
         'LOCATION': [
             'localhost:11211',
         ]
+    }
 }
 
 #if ESPA_ENV is 'dev':
