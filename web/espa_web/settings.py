@@ -163,28 +163,36 @@ LOGIN_REDIRECT_URL = 'index'
 # Set up caching for Django.  Everything is pointed to our single memcache
 # cluster but each environment is going to separated out with the environment
 # value as a key prefix.
-if ESPA_ENV is 'dev':
-    CACHES = {
+CACHES = {
     'default': {
         'KEY_PREFIX' : ESPA_ENV,
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': [
-            'l8srlscp20.cr.usgs.gov:11211',
+            'localhost:11211',
         ]
     }
 }
-else:
-    CACHES = {
-        'default': {
-            'KEY_PREFIX' : ESPA_ENV,
-            'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-            'LOCATION': [
-                'l8srlscp20.cr.usgs.gov:11211',
-                'l8srlscp21.cr.usgs.gov:11211',
-                'l8srlscp22.cr.usgs.gov:11211',
-            ]
-        }
-    }
+
+#if ESPA_ENV is 'dev':
+#    CACHES = {
+#    'default': {
+#        'KEY_PREFIX' : ESPA_ENV,
+#        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#        'LOCATION': [
+#            'localhost:11211',
+#        ]
+#    }
+#}
+#else:
+#    CACHES = {
+#        'default': {
+#            'KEY_PREFIX' : ESPA_ENV,
+#            'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#            'LOCATION': [
+#                'l8srlscp20.cr.usgs.gov:11211',
+#            ]
+#        }
+#    }
 
 LOGDIR = os.environ.get('ESPA_LOG_DIR', '/var/log/uwsgi')
 

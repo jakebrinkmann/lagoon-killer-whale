@@ -56,6 +56,9 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
+###### Version 2.9.3 (January 2015)
+* altered settings configuration to point to localhost for caching
+
 ###### Version 2.9.2 (December 2015)
 * fixed bug with scene list submission generated on MacOS
 
