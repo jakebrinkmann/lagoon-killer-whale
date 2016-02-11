@@ -202,11 +202,20 @@ class LandsatProductListValidator(Validator):
                                     logger.info(
                                         "{0} year is {1}, day is {2}".format(
                                             product, product.year, product.doy))
-                                    if (int(product.year) >= 2015 and int(
-                                            product.doy) >= 305):
+                                    #if (int(product.year) >= 2015 and int(product.doy) >= 305):
+
+                                    _year = int(product.year)
+                                    _doy = int(product.doy)
+
+                                    if _year > 2015:
                                         msg = (
-                                            "Landsat 8 surface reflectance based products are not available "
-                                            "from November 1st, 2015 onward due to TIRS anomolies")
+                                            "Landsat 8 surface reflectance products are not available "
+                                            "after December 31, 2015 due to TIRS anomolies")
+                                        self.add_error('input_products', msg)
+                                    elif _year == 2015 and _doy in [305, 306]:
+                                        msg = (
+                                            "Landsat 8 surface reflectance products are not available "
+                                            "for November 1st or 2nd 2015 due to TIRS anomolies")
                                         self.add_error('input_products', msg)
 
         return super(LandsatProductListValidator, self).errors()
