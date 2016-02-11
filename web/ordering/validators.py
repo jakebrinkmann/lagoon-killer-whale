@@ -209,13 +209,13 @@ class LandsatProductListValidator(Validator):
 
                                     if _year > 2015:
                                         msg = (
-                                            "Landsat 8 surface reflectance products are not available "
+                                            "Landsat 8 surface reflectance is not available "
                                             "after December 31, 2015 due to TIRS anomolies")
                                         self.add_error('input_products', msg)
                                     elif _year == 2015 and _doy in [305, 306]:
                                         msg = (
-                                            "Landsat 8 surface reflectance products are not available "
-                                            "for November 1st or 2nd 2015 due to TIRS anomolies")
+                                            "Landsat 8 surface reflectance is not available "
+                                            "for November 1-2, 2015 due to TIRS anomolies")
                                         self.add_error('input_products', msg)
 
         return super(LandsatProductListValidator, self).errors()
