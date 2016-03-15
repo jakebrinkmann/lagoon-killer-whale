@@ -605,7 +605,7 @@ class MeterPixelSizeValidator(Validator):
 
     def errors(self):
 
-        msg = "Please enter a pixel size between 30 and 1000 meters"
+        msg = "Please enter a pixel size between 30 and 5000 meters"
 
         ps = None
 
@@ -616,7 +616,7 @@ class MeterPixelSizeValidator(Validator):
         else:
             self.add_error('pixel_size', msg)
 
-        if ps is not None and (ps < 30.0 or ps > 1000.0):
+        if ps is not None and (ps < 30.0 or ps > 5000.0):
             self.add_error('pixel_size', msg)
 
         return super(MeterPixelSizeValidator, self).errors()
@@ -624,13 +624,17 @@ class MeterPixelSizeValidator(Validator):
 
 class DecimalDegreePixelSizeValidator(Validator):
     '''Validates pixel sizes specified in decimal degrees'''
+    # use the fixed value of 111320 to
+    #0.0002695 dd == 30 meters
+    #0.0089831 dd == 1000 meters
+    #0.0449155 dd == 5000 meters
 
     def errors(self):
 
         msg = ''.join(["Please enter a pixel size between",
-                       " 0.0002695 to 0.0089831 decimal degrees"])
+                       " 0.0002695 to 0.0449155 decimal degrees"])
 
-        msg1 = "Valid pixel size is 0.0002695 to 0.0089831 decimal degrees"
+        msg1 = "Valid pixel size is 0.0002695 to 0.0449155 decimal degrees"
 
         ps = None
 
@@ -641,7 +645,7 @@ class DecimalDegreePixelSizeValidator(Validator):
         else:
             self.add_error('pixel_size', msg)
 
-        if ps and (ps > 0.0089831 or ps < 0.0002695):
+        if ps and (ps > 0.0449155 or ps < 0.0002695):
             self.add_error('pixel_size', msg1)
 
         return super(DecimalDegreePixelSizeValidator, self).errors()

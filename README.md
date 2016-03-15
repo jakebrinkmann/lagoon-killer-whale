@@ -56,6 +56,10 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
+###### Version 2.9.5 (March 2015)
+* updated NLAPS (TMA) restriction list
+* set max pixel size to 5000 meters/0.44 dd
+
 ###### Version 2.9.4 (February 2015)
 * updated schema path in uwsgi mappings
 * moved the date restriction for ordering l8sr to 12/31/2015 except 
