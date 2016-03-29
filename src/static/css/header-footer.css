@@ -1,7 +1,10 @@
 /* These three are to pin the footer at the bottom of the window but not 
 have it fixed there */
 html{position:relative; min-height: 100% }
-body { margin-bottom:100px;}
+body {
+  margin-bottom:100px;
+
+}
 #footer{height: 100px; width:100%; position: absolute; left: 0; bottom: 0;}
 
 #header {height:71px; margin-bottom:0px;overflow:hidden;}
@@ -22,6 +25,88 @@ body { margin-bottom:100px;}
              padding-top:4px; padding-left:10px;
              height:30px; background-color:#000;}
 
+#nav a {
+  color: #FFFFFF;
+}
+
+#nav {
+  color: #FFFFFF;
+}
+
+#usgsfooter {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  color: #000000;
+  font-size: small;
+  margin: 0;
+  padding-top: 2px;
+}
+
+#usgsfooter {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: small;
+  clear: both;
+  margin: 0;
+}
+
+#usgsfooterbar {
+  background-color: #666666;
+  padding: 4px;
+  margin: 0;
+}
+
+#usgsfooterbar a:link {
+  margin-right: 40px;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#usgsfootertext{
+  padding: 4px;
+  margin: 0;
+}
+
+#usgsfootertext img {
+  border: none;
+  float: right;
+  margin-right: 5px;
+}
+
+a {
+  background-color: transparent;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+
+a:-webkit-any-link {
+  color: -webkit-link;
+  text-decoration: underline;
+  cursor: auto;
+}
+
+p {
+  font-family: Verdana, Arial, Helvetica, sans-serif, Times New Roman;
+  line-height: 1.6em;
+}
+
+span.navitemleft {
+  padding-left: 15px;
+  font-weight: bold;
+  line-height: 20px;
+  display: inline-block;
+  zoom: 1;
+  float: left;
+}
+
+span.navitemright {
+  padding-left: 15px;
+  font-weight: bold;
+  line-height: 20px;
+  display: inline-block;
+  zoom: 1;
+  float: right;
+}
 
 .gap-top { margin-top:10px; }
 .gap-bottom { margin-bottom:10px; }

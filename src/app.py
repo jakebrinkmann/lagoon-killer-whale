@@ -1,11 +1,18 @@
 from flask import Flask
 from flask import request
-from flask import g
 from flask import render_template
 from flask import url_for
 
+import requests
+import json
+
+from collections import OrderedDict
+import datetime
+
 app = Flask(__name__)
 app.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
+
+api_base_url = "http://{0}:{1}".format(app.config['APIHOST'], app.config['APIPORT'])
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -28,8 +35,11 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/')
+@app.route('/index/')
 def index():
-    return render_template('index.html')
+    bar = "heres a string"
+    display_system_message = None
+    return render_template('index.html', bar=bar, display_system_message=display_system_message)
 
 @app.route('/ordering/new/')
 def new_order():
@@ -43,6 +53,21 @@ def list_orders():
 @app.route('/ordering/status/orderid')
 def view_order():
     return render_template('view_order.html')
+
+@app.route('/reports/')
+def list_reports():
+    req_url = api_base_url + "/api/v0/reports/"
+    response = requests.get(req_url)
+    res_data = json.loads(response._content)
+    return render_template('list_orders.html', reports=res_data)
+
+@app.route('/reports/<name>/')
+def show_report(name):
+    req_url = api_base_url + "/api/v0/reports/{0}/".format(name)
+    response = requests.get(req_url)
+    res_data = eval(json.loads(response._content))
+    return render_template('report.html', report_name=name, report=res_data)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='localhost', port=8889)

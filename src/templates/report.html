@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %} ESPA Reports {% endblock %}
+{% block header %} All Reports {% endblock %}
+
+{% block nav %}{% include 'ordering/bulk_ordering_nav.html' %}{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css"/>
+{% endblock %}
+
+{% block js_files %}
+  <script type="text/javascript" src="http://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+    $(document).ready(function(){
+        $('#reports').DataTable();
+      });  
+{% endblock %}
+
+
+{% block content %}
+
+<div class="wrapper">
+    <h4>{{ report_name }} Report</h4>
+    {% if report %}
+    <table id='reports' class='display' cellspacing='0' width='100%'>
+    <thead>
+        <tr>
+        {% for key in report[0].keys() %}
+        <th>{{ key }}</th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for rpt in report %}
+        <tr>
+            {% for k,v in rpt.items() %}
+            <td> {{ v }} </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+    {% else %}
+    <h5>No items to report.</h5>
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
