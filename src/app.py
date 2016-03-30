@@ -38,8 +38,20 @@ def logout():
 @app.route('/index/')
 def index():
     bar = "heres a string"
-    display_system_message = None
-    return render_template('index.html', bar=bar, display_system_message=display_system_message)
+    response = requests.get(api_base_url + '/api/v0/system-status')._content
+    sys_msg_resp = json.loads(response)
+    system_message_body = sys_msg_resp['system_message_body']
+    system_message_title = sys_msg_resp['system_message_title']
+    if system_message_title or system_message_body:
+        display_system_message = True
+    else:
+        display_system_message = False
+    print "****", display_system_message
+    return render_template('index.html', bar=bar,
+                           display_system_message=display_system_message,
+                           system_message_body=system_message_body,
+                           system_message_title=system_message_title
+                           )
 
 @app.route('/ordering/new/')
 def new_order():

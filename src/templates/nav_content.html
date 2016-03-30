@@ -1,0 +1,20 @@
+        <span class="navitemleft"><a href="index">Home</a></span>
+        <span class="navitemleft">|</span>
+        <span class="navitemleft"><a href="ordering/new">New Order</a></span>
+        <span class="navitemleft">|</span>
+        <span class="navitemleft"><a href="listorders_form">Show Orders</a></span>
+        <span class="navitemleft">|</span>
+        <span class="navitemleft"><a href="http://landsat.usgs.gov/CDR_ECV.php">Product Information</a></span>
+        <span class="navitemleft">|</span>
+        <span class="navitemleft"><a href="http://landsat.usgs.gov/documents/espa_odi_userguide.pdf">User Guide</a></span>
+        <span class="navitemright"><a href="logout">Logout</a></span>
+        {#% if user.is_staff %#}
+            <span class="navitemright">|</span>
+            <span class="navitemright"><a href="console_index">Console</a></span>
+        {#% endif %#}
+        <span class="navitemright">|</span>
+        <span class="navitemright">{#{ user.username}#} ({#{ user.email }#})</span>
+        <span class="navitemright">|</span>
+        <span class="navitemright">Products Completed Last Day: {#{ stat_products_complete_24_hrs }#}</span>
+        <span class="navitemright">|</span>
+        <span class="navitemright">Product Backlog: {#{ stat_backlog_depth }#}</span>
