@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import request
+from flask import g
 from flask import render_template
 from flask import url_for
 
@@ -11,6 +12,7 @@ import datetime
 
 app = Flask(__name__)
 app.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
+
 
 api_base_url = "http://{0}:{1}".format(app.config['APIHOST'], app.config['APIPORT'])
 
@@ -37,9 +39,8 @@ def logout():
 @app.route('/')
 @app.route('/index/')
 def index():
-    bar = "heres a string"
-    response = requests.get(api_base_url + '/api/v0/system-status')._content
-    sys_msg_resp = json.loads(response)
+    status_response = requests.get(api_base_url + '/api/v0/system-status')._content
+    sys_msg_resp = json.loads(status_response)
     system_message_body = sys_msg_resp['system_message_body']
     system_message_title = sys_msg_resp['system_message_title']
     if system_message_title or system_message_body:
@@ -47,7 +48,7 @@ def index():
     else:
         display_system_message = False
     print "****", display_system_message
-    return render_template('index.html', bar=bar,
+    return render_template('index.html',
                            display_system_message=display_system_message,
                            system_message_body=system_message_body,
                            system_message_title=system_message_title
@@ -55,7 +56,21 @@ def index():
 
 @app.route('/ordering/new/')
 def new_order():
-    return render_template('new_order.html')
+    status_response = requests.get(api_base_url + '/api/v0/system-status')._content
+    sys_msg_resp = json.loads(status_response)
+    system_message_body = sys_msg_resp['system_message_body']
+    system_message_title = sys_msg_resp['system_message_title']
+    form_action = api_base_url + '/api/v0/order'
+    if system_message_title or system_message_body:
+        display_system_message = True
+    else:
+        display_system_message = False
+    return render_template('new_order.html',
+                           display_system_message=display_system_message,
+                           system_message_body=system_message_body,
+                           system_message_title=system_message_title,
+                           form_action=form_action
+                           )
 
 @app.route('/ordering/status/')
 @app.route('/ordering/status/emailaddr')

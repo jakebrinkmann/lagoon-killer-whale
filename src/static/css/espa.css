@@ -268,13 +268,13 @@ fieldset {
 
 #nav {
     background-color: #577196;
-    color: #FFFFFF;
-    padding-top:8px;
-    padding-bottom:8px;
+    color: #ffffff;
     font-size:12px;
+    line-height:20px;
     margin-top:-3px;
     overflow:auto;
-    line-height:20px;
+    padding-bottom:8px;
+    padding-top:8px;
 }
 
 #nav a{
