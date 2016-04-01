@@ -3,6 +3,10 @@
 {% block title %} ESPA Reports {% endblock %}
 {% block header %} All Reports {% endblock %}
 
+{% block usgstitle %}
+  <p>LSDS Science Research and Development (LSRD)</p>
+{% endblock %}
+
 {% block stylesheets %}
     <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css"/>
 {% endblock %}
@@ -11,7 +15,7 @@
   <script type="text/javascript" src="http://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
 {% endblock %}
 
-{% block scripts %}
+{% block javascript %}
     $(document).ready(function(){
         $('#reports').DataTable();
       });
@@ -20,16 +24,19 @@
 {% block content %}
 
 <div class="wrapper">
-    <h4>Reports</h4>
+    <h4>Orders</h4>
     <table id='reports' class='display' width='100%'>
     <thead>
-    <tr><th>Report</th><th>Description</th></tr>
+    <tr><th>Order ID</th><th>Products Ordered</th><th>Products Complete</th><th>Order Status</th><th>Note</th></tr>
     </thead>
     <tbody>
-    {% for k, v in reports.items() %}
+    {% for item in order_list %}
        <tr>
-       <td><a href="reports/{{ k }}/" >{{ v['display_name'] }}</a></td>
-       <td>{{ v['description'] }}</td>
+           <td>{{ item['orderid'] }}</td>
+           <td>{{ item['products_ordered'] }}</td>
+           <td>{{ item['products_complete'] }}</td>
+           <td>{{ item['order_status'] }}</td>
+           <td>{{ item['order_note'] }}</td>
        </tr>
     {% endfor %}
     </tbody>

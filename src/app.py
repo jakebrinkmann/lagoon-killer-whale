@@ -2,6 +2,7 @@ from flask import Flask, request, flash, session, redirect, render_template, url
 # OrderedDict and datetime used by reports, leave
 from collections import OrderedDict
 import datetime
+from datetime import timedelta
 from flask.ext.session import Session
 from functools import wraps
 from user import User
@@ -12,6 +13,7 @@ app = Flask(__name__)
 app.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
 app.secret_key = '@ijn@@d)h@8f8avh+h=lzed2gy=hp2w+6+nbgl2sdyh$!x!%3+'
 app.config['SESSION_TYPE'] = 'memcached'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 Session(app)
 api_base_url = "http://{0}:{1}".format(app.config['APIHOST'], app.config['APIPORT'])
@@ -37,6 +39,16 @@ def login():
         if response.status_code == 200:
             session['logged_in'] = True
             session['user'] = user
+
+            status_response = requests.get(api_base_url + '/api/v0/system-status',
+                                           auth=(user.username, user.wurd))._content
+            sys_msg_resp = json.loads(status_response)
+            session['system_message_body'] = sys_msg_resp['system_message_body']
+            session['system_message_title'] = sys_msg_resp['system_message_title']
+            session['stat_products_complete_24_hrs'] = requests.get(api_base_url+'/api/v0/statistics/stat_products_complete_24_hrs',
+                                                                    auth=(user.username, user.wurd))._content
+            session['stat_backlog_depth'] = requests.get(api_base_url + '/api/v0/statistics/stat_backlog_depth',
+                                              auth=(user.username, user.wurd))._content
             flash('You were logged in')
             return redirect(url_for('index'))
         else:
@@ -45,8 +57,10 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None)
-    session.pop('user', None)
+    for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
+                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
+        session.pop(item, None)
+
     flash('You were logged out')
     return redirect(url_for('login'))
 
@@ -55,14 +69,10 @@ def logout():
 @login_required
 def index():
     user = session['user']
-    status_response = requests.get(api_base_url + '/api/v0/system-status', auth=(user.username, user.wurd))._content
-    sys_msg_resp = json.loads(status_response)
-    system_message_body = sys_msg_resp['system_message_body']
-    system_message_title = sys_msg_resp['system_message_title']
-
-    stat_products_complete_24_hrs = requests.get(api_base_url + '/api/v0/statistics/stat_products_complete_24_hrs', auth=(user.username, user.wurd))._content
-    stat_backlog_depth = requests.get(api_base_url + '/api/v0/statistics/stat_backlog_depth', auth=(user.username, user.wurd))._content
-
+    system_message_body = session['system_message_body']
+    system_message_title = session['system_message_title']
+    stat_products_complete_24_hrs = session['stat_products_complete_24_hrs']
+    stat_backlog_depth = session['stat_backlog_depth']
 
     if system_message_title or system_message_body:
         display_system_message = True
@@ -80,12 +90,13 @@ def index():
 @app.route('/ordering/new/')
 @login_required
 def new_order():
-    status_response = requests.get(api_base_url + '/api/v0/system-status')._content
-    sys_msg_resp = json.loads(status_response)
-    system_message_body = sys_msg_resp['system_message_body']
-    system_message_title = sys_msg_resp['system_message_title']
-    form_action = api_base_url + '/api/v0/order'
     user = session['user']
+    system_message_body = session['system_message_body']
+    system_message_title = session['system_message_title']
+    stat_products_complete_24_hrs = session['stat_products_complete_24_hrs']
+    stat_backlog_depth = session['stat_backlog_depth']
+
+    form_action = api_base_url + '/api/v0/order'
     if system_message_title or system_message_body:
         display_system_message = True
     else:
@@ -95,15 +106,23 @@ def new_order():
                            system_message_body=system_message_body,
                            system_message_title=system_message_title,
                            form_action=form_action,
+                           stat_products_complete_24_hrs=stat_products_complete_24_hrs,
+                           stat_backlog_depth=stat_backlog_depth,
                            user=user
                            )
 
 @app.route('/ordering/status/')
-@app.route('/ordering/status/emailaddr')
+@app.route('/ordering/status/<email>')
 @login_required
-def list_orders():
+def list_orders(email=None):
     user = session['user']
-    return render_template('list_orders.html', user=user)
+    url = api_base_url + "/api/v0/list-orders-ext"
+    if email:
+        url += "/{0}".format(email)
+    response = requests.get(url, auth=(user.username, user.wurd))._content
+    res_data = json.loads(response)
+    print "****", res_data
+    return render_template('list_orders.html', user=user, order_list=res_data)
 
 @app.route('/ordering/status/orderid')
 @login_required
