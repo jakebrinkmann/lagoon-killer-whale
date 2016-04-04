@@ -45,6 +45,7 @@ def login():
             sys_msg_resp = json.loads(status_response)
             session['system_message_body'] = sys_msg_resp['system_message_body']
             session['system_message_title'] = sys_msg_resp['system_message_title']
+            session['display_system_message'] = sys_msg_resp['display_system_message']
             session['stat_products_complete_24_hrs'] = requests.get(api_base_url+'/api/v0/statistics/stat_products_complete_24_hrs',
                                                                     auth=(user.username, user.wurd))._content
             session['stat_backlog_depth'] = requests.get(api_base_url + '/api/v0/statistics/stat_backlog_depth',
@@ -148,7 +149,36 @@ def show_report(name):
     user = session['user']
     return render_template('report.html', report_name=name, report=res_data, user=user)
 
+@app.route('/console', methods=['GET', 'POST'])
+@login_required
+def console():
+    user = session['user']
+    if request.method == 'POST':
+        req_url = api_base_url + '/api/v0/system-status-update'
+        dsm = 'false'
+        if 'display_system_message' in request.form.keys():
+            dsm = 'true'
+        api_args = {'system_message_title': request.form['system_message_title'],
+                    'system_message_body': request.form['system_message_body'],
+                    'display_system_message': dsm}
+        requests.post(req_url, data=json.dumps(api_args), auth=(user.username, user.wurd))
+
+        return redirect(url_for('console'))
+    else:
+        status_response = requests.get(api_base_url + '/api/v0/system-status',
+                                       auth=(user.username, user.wurd))._content
+        sys_msg_resp = json.loads(status_response)
+        session['system_message_body'] = sys_msg_resp['system_message_body']
+        session['system_message_title'] = sys_msg_resp['system_message_title']
+        return render_template('console.html',
+                               user=user,
+                               display_system_message=session['display_system_message'],
+                               system_message_title=session['system_message_title'],
+                               system_message_body=session['system_message_body'])
+
+
+
 
 if __name__ == '__main__':
 
-    app.run(debug=True, host='localhost', port=8889)
+    app.run(debug=True, use_evalex=False, host='localhost', port=8889)
