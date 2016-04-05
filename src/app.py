@@ -135,7 +135,7 @@ def view_order():
 @login_required
 def list_reports():
     req_url = api_base_url + "/api/v0/reports/"
-    response = requests.get(req_url)
+    response = requests.get(req_url, auth=(user.username, user.wurd))
     res_data = json.loads(response._content)
     user = session['user']
     return render_template('list_orders.html', reports=res_data, user=user)
@@ -144,40 +144,67 @@ def list_reports():
 @login_required
 def show_report(name):
     req_url = api_base_url + "/api/v0/reports/{0}/".format(name)
-    response = requests.get(req_url)
+    response = requests.get(req_url, auth=(user.username, user.wurd))
     res_data = eval(json.loads(response._content))
     user = session['user']
     return render_template('report.html', report_name=name, report=res_data, user=user)
 
-@app.route('/console', methods=['GET', 'POST'])
+@app.route('/console', methods=['GET'])
 @login_required
 def console():
     user = session['user']
+    req_url = api_base_url + "/api/v0/statistics/all"
+    response = requests.get(req_url, auth=(user.username, user.wurd))
+    data = json.loads(response._content)
+    stats = {'Open Orders': data['stat_open_orders'],
+             'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
+             'Waiting Users': data['stat_waiting_users'],
+             'Backlog Depth': data['stat_backlog_depth']}
+    return render_template('console.html', user=user, stats=stats)
+
+@app.route('/console/statusmsg', methods=['GET', 'POST'])
+@login_required
+def statusmsg():
+    user = session['user']
     if request.method == 'POST':
         req_url = api_base_url + '/api/v0/system-status-update'
-        dsm = 'false'
+        dsm = 'False'
         if 'display_system_message' in request.form.keys():
-            dsm = 'true'
+            dsm = 'True'
         api_args = {'system_message_title': request.form['system_message_title'],
                     'system_message_body': request.form['system_message_body'],
                     'display_system_message': dsm}
-        requests.post(req_url, data=json.dumps(api_args), auth=(user.username, user.wurd))
-
-        return redirect(url_for('console'))
+        response = requests.post(req_url,
+                                 data=json.dumps(api_args),
+                                 auth=(user.username, user.wurd))
+        if response.status_code == 200:
+            flash('update successful')
+        else:
+            flash('update failed, ')
+        return redirect(url_for('statusmsg'))
     else:
         status_response = requests.get(api_base_url + '/api/v0/system-status',
                                        auth=(user.username, user.wurd))._content
         sys_msg_resp = json.loads(status_response)
         session['system_message_body'] = sys_msg_resp['system_message_body']
         session['system_message_title'] = sys_msg_resp['system_message_title']
-        return render_template('console.html',
+        session['display_system_message'] = sys_msg_resp['display_system_message']
+        return render_template('statusmsg.html',
                                user=user,
                                display_system_message=session['display_system_message'],
                                system_message_title=session['system_message_title'],
                                system_message_body=session['system_message_body'])
 
-
-
+@app.route('/console/config', methods=['GET'])
+@login_required
+def console_config():
+    user = session['user']
+    req_url = api_base_url + "/api/v0/system/config"
+    response = requests.get(req_url, auth=(user.username, user.wurd))
+    config_data = json.loads(response._content)
+    return render_template('config.html',
+                           user=user,
+                           config_data=config_data)
 
 if __name__ == '__main__':
 
