@@ -102,7 +102,7 @@
 			</div>-->
 
 					<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_customized_source_data" name="include_customized_source_data">
+				<input class="product custom_product" type="checkbox" id="include_customized_source_data" name="include_source_data">
 				<label class="tooltip" title="Input Products (as ESPA product)">Input Products</label>
 			</div>
 
@@ -222,14 +222,14 @@
 
 			   <div class="inputitem" id="output_formats">
 				   <label class="tooltip" title="Output format for ESPA products">Output Format</label>
-				   <input type="radio" id="output_format" name="output_format" value="gtiff" checked="checked">GeoTiff</input>
-				   <input type="radio" id="output_format" name="output_format" value="envi">ENVI</input>
+				   <input type="radio" id="output_format" name="format" value="gtiff" checked="checked">GeoTiff</input>
+				   <input type="radio" id="output_format" name="format" value="envi">ENVI</input>
 				   <!--<input type="radio" id="output_format" name="output_format" value="envi-bip">ENVI-BIP</input>-->
-				   <input type="radio" id="output_format" name="output_format" value="hdf-eos2">HDF-EOS2</input>
+				   <input type="radio" id="output_format" name="format" value="hdf-eos2">HDF-EOS2</input>
 			   </div>
 
 				<div class="inputitem">
-					<input class="custom_control needs_resample_opts" type="checkbox" id="reproject" name="reproject">
+					<input class="custom_control needs_resample_opts" type="checkbox" id="reproject" name="projection">
 					<label class="tooltip" title="Specify custom image projection for output products" for="reproject">Reproject Products</label>
 					   <div class="custom_control_options" id="reprojection">
 							<label for="projection">Projection:</label>
@@ -250,25 +250,25 @@
 					<label class="tooltip" title="Enter user defined extents for output products (minimum X,Y maximum X,Y in meters or decimal degrees)" for="include_solr_index">Modify Image Extents</label>
 					<div class="custom_control_options" id="scene_extents">
 						 <div class="inputitem" id="box_units">
-							 <input class="image_extents_units image_extents_units_dd" type="radio" name="image_extents_units" value="dd" />
+							 <input class="image_extents_units image_extents_units_dd" type="radio" name="image_extents|units" value="dd" />
 							 <label class="image_extents_units image_extents_units_dd">Decimal Degrees</label>
-							 <input class="image_extents_units image_extents_units_meters" type="radio" name="image_extents_units" value="meters" />
+							 <input class="image_extents_units image_extents_units_meters" type="radio" name="image_extents|units" value="meters" />
 							 <label class="image_extents_units image_extents_units_meters">Meters</label>
 						 </div>
 						 <div class="inputitem" id="minx_div">
-							 <input class="bounding_box_params" type="text" id="minx" name="minx" />
+							 <input class="bounding_box_params" type="text" id="minx" name="image_extents|west" />
 							 <label for="minx">Upper left X coordinate</label>
 						 </div>
 						 <div class="inputitem" id="maxy_div">
-							<input class="bounding_box_params" type="text" id="maxy" name="maxy" />
+							<input class="bounding_box_params" type="text" id="maxy" name="image_extents|north" />
 							<label for="maxy">Upper left Y coordinate</label>
 						 </div>
 						 <div class="inputitem" id="maxx_div">
-							<input class="bounding_box_params" type="text" id="maxx" name="maxx" />
+							<input class="bounding_box_params" type="text" id="maxx" name="image_extents|east" />
 							<label for="maxx">Lower right X coordinate</label>
 						 </div>
 						 <div class="inputitem" id="miny_div">
-							<input class="bounding_box_params" type="text" id="miny" name="miny" />
+							<input class="bounding_box_params" type="text" id="miny" name="image_extents|south" />
 							<label for="miny">Lower right Y coordinate</label>
 						 </div>
 					</div>
@@ -278,19 +278,19 @@
 					<input class="custom_control needs_resample_opts" type="checkbox" id="resize" name="resize">
 					<label class="tooltip inline" title="Specify desired pixel size" for="resize">Pixel Resizing</label>
 					<div class="custom_control_options" id="resize_options">
-						<input placeholder="30 to 5000" type="text" name="pixel_size" id="pixel_size" />
-						<input type="hidden" id="pixel_size_units" name="pixel_size_units" />
+						<input placeholder="30 to 5000" type="text" name="resize|pixel_size" id="pixel_size" />
+						<input type="hidden" id="pixel_size_units" name="resize|pixel_size_units" />
 						<label id="pixel_size_unit_label" form="request_form"></label>
 					</div>
 				</div>
 
 				<div id="resample_options">
 					<label class="tooltip" title="Select method for resampling" for="resample_method">Resample Method:</label>
-					<input id="resample_method" name="resample_method" type="hidden" value="near" />
+					<input id="resample_method" name="resampling_method" type="hidden" value="nn" />
 					<select id="select_resample_method" form="request_form">
-						<option value="near">Nearest Neighbor</option>
-						<option value="bilinear">Bilinear Interpolation</option>
-						<option value="cubic">Cubic Convolution</option>
+						<option value="nn">Nearest Neighbor</option>
+						<option value="bil">Bilinear Interpolation</option>
+						<option value="cc">Cubic Convolution</option>
 					</select>
 				</div>
 
@@ -328,6 +328,6 @@
   </form>
 {% endblock %}
 
-{% block javascript %}
+{% block new_order_javascript %}
   {% include "new_order.js" %}
 {% endblock %}

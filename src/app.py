@@ -1,4 +1,4 @@
-from flask import Flask, request, flash, session, redirect, render_template, url_for, jsonify
+from flask import Flask, request, flash, session, redirect, render_template, url_for
 # OrderedDict and datetime used by reports, leave
 from collections import OrderedDict
 import datetime
@@ -7,7 +7,7 @@ from flask.ext.session import Session
 from werkzeug.datastructures import ImmutableMultiDict
 from functools import wraps
 from user import User
-from utils import conversions_all, conversions
+from utils import conversions, deep_update
 import requests
 import json
 
@@ -119,10 +119,8 @@ def new_order():
 @login_required
 def submit_order():
     user = session['user']
-
     # form values come in as an ImmutableMultiDict
     data = request.form.to_dict()
-    print "****** form data ", data
 
     # grab sceneids from the file in input_product_list field
     _ipl_str = request.files.get('input_product_list').read()
@@ -136,22 +134,48 @@ def submit_order():
     ap_resp = requests.post(ap_url, json=ap_data, auth=(user.username, user.wurd))
     scene_dict_all_prods = ap_resp.json()
 
-    # convert keys to accepted values
-    for key in data.keys():
-        if key in conversions_all.keys():
-            new_key = conversions_all[key]
-            data[new_key] = data[key]
-            data.pop(key)
-
     # create a list of requested products
-    new_product_vals = conversions['products'].values()
     product_list = []
     for key in data.keys():
-        if key in new_product_vals:
-            product_list.append(key)
+        if key in conversions['products'].keys():
+            product_list.append(conversions['products'][key])
             # now that we have the product list, lets remove
             # this key from the form inputs
             data.pop(key)
+
+    # pop 'image_extents' if present.
+    # the image extents parameters also come in under
+    # this key in the form, and this causes a conflict
+    # with the 'image_extents' used to enable modifying
+    # image extents in the deep_update function
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # 'order_description just being included here till validation
+    # for it is figured out
+    clk = ['image_extents', 'projection', 'resize', 'order_description']
+    for k in clk:
+        if k in data.keys():
+            # remove these keys
+            data.pop(k)
+        else:
+            # they are not there, so their 'children'
+            # should also be removed
+            for key in data.keys():
+                if k in key:
+                    data.pop(key)
+
+    # this dictionary will hold the output
+    out_dict = {}
+    for k, v in data.iteritems():
+        if "|" not in k:
+            tdict = {k: v}
+        else:
+            key_list = k.split("|")
+            if len(key_list) == 3:
+                tdict = {key_list[0]: {key_list[1]: {key_list[2]: v}}}
+            else:
+                tdict = {key_list[0]: {key_list[1]: v}}
+
+        deep_update(out_dict, tdict)
 
     # the response from available-products returns... all possible products
     # pop the 'outputs' key, add 'products' key with values indicated
@@ -161,50 +185,23 @@ def submit_order():
                 scene_dict_all_prods[key]['products'] = product_list
                 scene_dict_all_prods[key].pop('outputs')
 
-    # keys to sort out
-    # standard_parallel_1
-    # include_customized_source_data
-    # order_description
-    # standard_parallel_2
-    # target_projection
-    # latitude_of_origin
+    # combine order options with product lists
+    out_dict.update(scene_dict_all_prods)
 
-    order_groups = {"image_extents": ['units', 'west', 'east', 'north', 'south'],
-                    "resize": ['pixel_size_units', 'pixel_size'],
-                    "projection": ['lonlat']}
-
-    # group data items under appropriate keys
-    for ogk in order_groups.keys():
-        data[ogk] = {}
-        for item in order_groups[ogk]:
-            if item in data.keys():
-                data[ogk][item] = data[item]
-                data.pop(item)
-
-    print "data now: ", data
-    print "scene_dict: ", scene_dict_all_prods
-    # data.update(scene_dict_all_prods)
-
-
-
-
-
-
-
-
-
-
+    # keys to clean up
+    cleankeys = ['not_implemented', 'target_projection']
+    for item in cleankeys:
+        if item in out_dict.keys():
+            out_dict.pop(item)
 
     url = api_base_url + "/api/v0/order"
-    response = requests.post(url, json=data, auth=(user.username, user.wurd))
-    print "******* HERE"
+    response = requests.post(url, json=out_dict, auth=(user.username, user.wurd))
     response_data = response.json()
 
     # hack till we settle on msg or message
     if 'message' in response_data.keys():
         response_data['msg'] = response_data['message']
 
-    print "******* web, response_data", response_data
     if response.status_code == 200:
         flash("Order submitted successfully! Your OrderId is {}".format(response_data))
         return redirect(url_for('index'))
@@ -312,4 +309,4 @@ def console_config():
 
 if __name__ == '__main__':
 
-    app.run(debug=True, use_evalex=False, host='localhost', port=8889)
+    app.run(debug=True, use_evalex=False, host='0.0.0.0', port=8889)

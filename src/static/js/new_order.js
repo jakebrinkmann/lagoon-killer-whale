@@ -237,8 +237,8 @@ $(document).ready(function(){
       Initialize the bounding box placeholders
    *******************************************************************/
    $(image_extents).click(function(item) {
-        if ( $("input:radio[name='image_extents_unit']:checked").val() ==  undefined ) {
-            $("input:radio[name='image_extents_units'][value='dd']").click();
+        if ( $("input:radio[name='image_extents|units']:checked").val() ==  undefined ) {
+            $("input:radio[name='image_extents|units'][value='dd']").click();
         }
 
        //make sure dd is selected if the projection is lonlat
@@ -307,37 +307,37 @@ $(resample_control).on('change', select_resample_method, function() {
 function build_albers_options() {
 var html = "";
 html += "<div class='inputitem'>";
-html += "<input placeholder='-90.0 to 90.0' class='projection_params_txt' type='text' id='origin_lat' name='origin_lat'>";
+html += "<input placeholder='-90.0 to 90.0' class='projection_params_txt' type='text' id='origin_lat' name='projection|aea|latitude_of_origin'>";
 html += "<label for='origin_lat'>Latitude of Origin</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input placeholder='-180.0 to 180.0' class='projection_params_txt' type='text' id='central_meridian' name='central_meridian'>";
+html += "<input placeholder='-180.0 to 180.0' class='projection_params_txt' type='text' id='central_meridian' name='projection|aea|central_meridian'>";
 html += "<label for='central_meridian'>Central Meridian</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='std_parallel_1' name='std_parallel_1' placeholder='-90.0 to 90.0'>";
+html += "<input class='projection_params_txt' type='text' id='std_parallel_1' name='projection|aea|standard_parallel_1' placeholder='-90.0 to 90.0'>";
 html += "<label for='std_parallel_1'>1st Standard Parallel</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='std_parallel_2' name='std_parallel_2' placeholder='-90.0 to 90.0'>";
+html += "<input class='projection_params_txt' type='text' id='std_parallel_2' name='projection|aea|standard_parallel_2' placeholder='-90.0 to 90.0'>";
 html += "<label for='std_parallel_2'>2nd Standard Parallel</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='false_easting' name='false_easting' placeholder='any float (e.g. 0.0)'>";
+html += "<input class='projection_params_txt' type='text' id='false_easting' name='projection|aea|false_easting' placeholder='any float (e.g. 0.0)'>";
 html += "<label for='false_easting'>False Easting</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='false_northing' name='false_northing' placeholder='any float (e.g. 0.0)'>";
+html += "<input class='projection_params_txt' type='text' id='false_northing' name='projection|aea|false_northing' placeholder='any float (e.g. 0.0)'>";
 html += "<label for='false_northing'>False Northing</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input type='hidden' id='datum' name='datum' />";
+html += "<input type='hidden' id='datum' name='projection|aea|datum' />";
 html += "<select class='projection_params_select' form='request_form' id='select_datum' onchange=update_datum();>";
 html += "<option value='wgs84'>WGS 84</option>";
 html += "<option value='nad27'>NAD 27</option>";
@@ -354,17 +354,17 @@ return html;
 function build_sinusoidal_options() {
   var html = "";
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='central_meridian' name='central_meridian' placeholder='-180.0 to 180.0'>";
+html += "<input class='projection_params_txt' type='text' id='central_meridian' name='projection|sinu|central_meridian' placeholder='-180.0 to 180.0'>";
 html += "<label for='central_meridian'>Central Meridian</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='false_easting' name='false_easting' placeholder='any float (e.g. 0.0)'>";
+html += "<input class='projection_params_txt' type='text' id='false_easting' name='projection|sinu|false_easting' placeholder='any float (e.g. 0.0)'>";
 html += "<label for='false_easting'>False Easting</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='false_northing' name='false_northing' placeholder='any float (e.g. 0.0)'>";
+html += "<input class='projection_params_txt' type='text' id='false_northing' name='projection|sinu|false_northing' placeholder='any float (e.g. 0.0)'>";
 html += "<label for='false_northing'>False Northing</label>";
 html += "</div>";
 
@@ -376,8 +376,8 @@ function build_utm_options() {
 var html = "";
 html += "<div class='inputitem'>";
 html += "<label id='utm_zone_label' for='utm_zone'>UTM Zone</label>";
-html += "<input class='projection_params_txt' type='text' name='utm_zone' id='utm_zone' placeholder='1-60' />";
-html += "<input type='hidden' id='utm_north_south' name='utm_north_south' />";
+html += "<input class='projection_params_txt' type='text' name='projection|utm|zone' id='utm_zone' placeholder='1-60' />";
+html += "<input type='hidden' id='utm_north_south' name='projection|utm|zone_ns' />";
 html += "<select class='projection_params_select' form='request_form' id='select_utm_north_south' onchange=update_utm_params();>";
 html += "<option value='north'>North</option>";
 html += "<option value='south'>South</option>";
@@ -391,23 +391,23 @@ return html;
 function build_ps_options() {
   var html = "";
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='longitude_pole' name='longitude_pole' placeholder='-180.0 to 180.0'>";
+html += "<input class='projection_params_txt' type='text' id='longitude_pole' name='projection|ps|longitudinal_pole' placeholder='-180.0 to 180.0'>";
 html += "<label for='longitude_pole'>Longitudinal Pole</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='latitude_true_scale' name='latitude_true_scale' placeholder='-90.0 to -60.0 or 60.0 to 90.0'>";
+html += "<input class='projection_params_txt' type='text' id='latitude_true_scale' name='projection|ps|latitude_true_scale' placeholder='-90.0 to -60.0 or 60.0 to 90.0'>";
 html += "<label for='latitude_true_scale'>Latitude True Scale</label>";
 html += "</div>";
 
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='false_easting' name='false_easting' placeholder='any float (e.g. 0.0)'>";
+html += "<input class='projection_params_txt' type='text' id='false_easting' name='projection|ps|false_easting' placeholder='any float (e.g. 0.0)'>";
 html += "<label for='false_easting'>False Easting</label>";
 html += "</div>";
 
 html += "<div class='inputitem'>";
-html += "<input class='projection_params_txt' type='text' id='false_northing' name='false_northing' placeholder='any float (e.g. 0.0)'>";
+html += "<input class='projection_params_txt' type='text' id='false_northing' name='projection|ps|false_northing' placeholder='any float (e.g. 0.0)'>";
 html += "<label for='false_northing'>False Northing</label>";
 html += "</div>";
 
@@ -490,7 +490,7 @@ switch( $('#select_target_projection').val() ) {
         $("#select_pixel_size_units").val("dd");                      //force pixel size units to dd
         update_pixelsize_units(decimal_degrees);
         update_available_extents_units([decimal_degrees]);
-        $("input:radio[name='image_extents_units'][value='dd']").click();
+        $("input:radio[name='image_extents|units'][value='dd']").click();
      break;
 
    default:
