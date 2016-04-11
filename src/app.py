@@ -20,6 +20,19 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 Session(app)
 api_base_url = "http://{0}:{1}".format(app.config['APIHOST'], app.config['APIPORT'])
 
+def is_num(value):
+    try:
+        # is it an int
+        rv = int(value)
+    except:
+        try:
+            # is it a float
+            rv = float(value)
+        except:
+            # must be a str
+            rv = value
+    return rv
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -32,6 +45,8 @@ def login_required(f):
 def login():
     error = None
     user = None
+    next = request.args.get('next')
+
     if request.method == 'POST':
         auth_url = api_base_url + "/api/v0/user"
         response = requests.get(auth_url, auth=(request.form['username'], request.form['password']))
@@ -52,11 +67,17 @@ def login():
                                                                     auth=(user.username, user.wurd)).text
             session['stat_backlog_depth'] = requests.get(api_base_url + '/api/v0/statistics/stat_backlog_depth',
                                               auth=(user.username, user.wurd)).text
-            flash('You were logged in')
-            return redirect(url_for('index'))
+
+            # send the user back to their
+            # originally requested destination
+            if next and next != 'None':
+                return redirect(next)
+            else:
+                return redirect(url_for('index'))
+
         else:
             error = resp_json['msg']
-    return render_template('login.html', error=error, user=user)
+    return render_template('login.html', error=error, user=user, next=next)
 
 @app.route('/logout')
 def logout():
@@ -64,7 +85,6 @@ def logout():
                  'stat_products_complete_24_hrs', 'stat_backlog_depth']:
         session.pop(item, None)
 
-    flash('You were logged out')
     return redirect(url_for('login'))
 
 @app.route('/')
@@ -81,6 +101,7 @@ def index():
         display_system_message = True
     else:
         display_system_message = False
+
     return render_template('index.html',
                            display_system_message=display_system_message,
                            system_message_body=system_message_body,
@@ -143,22 +164,25 @@ def submit_order():
             # this key from the form inputs
             data.pop(key)
 
+
+    print "******, original data.keys: ", data.keys()
+    print "***** target_projection: ", data['target_projection']
     # pop 'image_extents' if present.
     # the image extents parameters also come in under
     # this key in the form, and this causes a conflict
     # with the 'image_extents' used to enable modifying
     # image extents in the deep_update function
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # 'order_description just being included here till validation
-    # for it is figured out
-    clk = ['image_extents', 'projection', 'resize', 'order_description']
+    clk = ['image_extents', 'projection', 'resize']
     for k in clk:
         if k in data.keys():
-            # remove these keys
-            data.pop(k)
+            # 'image_extents', 'projection', 'resize'
+            # are in data.keys().  if there are child
+            # keys, remove k
+            if "{}|".format(k) in " ".join(data.keys()):
+                data.pop(k)
         else:
-            # they are not there, so their 'children'
-            # should also be removed
+            # project, resize, image_extents are not there
+            # so remove their children
             for key in data.keys():
                 if k in key:
                     data.pop(key)
@@ -166,15 +190,20 @@ def submit_order():
     # this dictionary will hold the output
     out_dict = {}
     for k, v in data.iteritems():
+        # all values coming in from the post request
+        # are unicode, convert those values which
+        # should be int or float
+        val = is_num(v)
         if "|" not in k:
-            tdict = {k: v}
+            tdict = {k: val}
         else:
             key_list = k.split("|")
             if len(key_list) == 3:
-                tdict = {key_list[0]: {key_list[1]: {key_list[2]: v}}}
+                tdict = {key_list[0]: {key_list[1]: {key_list[2]: val}}}
             else:
-                tdict = {key_list[0]: {key_list[1]: v}}
+                tdict = {key_list[0]: {key_list[1]: val}}
 
+        # deep_update updates the dictionary
         deep_update(out_dict, tdict)
 
     # the response from available-products returns... all possible products
@@ -210,22 +239,26 @@ def submit_order():
         return redirect(url_for('new_order'))
 
 @app.route('/ordering/status/')
-@app.route('/ordering/status/<email>')
+@app.route('/ordering/status/<email>/')
 @login_required
 def list_orders(email=None):
     user = session['user']
     url = api_base_url + "/api/v0/list-orders-ext"
     if email:
         url += "/{0}".format(email)
-    response = requests.get(url, auth=(user.username, user.wurd))
+    json = {'status': ['complete', 'ordered']}
+    response = requests.get(url, json=json, auth=(user.username, user.wurd))
     res_data = response.json()
     return render_template('list_orders.html', user=user, order_list=res_data)
 
-@app.route('/ordering/status/orderid')
+@app.route('/ordering/order-status/<orderid>/')
 @login_required
-def view_order():
+def view_order(orderid):
     user = session['user']
-    return render_template('view_order.html', user=user)
+    url = api_base_url + "/api/v0/order-status/{}".format(orderid)
+    response = requests.get(url, auth=(user.username, user.wurd))
+    res_data = response.json()
+    return render_template('view_order.html', order=res_data, user=user)
 
 @app.route('/reports/')
 @login_required

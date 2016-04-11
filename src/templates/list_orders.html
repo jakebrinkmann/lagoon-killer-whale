@@ -16,34 +16,67 @@
 {% endblock %}
 
 {% block javascript %}
-    $(document).ready(function(){
-        $('#reports').DataTable();
-      });
+
+    function switchUrl() {
+        var path = "ordering/status/fake@val.com";
+        var email_addr = document.getElementById('id_email');
+        path = path.replace('fake@val.com', $.trim(email_addr.value));
+        window.location = path;
+        return false;
+    }
+
 {% endblock %}
 
 {% block content %}
-
 <div class="wrapper">
-    <h4>Orders</h4>
-    <table id='reports' class='display' width='100%'>
-    <thead>
-    <tr><th>Order ID</th><th>Products Ordered</th><th>Products Complete</th><th>Order Status</th><th>Note</th></tr>
-    </thead>
-    <tbody>
-    {% for item in order_list %}
-       <tr>
-           <td>{{ item['orderid'] }}</td>
-           <td>{{ item['products_ordered'] }}</td>
-           <td>{{ item['products_complete'] }}</td>
-           <td>{{ item['order_status'] }}</td>
-           <td>{{ item['order_note'] }}</td>
-       </tr>
-    {% endfor %}
-    </tbody>
-    </table>
+    {% if display_system_message %}
+        {% include "system_message.html" %}
+    {% endif %}
+    <div style='margin:0 auto; text-align:center;margin-top:10px;'>
 
+        {#% if errors.email %#}
+            <span class="error">{#{errors.email}#}</span><br/>
+        {#% endif %#}
+
+        <form method="GET" action="ordering/status">
+            <label for="id_email" style="font-weight:bold">Show orders for:</label>
+            <input type="text" id="id_email" >
+            <input type="button" value="Submit" onclick='switchUrl();' />
+        </form>
+
+    </div>
+    {% if order_list %}
+        <h4>
+            <a href="status_feed"><img border="0" alt="RSS Status Feed" title="Completed Scene RSS Feed" src="static/img/feed-icon-28x28.png"></img></a>
+            &nbsp;&nbsp;Showing all orders for {{ user.email }}
+        </h4>
+        <div class='boxbody'>
+            <table>
+                <tr class="header_row">
+                    <th class='header_row noborder orderid'>Order ID</th>
+                    <th class='header_row noborder pordered'>Products Ordered</th>
+                    <th class='header_row noborder pcomplete'>Products Complete</th>
+                    <th class='header_row noborder pstatus'>Status</th>
+                    <th class='header_row noborder pnote'>Note</th>
+                </tr>
+                {% for order in order_list %}
+                    {% set rowclass = loop.cycle('evenrow', 'oddrow') %}
+                    <tr class="{{ rowclass }}">
+                        <td class="{{ rowclass }}"><a href=" /ordering/order-status/{{ order.orderid }}/">{{ order.orderid }}</a></td>
+                        <td class="{{ rowclass }}" id='{{ order.id }}_total_ordered'>{{ order.products_ordered }}</td>
+                        <td class="{{ rowclass }}" id='{{ order.id }}_finished'>{{ order.products_complete }}</td>
+                        <td class="{{ rowclass }}">{{ order.order_status }}</td>
+                        <td class="{{ rowclass }}">{{ order.order_note }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% else %}
+        <div style="margin:0 auto;text-align:center;">
+            <h4 style='margin-top:40px;'>No orders found for {{ user.email }}</h4>
+        </div>
+    {% endif %}
 </div>
-
 {% endblock %}
 
 
