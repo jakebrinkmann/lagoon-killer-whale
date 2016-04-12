@@ -164,9 +164,6 @@ def submit_order():
             # this key from the form inputs
             data.pop(key)
 
-
-    print "******, original data.keys: ", data.keys()
-    print "***** target_projection: ", data['target_projection']
     # pop 'image_extents' if present.
     # the image extents parameters also come in under
     # this key in the form, and this causes a conflict
@@ -255,10 +252,41 @@ def list_orders(email=None):
 @login_required
 def view_order(orderid):
     user = session['user']
-    url = api_base_url + "/api/v0/order-status/{}".format(orderid)
-    response = requests.get(url, auth=(user.username, user.wurd))
-    res_data = response.json()
-    return render_template('view_order.html', order=res_data, user=user)
+
+    order_dict_url = api_base_url + "/api/v0/order/{}".format(orderid)
+    order_dict = requests.get(order_dict_url, auth=(user.username, user.wurd)).json()
+
+    scenes_url = api_base_url + "/api/v0/item-status/{}".format(orderid)
+    scenes_resp = requests.get(scenes_url, auth=(user.username, user.wurd)).json()
+    scenes = scenes_resp['orderid'][orderid]
+
+    complete = ['complete', 'unavailable']
+    open = ['oncache', 'queued', 'processing', 'error', 'submitted']
+    waiting = ['retry', 'onorder']
+    statuses = {'complete': complete, 'open': open, 'waiting': waiting}
+
+    product_counts = {}
+    for status in statuses:
+        product_counts[status] = len([s for s in scenes if s['status'] in statuses[status]])
+    product_counts['total'] = len(scenes)
+
+    # get away from unicode
+    joptions = json.dumps(order_dict['product_opts'])
+
+    # sensor/products
+    options_by_sensor = {}
+    for key in order_dict['product_opts']:
+        if isinstance(order_dict['product_opts'][key], dict) and 'products' in order_dict['product_opts'][key].keys():
+            options_by_sensor[key] = order_dict['product_opts'][key]['products']
+
+    options_list = []
+    for sensor in options_by_sensor:
+        options_list.append(" {0}: {1} ,".format(sensor, ", ".join(options_by_sensor[sensor])))
+
+    options_str = " ".join(options_list)
+
+    return render_template('view_order.html', order=order_dict, scenes=scenes, prod_str=options_str,
+                           product_counts=product_counts, user=user, product_opts=joptions)
 
 @app.route('/reports/')
 @login_required
