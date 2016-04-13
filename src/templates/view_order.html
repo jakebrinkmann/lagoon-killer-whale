@@ -73,11 +73,6 @@
 {% endblock %}
 
 {% block content %}
-    <div class="wrapper">
-        {% if display_system_message == 'True' %}
-			{% include "system_message.html" %}
-		{% endif %}
-
         {% if scenes %}
             <div class='product_stats'>
                 <p>
@@ -168,7 +163,6 @@
         {% else %}
             <h4>No scenes found for {{ order['orderid'] }}</h4>
         {% endif %}
-    </div>
 {% endblock %}
 
 {% block javascript %}

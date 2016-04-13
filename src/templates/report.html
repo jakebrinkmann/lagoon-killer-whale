@@ -19,10 +19,7 @@
       });  
 {% endblock %}
 
-
 {% block content %}
-
-<div class="wrapper">
     <h4>{{ report_name }} Report</h4>
     {% if report %}
     <table id='reports' class='display' cellspacing='0' width='100%'>
@@ -46,8 +43,5 @@
     {% else %}
     <h5>No items to report.</h5>
     {% endif %}
-
-</div>
-
 {% endblock %}
 

@@ -7,7 +7,7 @@ from flask.ext.session import Session
 from werkzeug.datastructures import ImmutableMultiDict
 from functools import wraps
 from user import User
-from utils import conversions, deep_update
+from utils import conversions, deep_update, is_num
 import requests
 import json
 
@@ -20,18 +20,18 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 Session(app)
 api_base_url = "http://{0}:{1}".format(app.config['APIHOST'], app.config['APIPORT'])
 
-def is_num(value):
-    try:
-        # is it an int
-        rv = int(value)
-    except:
-        try:
-            # is it a float
-            rv = float(value)
-        except:
-            # must be a str
-            rv = value
-    return rv
+def update_status_details():
+    user = session['user']
+    status_response = requests.get(api_base_url + '/api/v0/system-status',
+                                   auth=(user.username, user.wurd))
+    sys_msg_resp = status_response.json()
+    session['system_message_body'] = sys_msg_resp['system_message_body']
+    session['system_message_title'] = sys_msg_resp['system_message_title']
+    session['display_system_message'] = sys_msg_resp['display_system_message']
+    comp_url = api_base_url + '/api/v0/statistics/stat_products_complete_24_hrs'
+    session['stat_products_complete_24_hrs'] = requests.get(comp_url, auth=(user.username, user.wurd)).text
+    depth_url = api_base_url + '/api/v0/statistics/stat_backlog_depth'
+    session['stat_backlog_depth'] = requests.get(depth_url, auth=(user.username, user.wurd)).text
 
 def login_required(f):
     @wraps(f)
@@ -56,17 +56,7 @@ def login():
         if response.status_code == 200:
             session['logged_in'] = True
             session['user'] = user
-
-            status_response = requests.get(api_base_url + '/api/v0/system-status',
-                                           auth=(user.username, user.wurd))
-            sys_msg_resp = status_response.json()
-            session['system_message_body'] = sys_msg_resp['system_message_body']
-            session['system_message_title'] = sys_msg_resp['system_message_title']
-            session['display_system_message'] = sys_msg_resp['display_system_message']
-            session['stat_products_complete_24_hrs'] = requests.get(api_base_url+'/api/v0/statistics/stat_products_complete_24_hrs',
-                                                                    auth=(user.username, user.wurd)).text
-            session['stat_backlog_depth'] = requests.get(api_base_url + '/api/v0/statistics/stat_backlog_depth',
-                                              auth=(user.username, user.wurd)).text
+            update_status_details()
 
             # send the user back to their
             # originally requested destination
@@ -76,7 +66,7 @@ def login():
                 return redirect(url_for('index'))
 
         else:
-            error = resp_json['msg']
+            flash(resp_json['msg'], 'error')
     return render_template('login.html', error=error, user=user, next=next)
 
 @app.route('/logout')
@@ -84,7 +74,6 @@ def logout():
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
                  'stat_products_complete_24_hrs', 'stat_backlog_depth']:
         session.pop(item, None)
-
     return redirect(url_for('login'))
 
 @app.route('/')
@@ -92,48 +81,16 @@ def logout():
 @login_required
 def index():
     user = session['user']
-    system_message_body = session['system_message_body']
-    system_message_title = session['system_message_title']
-    stat_products_complete_24_hrs = session['stat_products_complete_24_hrs']
-    stat_backlog_depth = session['stat_backlog_depth']
-
-    if system_message_title or system_message_body:
-        display_system_message = True
-    else:
-        display_system_message = False
-
-    return render_template('index.html',
-                           display_system_message=display_system_message,
-                           system_message_body=system_message_body,
-                           system_message_title=system_message_title,
-                           stat_products_complete_24_hrs=stat_products_complete_24_hrs,
-                           stat_backlog_depth=stat_backlog_depth,
-                           user=user
-                           )
+    return render_template('index.html', user=user)
 
 @app.route('/ordering/new/')
 @login_required
 def new_order():
     user = session['user']
-    system_message_body = session['system_message_body']
-    system_message_title = session['system_message_title']
-    stat_products_complete_24_hrs = session['stat_products_complete_24_hrs']
-    stat_backlog_depth = session['stat_backlog_depth']
-
     form_action = '/ordering/submit/'
-    if system_message_title or system_message_body:
-        display_system_message = True
-    else:
-        display_system_message = False
     return render_template('new_order.html',
-                           display_system_message=display_system_message,
-                           system_message_body=system_message_body,
-                           system_message_title=system_message_title,
-                           form_action=form_action,
-                           stat_products_complete_24_hrs=stat_products_complete_24_hrs,
-                           stat_backlog_depth=stat_backlog_depth,
-                           user=user
-                           )
+                           form_action=form_action, user=user)
+
 
 
 @app.route('/ordering/submit/', methods=['POST'])
@@ -151,15 +108,14 @@ def submit_order():
     # use available-products to convert our list of sceneids into
     # the format required for new orders
     ap_url = api_base_url + "/api/v0/available-products"
-    ap_data = {'inputs': _ipl}
-    ap_resp = requests.post(ap_url, json=ap_data, auth=(user.username, user.wurd))
+    ap_resp = requests.post(ap_url, json={'inputs': _ipl}, auth=(user.username, user.wurd))
     scene_dict_all_prods = ap_resp.json()
 
     # create a list of requested products
     product_list = []
     for key in data.keys():
         if key in conversions['products'].keys():
-            product_list.append(conversions['products'][key])
+            product_list.append(key)
             # now that we have the product list, lets remove
             # this key from the form inputs
             data.pop(key)
@@ -218,7 +174,17 @@ def submit_order():
     cleankeys = ['not_implemented', 'target_projection']
     for item in cleankeys:
         if item in out_dict.keys():
+            if item == 'target_projection' and out_dict[item] == 'lonlat':
+                # there are no other parameters needed for a geographic
+                # projection, so assign 'lonlat' to the projection key
+                out_dict['projection'] = 'lonlat'
             out_dict.pop(item)
+
+    if 'plot_statistics' in out_dict.keys():
+        out_dict['plot_statistics'] = True
+
+    print "****** out_dict", out_dict
+
 
     url = api_base_url + "/api/v0/order"
     response = requests.post(url, json=out_dict, auth=(user.username, user.wurd))
@@ -230,9 +196,9 @@ def submit_order():
 
     if response.status_code == 200:
         flash("Order submitted successfully! Your OrderId is {}".format(response_data))
-        return redirect(url_for('index'))
+        return redirect('/ordering/order-status/{}/'.format(response_data['orderid']))
     else:
-        flash("There was an issue submitting your order. {}".format(response_data["msg"]))
+        flash("There was an issue submitting your order. {}".format(response_data["msg"]), 'error')
         return redirect(url_for('new_order'))
 
 @app.route('/ordering/status/')
@@ -277,7 +243,11 @@ def view_order(orderid):
     options_by_sensor = {}
     for key in order_dict['product_opts']:
         if isinstance(order_dict['product_opts'][key], dict) and 'products' in order_dict['product_opts'][key].keys():
-            options_by_sensor[key] = order_dict['product_opts'][key]['products']
+            _spl = order_dict['product_opts'][key]['products']
+            _out_spl = [conversions['products'][item] for item in _spl]
+
+            options_by_sensor[key] = _out_spl
+
 
     options_list = []
     for sensor in options_by_sensor:
@@ -318,9 +288,7 @@ def console():
              'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
              'Waiting Users': data['stat_waiting_users'],
              'Backlog Depth': data['stat_backlog_depth']}
-    return render_template('console.html', user=user, stats=stats,
-                           stat_products_complete_24_hrs=session['stat_products_complete_24_hrs'],
-                           stat_backlog_depth=session['stat_backlog_depth'])
+    return render_template('console.html', user=user, stats=stats)
 
 @app.route('/console/statusmsg', methods=['GET', 'POST'])
 @login_required
@@ -338,17 +306,14 @@ def statusmsg():
                                  data=json.dumps(api_args),
                                  auth=(user.username, user.wurd))
         if response.status_code == 200:
+            update_status_details()
             flash('update successful')
+            return redirect(url_for('index'))
         else:
-            flash('update failed')
-        return redirect(url_for('statusmsg'))
+            flash('update failed', 'error')
+            return redirect(url_for('statusmsg'))
     else:
-        status_response = requests.get(api_base_url + '/api/v0/system-status',
-                                       auth=(user.username, user.wurd))
-        sys_msg_resp = status_response.json()
-        session['system_message_body'] = sys_msg_resp['system_message_body']
-        session['system_message_title'] = sys_msg_resp['system_message_title']
-        session['display_system_message'] = sys_msg_resp['display_system_message']
+        update_status_details()
         return render_template('statusmsg.html',
                                user=user,
                                display_system_message=session['display_system_message'],
@@ -362,11 +327,7 @@ def console_config():
     req_url = api_base_url + "/api/v0/system/config"
     response = requests.get(req_url, auth=(user.username, user.wurd))
     config_data = response.json()
-    return render_template('config.html',
-                           user=user,
-                           config_data=config_data,
-                           stat_products_complete_24_hrs=session['stat_products_complete_24_hrs'],
-                           stat_backlog_depth=session['stat_backlog_depth'])
+    return render_template('config.html', user=user, config_data=config_data)
 
 if __name__ == '__main__':
 

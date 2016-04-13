@@ -28,7 +28,6 @@
 {% endblock %}
 
 {% block content %}
-<div class="wrapper">
     {% if display_system_message %}
         {% include "system_message.html" %}
     {% endif %}
@@ -47,8 +46,7 @@
     </div>
     {% if order_list %}
         <h4>
-            <a href="status_feed"><img border="0" alt="RSS Status Feed" title="Completed Scene RSS Feed" src="static/img/feed-icon-28x28.png"></img></a>
-            &nbsp;&nbsp;Showing all orders for {{ user.email }}
+            Showing all orders for {{ user.email }}
         </h4>
         <div class='boxbody'>
             <table>
@@ -76,7 +74,6 @@
             <h4 style='margin-top:40px;'>No orders found for {{ user.email }}</h4>
         </div>
     {% endif %}
-</div>
 {% endblock %}
 
 

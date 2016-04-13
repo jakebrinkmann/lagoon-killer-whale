@@ -42,14 +42,22 @@
         <span class="navitemright">|</span>
         <span class="navitemright">{{ user.username}} ({{ user.email }})</span>
         <span class="navitemright">|</span>
-        <span class="navitemright">Products Completed Last Day: {{ stat_products_complete_24_hrs }}</span>
+        <span class="navitemright">Products Completed Last Day: {{ session['stat_products_complete_24_hrs'] }}</span>
         <span class="navitemright">|</span>
-        <span class="navitemright">Product Backlog: {{ stat_backlog_depth }}</span>
+        <span class="navitemright">Product Backlog: {{ session['stat_backlog_depth'] }}</span>
 
         {#% include "nav_content.html" with context %#}
       </div>
       <div id="content">
-        {% block content %}{% endblock %}
+        <div class="wrapper">
+            {% if session['display_system_message'] == 'True' %}
+	    		{% include "system_message.html" %}
+		    {% endif %}
+
+            {% include "action_message.html" %}
+
+            {% block content %}{% endblock %}
+        </div>
       </div>
       <div id='footer'>
         {% include "footer_content.html" %}

@@ -14,23 +14,6 @@
 {% block content %}
 
   <form action="{{ form_action }}" method="post" id="request_form" name="request_form" enctype="multipart/form-data"> {#% csrf_token %#}
-    <div class="wrapper">
-
-		{% if display_system_message == 'True' %}
-			{% include "system_message.html" %}
-		{% endif %}
-
-		{% with messages = get_flashed_messages() %}
-			{% if messages %}
-				<div id="errorbox">
-					<h3>Errors were found in your request.&nbsp;&nbsp;Please correct them and retry your order.</h3>
-						{% for message in messages %}
-							<h4>{{ message }}</h4>
-						{% endfor %}
-				</div>
-			{% endif %}
-		{% endwith %}
-
 		<div class="espa_lightbox" id="available_input_products">
 			<h2>ESPA Input Products & Options</h2>
 
@@ -95,19 +78,13 @@
 			Source Products
 			</div>
 			<div class="product_boxbody">
-
-			<!--<div class="inputitem">
-				<input class="product" type="checkbox" id="include_source_data" name="include_source_data">
-				<label class="tooltip" title="Deliver Unmodified Input Products" for="source_products">Original Input Products</label>
-			</div>-->
-
-					<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_customized_source_data" name="include_source_data">
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_customized_source_data" name="l1">
 				<label class="tooltip" title="Input Products (as ESPA product)">Input Products</label>
 			</div>
 
 			<div class="inputitem">
-				<input class="product" type="checkbox" id="include_source_metadata" name="include_source_metadata">
+				<input class="product" type="checkbox" id="include_source_metadata" name="source_metadata">
 				<label class="tooltip" title="Deliver Unmodified Input Product Metadata">Input Product Metadata</label>
 			</div>
 
@@ -124,28 +101,28 @@
 			<div class="product_boxbody">
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_toa" name="include_sr_toa"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_toa" name="toa"></input>
 				<label class="tooltip" title="Top of Atmosphere Reflectance " for="toa_reflectance">Top of Atmosphere Reflectance</label>
 			</div>
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_thermal" name="include_sr_thermal"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_thermal" name="bt"></input>
 				<label class="tooltip" title="Surface Reflectance Brightness Temperature" for="sr_thermal">Brightness Temperature</label>
 			</div>
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_cfmask" name="include_cfmask"></input>
+				<input class="product custom_product" type="checkbox" id="include_cfmask" name="cloud"></input>
 				<label class="tooltip" title="CFMask" for="sr_thermal">CFMask</label>
 			</div>
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr" name="include_sr"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr" name="sr"></input>
 				<label class="tooltip" title="Surface Reflectance" for="surface_reflectance">Surface Reflectance</label>
 			</div>
 
 					{% if user.is_staff %}
 						<div class="inputitem">
-							<input class="product custom_product" type="checkbox" id="include_lst" name="include_lst"></input>
+							<input class="product custom_product" type="checkbox" id="include_lst" name="lst"></input>
 							<label class="tooltip" title="Land Surface Temperature" for="include_lst">Land Surface Temperature</label>
 						</div>
 					{% endif %}
@@ -159,7 +136,7 @@
 			</div>
 			<div class="product_boxbody">
 			<div class="inputitem">
-				   <input class="product custom_product" type="checkbox" id="include_dswe" name="include_dswe"></input>
+				   <input class="product custom_product" type="checkbox" id="include_dswe" name="swe"></input>
 				<label class="tooltip" title="Dynamic Surface Water Extent" for="include_dwse">Dynamic Surface Water Extent</label>
 			   </div>
 			</div>
@@ -173,37 +150,37 @@
 			<div class="product_boxbody">
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_ndvi" name="include_sr_ndvi"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_ndvi" name="sr_ndvi"></input>
 				<label class="tooltip" title="Normalized Difference Vegetation Index" for="include_sr_ndvi">Surface Reflectance NDVI</label>
 			</div>
 
 			   <div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_evi" name="include_sr_evi"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_evi" name="sr_evi"></input>
 				<label class="tooltip" title="Enhanced Vegetation Index" for="include_sr_evi">Surface Reflectance EVI</label>
 			</div>
 
 			   <div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_savi" name="include_sr_savi"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_savi" name="sr_savi"></input>
 				<label class="tooltip" title="Soil Adjusted Vegetation Index" for="include_sr_savi">Surface Reflectance SAVI</label>
 			</div>
 
 				<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_msavi" name="include_sr_msavi"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_msavi" name="sr_msavi"></input>
 				<label class="tooltip" title="Modified Soil Adjusted Vegetation Index" for="include_sr_msavi">Surface Reflectance MSAVI</label>
 			</div>
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_ndmi" name="include_sr_ndmi"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_ndmi" name="sr_ndmi"></input>
 				<label class="tooltip" title="Normalized Difference Moisture Index" for="include_sr_ndmi">Surface Reflectance NDMI</label>
 			</div>
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_nbr" name="include_sr_nbr"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_nbr" name="sr_nbr"></input>
 				<label class="tooltip" title="Normalized Burn Ratio using bands 4 &amp; 7" for="include_sr_nbr">Surface Reflectance NBR</label>
 			</div>
 
 			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr_nbr2" name="include_sr_nbr2"></input>
+				<input class="product custom_product" type="checkbox" id="include_sr_nbr2" name="sr_nbr2"></input>
 				<label class="tooltip" title="Normalized Burn Ratio using bands 5 &amp; 7" for="include_sr_nbr2">Surface Reflectance NBR2</label>
 			</div>
 
@@ -305,7 +282,7 @@
 			</div>
 			<div class="product_boxbody">
 				<div class="inputitem">
-					<input class="product" type="checkbox" id="include_statistics" name="include_statistics"></input>
+					<input class="product" type="checkbox" id="include_statistics" name="plot_statistics"></input>
 					<label class="tooltip" title="Generate Intercomparision Statistics and Plots" for="include_statistics">Plot Output Product Statistics</label>
 				</div>
 			</div>
@@ -323,8 +300,6 @@
 		</div>
 
 		<input type="submit" id="submit" value="Submit" />
-
-    </div>
   </form>
 {% endblock %}
 

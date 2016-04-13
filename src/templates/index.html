@@ -30,12 +30,6 @@
 {% endblock %}
 
 {% block content %}
-
-<div class="wrapper">
-  {% if display_system_message == 'True' %}
-    {% include "system_message.html" %}
-  {% endif %}
-
 	<div id="logo_box" class='shadow'>
 	  <img src="static/img/lsrds/1.png" />
       <img src="static/img/lsrds/2.png" />
@@ -92,6 +86,4 @@
         <p><a href="new_order">Generate Comparisions</a></p>
       </div>
     </div>
-
-</div>
 {% endblock %}

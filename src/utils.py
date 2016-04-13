@@ -17,8 +17,41 @@ def deep_update(source, overrides):
             source[key] = overrides[key]
     return source
 
+
+def is_num(value):
+    try:
+        # is it an int
+        rv = int(value)
+    except:
+        try:
+            # is it a float
+            rv = float(value)
+        except:
+            # must be a str
+            rv = value
+    return rv
+
 conversions = {
     'products':
+        {'l1': 'original input products',
+         'swe': 'dynamic surface water extent',
+         'sr_evi': 'sr_evi',
+         'cloud': 'cfmask',
+         'sr_savi': 'sr_savi',
+         'sr_nbr2': 'sr_nbr2',
+         'sr_nbr': 'sr_nbr',
+         'sr_ndmi': 'sr_ndmi',
+         'sr': 'surface reflectance',
+         'sr_msavi': 'sr_msavi',
+         'lst': 'land surface temperature',
+         'source_metadata': 'original input metadata',
+         'bt': 'brightness temperature',
+         'toa': 'top of atmosphere',
+         'stats': 'plots and statistics',
+         'sr_ndvi': 'sr_ndvi'},
+
+
+    'products_prev':
         {'include_source_data': 'l1',
          'include_dswe': 'swe',
          'include_sr_evi': 'sr_evi',
@@ -35,6 +68,7 @@ conversions = {
          'include_sr_toa': 'toa',
          'include_statistics': 'stats',
          'include_sr_ndvi': 'sr_ndvi'},
+
 
     'aea_map':
         {'central_meridian': 'central_meridian',

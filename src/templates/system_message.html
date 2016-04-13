@@ -1,17 +1,16 @@
 {% autoescape off %}
 <div id='system_message_wrapper'>
-
 <br/>
 
-{% if system_message_title %}
+{% if session['system_message_title'] %}
 <div id='system_message_title'>
-{{ system_message_title  }}
+{{ session['system_message_title']  }}
 </div>
 {% endif %}
 
-{% if system_message_body %}
+{% if session['system_message_body'] %}
 <div id='system_message_body'>
-    {{ system_message_body }}
+    {{ session['system_message_body'] }}
 </div>
 {% endif %}
 

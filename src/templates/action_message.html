@@ -1,0 +1,17 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% if category == 'error' %}
+                <div id="errorbox">
+                    <h3>Errors were found in your request.</h3>
+                    <h4>{{ message }}</h4>
+                </div>
+            {% endif %}
+            {% if category == 'message' %}
+                <div id="messagebox">
+                    <h4>{{ message }}</h4>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endwith %}
