@@ -186,7 +186,7 @@ def submit_order():
         flash("Order submitted successfully! Your OrderId is {}".format(response_data['orderid']))
         rdest = redirect('/ordering/order-status/{}/'.format(response_data['orderid']))
     else:
-        flash(format_errors(["msg"]), 'error')
+        flash(format_errors(response_data["msg"]), 'error')
         rdest = redirect(url_for('new_order'))
 
     return rdest
