@@ -239,9 +239,6 @@
                     s = "universal transverse mercator with zone:" + zone +
                         " " + ns;
                     }
-                else if (product_options['projection']["lonlat"]) {
-                    return "geographic";
-                    }
                 else if (product_options['projection']["sinu"]) {
                     cm = product_options['projection']["sinu"]['central_meridian'];
                     fe = product_options['projection']["sinu"]['false_easting'];
@@ -259,6 +256,9 @@
                         " latitude true scale:" + ls +
                         " false easting:" + fe +
                         " false northing:" + fn;
+                    }
+                else if (product_options['projection'].hasOwnProperty('lonlat')) {
+                    return "geographic";
                     }
                 else {
                     s = '';

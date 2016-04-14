@@ -46,7 +46,7 @@
     </div>
     {% if order_list %}
         <h4>
-            Showing all orders for {{ user.email }}
+            Showing all orders for {{ session['user'].email }}
         </h4>
         <div class='boxbody'>
             <table>
@@ -71,7 +71,7 @@
         </div>
     {% else %}
         <div style="margin:0 auto;text-align:center;">
-            <h4 style='margin-top:40px;'>No orders found for {{ user.email }}</h4>
+            <h4 style='margin-top:40px;'>No orders found for {{ session['user'].email }}</h4>
         </div>
     {% endif %}
 {% endblock %}
