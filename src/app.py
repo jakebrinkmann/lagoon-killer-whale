@@ -47,6 +47,16 @@ def update_status_details():
         session[item] = api_get('/api/v0/statistics/' + item, 'text')
 
 
+def staff_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session['user'].is_staff is False:
+            flash('staff only', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -240,6 +250,7 @@ def view_order(orderid):
 
 
 @app.route('/reports/')
+@staff_only
 @login_required
 def list_reports():
     res_data = api_get("/api/v0/reports/")
@@ -247,6 +258,7 @@ def list_reports():
 
 
 @app.route('/reports/<name>/')
+@staff_only
 @login_required
 def show_report(name):
     response = api_get("/api/v0/reports/{0}/".format(name))
@@ -255,6 +267,7 @@ def show_report(name):
 
 
 @app.route('/console', methods=['GET'])
+@staff_only
 @login_required
 def console():
     data = api_get("/api/v0/statistics/all")
@@ -266,6 +279,7 @@ def console():
 
 
 @app.route('/console/statusmsg', methods=['GET', 'POST'])
+@staff_only
 @login_required
 def statusmsg():
     if request.method == 'POST':
@@ -291,6 +305,7 @@ def statusmsg():
 
 
 @app.route('/console/config', methods=['GET'])
+@staff_only
 @login_required
 def console_config():
     config_data = api_get("/api/v0/system/config")
