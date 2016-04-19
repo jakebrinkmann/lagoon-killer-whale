@@ -50,13 +50,16 @@ def gen_nested_dict(inlist, val):
     return _indict
 
 
-def format_errors(indict):
+def format_errors(inerror):
     outlist = []
-    for key in indict:
-        outlist.append(key+"<br/>")
-        for item in indict[key]:
-            outlist.append("&#8594;"+item+"<br/>")
-    return "".join(outlist)
+    if isinstance(inerror, dict):
+        for key in inerror:
+            outlist.append(key+"<br/>")
+            for item in inerror[key]:
+                outlist.append("&#8594;"+item+"<br/>")
+        return "".join(outlist)
+    else:
+        return inerror
 
 conversions = {
     'products': {

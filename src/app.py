@@ -10,14 +10,14 @@ from utils import conversions, deep_update, is_num, gen_nested_dict, User, forma
 import requests
 import json
 
-app = Flask(__name__)
-app.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
-app.secret_key = '@ijn@@d)h@8f8avh+h=lzed2gy=hp2w+6+nbgl2sdyh$!x!%3+'
-app.config['SESSION_TYPE'] = 'memcached'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+espaweb = Flask(__name__)
+espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
+espaweb.secret_key = '@ijn@@d)h@8f8avh+h=lzed2gy=hp2w+6+nbgl2sdyh$!x!%3+'
+espaweb.config['SESSION_TYPE'] = 'memcached'
+espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
-Session(app)
-api_base_url = "http://{0}:{1}".format(app.config['APIHOST'], app.config['APIPORT'])
+Session(espaweb)
+api_base_url = "http://{0}:{1}".format(espaweb.config['APIHOST'], espaweb.config['APIPORT'])
 
 
 def api_get(url, response_type='json', json=None, uauth=None):
@@ -60,13 +60,13 @@ def staff_only(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user' not in session.keys():
+        if 'logged_in' not in session.keys() or session['logged_in'] is not True:
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@espaweb.route('/login', methods=['GET', 'POST'])
 def login():
     next = request.args.get('next')
     if request.method == 'POST':
@@ -85,13 +85,15 @@ def login():
                 return redirect(url_for('index'))
         else:
             flash(format_errors(resp_json['msg']), 'error')
+            _status = 401
     else:
+        _status = 200
         if 'user' not in session.keys():
             session['user'] = None
-    return render_template('login.html', next=next)
+    return render_template('login.html', next=next), _status
 
 
-@app.route('/logout')
+@espaweb.route('/logout')
 def logout():
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
                  'stat_products_complete_24_hrs', 'stat_backlog_depth']:
@@ -99,20 +101,21 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/')
-@app.route('/index/')
+@espaweb.route('/')
+@espaweb.route('/index/')
 @login_required
 def index():
+    #return 'foo'
     return render_template('index.html')
 
 
-@app.route('/ordering/new/')
+@espaweb.route('/ordering/new/')
 @login_required
 def new_order():
     return render_template('new_order.html', form_action=url_for('submit_order'))
 
 
-@app.route('/ordering/submit/', methods=['POST'])
+@espaweb.route('/ordering/submit/', methods=['POST'])
 @login_required
 def submit_order():
     # form values come in as an ImmutableMultiDict
@@ -164,6 +167,7 @@ def submit_order():
     # the response from available-products returns... all possible products
     # pop the 'outputs' key, add 'products' key with values indicated
     # by user
+
     for key in scene_dict_all_prods.keys():
             if key != 'not_implemented':
                 scene_dict_all_prods[key]['products'] = product_list
@@ -202,8 +206,8 @@ def submit_order():
     return rdest
 
 
-@app.route('/ordering/status/')
-@app.route('/ordering/status/<email>/')
+@espaweb.route('/ordering/status/')
+@espaweb.route('/ordering/status/<email>/')
 @login_required
 def list_orders(email=None):
     url = "/api/v0/list-orders-ext"
@@ -213,7 +217,7 @@ def list_orders(email=None):
     return render_template('list_orders.html', order_list=res_data)
 
 
-@app.route('/ordering/order-status/<orderid>/')
+@espaweb.route('/ordering/order-status/<orderid>/')
 @login_required
 def view_order(orderid):
     order_dict = api_get("/api/v0/order/{}".format(orderid))
@@ -249,7 +253,7 @@ def view_order(orderid):
                            product_counts=product_counts, product_opts=joptions)
 
 
-@app.route('/reports/')
+@espaweb.route('/reports/')
 @staff_only
 @login_required
 def list_reports():
@@ -257,7 +261,7 @@ def list_reports():
     return render_template('list_reports.html', reports=res_data)
 
 
-@app.route('/reports/<name>/')
+@espaweb.route('/reports/<name>/')
 @staff_only
 @login_required
 def show_report(name):
@@ -266,7 +270,7 @@ def show_report(name):
     return render_template('report.html', report_name=name, report=res_data)
 
 
-@app.route('/console', methods=['GET'])
+@espaweb.route('/console', methods=['GET'])
 @staff_only
 @login_required
 def console():
@@ -278,7 +282,7 @@ def console():
     return render_template('console.html', stats=stats)
 
 
-@app.route('/console/statusmsg', methods=['GET', 'POST'])
+@espaweb.route('/console/statusmsg', methods=['GET', 'POST'])
 @staff_only
 @login_required
 def statusmsg():
@@ -304,12 +308,31 @@ def statusmsg():
     return action
 
 
-@app.route('/console/config', methods=['GET'])
+@espaweb.route('/console/config', methods=['GET'])
 @staff_only
 @login_required
 def console_config():
     config_data = api_get("/api/v0/system/config")
+    print "**** config_data", config_data
     return render_template('config.html', config_data=config_data)
 
 if __name__ == '__main__':
-    app.run(debug=True, use_evalex=False, host='0.0.0.0', port=8889)
+    espaweb.run(debug=True, use_evalex=False, host='0.0.0.0', port=8889)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

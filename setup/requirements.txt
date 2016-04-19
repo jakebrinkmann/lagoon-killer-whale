@@ -8,3 +8,6 @@ requests==2.9.1
 Werkzeug==0.11.4
 wheel==0.26.0
 python-memcached==1.57
+nose2
+nose2-cov
+mock==1.3.0

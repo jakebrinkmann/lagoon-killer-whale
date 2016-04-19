@@ -7,12 +7,12 @@
 <span class="navitemleft"><a href="http://landsat.usgs.gov/CDR_ECV.php">Product Information</a></span>
 <span class="navitemleft">|</span>
 <span class="navitemleft"><a href="http://landsat.usgs.gov/documents/espa_odi_userguide.pdf">User Guide</a></span>
-{% if session['logged_in'] %}
+{% if 'logged_in' in session.keys() and session['logged_in'] %}
     <span class="navitemright"><a href="logout">Logout</a></span>
 {% else %}
     <span class="navitemright"><a href="login">Login</a></span>
 {% endif %}
-{% if session['user'].is_staff %}
+{% if 'user' in session.keys() and session['user'].is_staff %}
     <span class="navitemright">|</span>
     <span class="navitemright"><a href="console">Console</a></span>
 {% endif %}
