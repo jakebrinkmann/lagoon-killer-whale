@@ -56,16 +56,19 @@ You would also need to made entries in your system process manager (systemd, ups
 start the uWSGI server on boot.
 
 ## Change Notes
-###### Version 2.9.5 (March 2015)
+###### Version 2.9.6 (April 2016)
+* updated onlinecache.py to remove log files
+
+###### Version 2.9.5 (March 2016)
 * updated NLAPS (TMA) restriction list
 * set max pixel size to 5000 meters/0.44 dd
 
-###### Version 2.9.4 (February 2015)
+###### Version 2.9.4 (February 2016)
 * updated schema path in uwsgi mappings
 * moved the date restriction for ordering l8sr to 12/31/2015 except 
   11/1/2015 & 11/2/2015
 
-###### Version 2.9.3 (January 2015)
+###### Version 2.9.3 (January 2016)
 * altered settings configuration to point to localhost for caching
 
 ###### Version 2.9.2 (December 2015)

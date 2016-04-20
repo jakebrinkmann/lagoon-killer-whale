@@ -52,12 +52,13 @@ class OnlineCache(object):
             raise OnlineCacheException('invalid orderid parameter specified:{0}'.format(orderid))
 
         path = '/'.join([self.orderpath, orderid])
-
+        log_file_path = '/'.join([self.orderpath, 'logs', orderid])
+       
         # this should be the dir where the order is held
         logger.info('Deleting {0} from online cache'.format(path))
 
         try:
-            result = self.client.execute('sudo chattr -fR -i {0};rm -rf {0}'.format(path))
+            result = self.client.execute('sudo chattr -fR -i {0};rm -rf {0};rm -rf {1}'.format(path, log_file_path))
         except Exception, exception:
             raise OnlineCacheException(exception)
 
