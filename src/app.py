@@ -1,6 +1,6 @@
-from flask import Flask, request, flash, session, redirect, render_template, url_for
-# OrderedDict and datetime used by reports
-# leave these imports
+from flask import Flask, request, flash, session, redirect, render_template, url_for, jsonify
+# OrderedDict used by reports
+# leave this import
 from collections import OrderedDict
 import datetime
 from datetime import timedelta
@@ -9,6 +9,7 @@ from functools import wraps
 from utils import conversions, deep_update, is_num, gen_nested_dict, User, format_errors
 import requests
 import json
+import PyRSS2Gen
 
 espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
@@ -105,7 +106,6 @@ def logout():
 @espaweb.route('/index/')
 @login_required
 def index():
-    #return 'foo'
     return render_template('index.html')
 
 
@@ -211,10 +211,45 @@ def submit_order():
 @login_required
 def list_orders(email=None):
     url = "/api/v0/list-orders-ext"
+    for_user = session['user'].email
     if email:
         url += "/{}".format(email)
+        for_user = email
     res_data = api_get(url, json={'status': ['complete', 'ordered']})
-    return render_template('list_orders.html', order_list=res_data)
+    return render_template('list_orders.html', order_list=res_data, for_user=for_user)
+
+
+@espaweb.route('/ordering/status/<email>/rss/')
+@login_required
+def list_orders_feed(email):
+    url = "/api/v0/list-orders-feed/{}".format(email)
+    response = api_get(url)
+    if response.keys() == ["msg"]:
+        # there was an issue
+        return jsonify(response), 404
+    else:
+        rss = PyRSS2Gen.RSS2(
+            title='ESPA Status Feed',
+            link='http://espa.cr.usgs.gov/ordering/status/{0}/rss/'.format(email),
+            description='ESPA scene status for:{0}'.format(email),
+            language='en-us',
+            lastBuildDate=datetime.datetime.now(),
+            items=[]
+        )
+
+        for item in response:
+            for scene in response[item]['scenes']:
+                description = 'scene_status:{0},orderid:{1},orderdate:{2}'.format(scene['status'], item, response[item]['orderdate'])
+                new_rss_item = PyRSS2Gen.RSSItem(
+                    title=scene['name'],
+                    link=scene['url'],
+                    description=description,
+                    guid=PyRSS2Gen.Guid(scene['url'])
+                )
+
+                rss.items.append(new_rss_item)
+
+        return rss.to_xml(encoding='utf-8')
 
 
 @espaweb.route('/ordering/order-status/<orderid>/')
@@ -313,26 +348,8 @@ def statusmsg():
 @login_required
 def console_config():
     config_data = api_get("/api/v0/system/config")
-    print "**** config_data", config_data
     return render_template('config.html', config_data=config_data)
 
 if __name__ == '__main__':
     espaweb.run(debug=True, use_evalex=False, host='0.0.0.0', port=8889)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

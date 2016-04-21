@@ -1,5 +1,14 @@
+class JSpoof(object):
+    def __init__(self, indict):
+        self.value = indict
 
-import json
+    @property
+    def status_code(self):
+        return 200
+
+    def json(self):
+        return self.value
+
 
 def api_get_user(url, response_type='json', json=None, uauth=None):
     return {'username': 'bob'}
@@ -31,17 +40,6 @@ def api_get_order_status(*args):
 
 
 def api_post_order(*args):
-    class JSpoof(object):
-        def __init__(self, indict):
-            self.value = indict
-
-        @property
-        def status_code(self):
-            return 200
-
-        def json(self):
-           return self.value
-
     if 'available-products' in args[0]:
         avail_prods = {'tm4': {'inputs': ['LT42181092013069PFS00'],
                                 'outputs': ['source_metadata', 'l1', 'toa', 'bt', 'cloud',
@@ -53,23 +51,14 @@ def api_post_order(*args):
         ap = JSpoof({'orderid': 'bob@google.com-03072016-085432'})
     return ap
 
+
 def api_get_system_config(*args):
     return {'retry.lta_soap_errors.timeout': '3600',
             'retry.retry_missing_l1.retries': '8',
             'url.dev.modis.datapool': 'e4ftl01.cr.usgs.gov'}
 
+
 def api_post_status(*args):
-    class JSpoof(object):
-        def __init__(self, indict):
-            self.value = indict
-
-        @property
-        def status_code(self):
-            return 200
-
-        def json(self):
-            return self.value
-
     return JSpoof({'foo':'bar'})
 
 
@@ -117,6 +106,19 @@ def api_get_show_report(*args):
            "OrderedDict([('Total Orders', 1L), ('Complete', 0L), ('Open', 1L), " \
            "('Email', 'rdilley@usgs.gov'), ('First Name', 'Ron'), ('Last Name', 'Dilley')])]"
 
+
+def api_get_rss_feed(*args):
+    return {u'cgaustin@usgs.gov-04112016-120349':
+                {u'orderdate': u'2016-04-11 12:03:49.948294',
+                 u'scenes':
+                     [{u'status': u'complete',
+                       u'url': u'http://espa-dev.cr.usgs.gov/orders/cgaustin@usgs.gov-04112016-120349/LE70270292003144-SC20160411120638.tar.gz',
+                       u'name': u'LE70270292003144EDC00'}
+                      ]
+                 }
+            }
+
+
 form_order = {'projection|utm|zone_ns': 'north',
               'resize|pixel_size_units': 'meters',
               'projection': 'on',
@@ -137,24 +139,3 @@ form_order = {'projection|utm|zone_ns': 'north',
               'toa': 'on',
               'cloud': 'on',
               'image_extents|north': ''}
-
-
-base_order = {'projection': {'lonlat': None},
-                'image_extents': {'units': 'dd',
-                                  'west': 0,
-                                  'east': 0.002695,
-                                  'north': 0.002695,
-                                  'south': 0},
-                'format': 'gtiff',
-                'resampling_method': 'cc',
-                'plot_statistics': True,
-                'resize': {'pixel_size_units': 'dd',
-                           'pixel_size': 0.0002695},
-                'myd13a2': {'inputs': ['MYD13A2.A2000072.h02v09.005.2008237032813'],
-                            'products': ['l1', 'stats']},
-                'myd09gq': {'inputs': ['MYD09GQ.A2000072.h02v09.005.2008237032813'],
-                            'products': ['l1', 'stats']},
-                'tm4': {'inputs': ['LT42181092013069PFS00'],
-                        'products': ['source_metadata', 'l1', 'toa', 'bt','cloud',
-                                     'sr', 'swe', 'sr_ndvi', 'sr_evi', 'sr_msavi',
-                                     'sr_ndmi', 'sr_nbr', 'sr_nbr2', 'stats']}}

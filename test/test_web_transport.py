@@ -127,6 +127,12 @@ class ApplicationTestCase(unittest.TestCase):
         result = self.client.get("/console/config")
         self.assertEqual(result.status_code, 200)
 
+    @patch('src.app.api_get', mock_app.api_get_rss_feed)
+    def test_get_rss_feed(self):
+        result = self.client.get("/ordering/status/bob@gmail.com/rss/")
+        self.assertEquals(result.status_code, 200)
+
+
 
 
 

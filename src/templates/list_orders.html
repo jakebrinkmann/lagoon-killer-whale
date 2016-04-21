@@ -46,7 +46,10 @@
     </div>
     {% if order_list %}
         <h4>
-            Showing all orders for {{ session['user'].email }}
+            <a href="/ordering/status/{{ for_user }}/rss" style="text-decoration: none">
+                <img border="0" alt="RSS Status Feed" title="Completed Scene RSS Feed" src="static/img/feed-icon-28x28.png"></img>
+            </a>&nbsp;&nbsp;&nbsp;
+            Showing all orders for {{ for_user }}
         </h4>
         <div class='boxbody'>
             <table>
