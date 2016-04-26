@@ -16,7 +16,7 @@
 
 {% block javascript %}
     $(document).ready(function() {
-        $("#msg_text_area").jqte();
+        $("#msg_text_area").jqte({fsize: false, color: false, source: false, sub: false, sup: false, rule: false, strike: false});
 
         {% if session['display_system_message'] == 'True' %}
             $("#msg_display").prop("checked", true);

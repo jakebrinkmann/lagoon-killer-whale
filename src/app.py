@@ -122,8 +122,9 @@ def submit_order():
     data = request.form.to_dict()
 
     # grab sceneids from the file in input_product_list field
-    _ipl_str = request.files.get('input_product_list').read()
-    _ipl = _ipl_str.split("\n" if "\n" in _ipl_str else "\r")
+    _ipl_list = request.files.get('input_product_list').read().splitlines()
+    _ipl = [i.strip().split("/r") for i in _ipl_list]
+    _ipl = [item for sublist in _ipl for item in sublist if item]
 
     # convert our list of sceneids into format required for new orders
     scene_dict_all_prods = api_post("/api/v0/available-products", {'inputs': _ipl}).json()

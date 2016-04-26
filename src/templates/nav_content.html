@@ -12,14 +12,15 @@
 {% else %}
     <span class="navitemright"><a href="login">Login</a></span>
 {% endif %}
-{% if 'user' in session.keys() and session['user'].is_staff %}
-    <span class="navitemright">|</span>
-    <span class="navitemright"><a href="console">Console</a></span>
-{% endif %}
+{% if 'logged_in' in session.keys() and session['logged_in'] %}
+    {% if session['user'].is_staff %}
+        <span class="navitemright">|</span>
+        <span class="navitemright"><a href="console">Console</a></span>
+    {% endif %}
 <span class="navitemright">|</span>
 <span class="navitemright">{{ session['user'].username}} ({{ session['user'].email }})</span>
 <span class="navitemright">|</span>
 <span class="navitemright">Products Completed Last Day: {{ session['stat_products_complete_24_hrs'] }}</span>
 <span class="navitemright">|</span>
 <span class="navitemright">Product Backlog: {{ session['stat_backlog_depth'] }}</span>
-
+{% endif %}
