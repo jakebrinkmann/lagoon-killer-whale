@@ -172,6 +172,8 @@ def submit_order():
     for key in scene_dict_all_prods.keys():
             if key != 'not_implemented':
                 sensor_prod_list = set(product_list).intersection(set(scene_dict_all_prods[key]['outputs']))
+                if not sensor_prod_list:
+                    sensor_prod_list = ['l1']
                 scene_dict_all_prods[key]['products'] = list(sensor_prod_list)
                 scene_dict_all_prods[key].pop('outputs')
 
