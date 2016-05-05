@@ -27,6 +27,19 @@
 
 {% endblock %}
 
+{% block new_order_javascript %}
+    $(document).ready(function(){
+        $("#id_email").keypress(function(e) {
+            var key = e.which;
+            if (key == 13) //the enter key code
+              {
+                switchUrl();
+                return false;
+              }
+        })
+    })
+{% endblock %}
+
 {% block content %}
     {% if display_system_message %}
         {% include "system_message.html" %}
