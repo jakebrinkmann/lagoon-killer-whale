@@ -51,7 +51,12 @@ def update_status_details():
 def staff_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session['user'].is_staff is False:
+        try:
+            is_staff = session['user'].is_staff
+        except:
+            is_staff = False
+
+        if 'user' not in session.keys() or is_staff is False:
             flash('staff only', 'error')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
