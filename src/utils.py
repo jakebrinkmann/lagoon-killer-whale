@@ -55,8 +55,11 @@ def format_errors(inerror):
     if isinstance(inerror, dict):
         for key in inerror:
             outlist.append(key+"<br/>")
-            for item in inerror[key]:
-                outlist.append("&#8594;"+item+"<br/>")
+            if isinstance(inerror[key], basestring):
+                outlist.append(inerror[key])
+            else:
+                for item in inerror[key]:
+                    outlist.append("&#8594;"+item+"<br/>")
         return "".join(outlist)
     else:
         return inerror
