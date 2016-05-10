@@ -174,6 +174,10 @@ def submit_order():
     # pop the 'outputs' key, add 'products' key with values indicated
     # by user
 
+    # we dont need these values returned by the available-products query
+    if 'date_restricted' in scene_dict_all_prods.keys():
+        scene_dict_all_prods.pop('date_restricted')
+
     for key in scene_dict_all_prods.keys():
             if key != 'not_implemented':
                 sensor_prod_list = set(product_list).intersection(set(scene_dict_all_prods[key]['outputs']))
