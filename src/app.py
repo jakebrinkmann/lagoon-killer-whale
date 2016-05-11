@@ -179,16 +179,22 @@ def submit_order():
             if ('mod' or 'myd') in key:
                 scene_dict_all_prods[key]['products'] = modis_list
                 scene_dict_all_prods[key].pop('outputs')
-            elif key != 'not_implemented':
-                sensor_prod_list = set(landsat_list).intersection(set(scene_dict_all_prods[key]['outputs']))
-                scene_dict_all_prods[key]['products'] = list(sensor_prod_list)
+            elif key not in ('not_implemented', 'date_restricted'):
+                # Probably better to let the user know if there
+                # are invalid landsat/product combinations rather than
+                # just making them disappear from the order, MODIS
+                # being the exception
+
+                # sensor_prod_list = set(landsat_list).intersection(set(scene_dict_all_prods[key]['outputs']))
+                # scene_dict_all_prods[key]['products'] = list(sensor_prod_list)
+                scene_dict_all_prods[key]['products'] = landsat_list
                 scene_dict_all_prods[key].pop('outputs')
 
     # combine order options with product lists
     out_dict.update(scene_dict_all_prods)
 
     # keys to clean up
-    cleankeys = ['not_implemented', 'target_projection']
+    cleankeys = ['not_implemented', 'target_projection', 'date_restricted']
     for item in cleankeys:
         if item in out_dict.keys():
             if item == 'target_projection' and out_dict[item] == 'lonlat':
