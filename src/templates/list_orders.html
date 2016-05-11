@@ -46,10 +46,6 @@
     {% endif %}
     <div style='margin:0 auto; text-align:center;margin-top:10px;'>
 
-        {#% if errors.email %#}
-            <span class="error">{#{errors.email}#}</span><br/>
-        {#% endif %#}
-
         <form method="GET" action="ordering/status">
             <label for="id_email" style="font-weight:bold">Show orders for:</label>
             <input type="text" id="id_email" >
@@ -76,9 +72,15 @@
                 {% for order in order_list %}
                     {% set rowclass = loop.cycle('evenrow', 'oddrow') %}
                     <tr class="{{ rowclass }}">
-                        <td class="{{ rowclass }}"><a href=" /ordering/order-status/{{ order.orderid }}/">{{ order.orderid }}</a></td>
+                        <td class="{{ rowclass }}">
+                            {% if session['user'].is_staff and order.products_error != 0 %}
+                                <span style="color: red">&#8225;</span>
+                            {% endif %}
+                            <a href=" /ordering/order-status/{{ order.orderid }}/">{{ order.orderid }}</a>
+                        </td>
                         <td class="{{ rowclass }}" id='{{ order.id }}_total_ordered'>{{ order.products_ordered }}</td>
                         <td class="{{ rowclass }}" id='{{ order.id }}_finished'>{{ order.products_complete }}</td>
+
                         <td class="{{ rowclass }}">{{ order.order_status }}</td>
                         <td class="{{ rowclass }}">{{ order.order_note }}</td>
                     </tr>

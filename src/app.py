@@ -227,6 +227,7 @@ def list_orders(email=None):
         url += "/{}".format(email)
         for_user = email
     res_data = api_get(url, json={'status': ['complete', 'ordered']})
+
     return render_template('list_orders.html', order_list=res_data, for_user=for_user)
 
 

@@ -128,6 +128,9 @@
                                 {% set rowclass = loop.cycle('evenrow', 'oddrow') %}
                                 <tr class="{{ rowclass }}">
                                     <td class="{} product noborder">
+                                        {% if session['user'].is_staff %}
+                                            {{ s['scene_id'] }} -
+                                        {% endif %}
                                         {% if s['name'] == 'plot' %}
                                             Plotting & Statistics
                                         {% else %}
@@ -153,6 +156,10 @@
                                     </td>
                                     <td class="{{ rowclass }} note noborder">
                                         {{ s['note'] }}
+                                        {% if s['status'] == 'error' and session['user'].is_staff %}
+                                            <button class="log_dialog" id="{{ s['scene_id'] }}">Log</button>
+                                            <div id="{{ s['scene_id'] }}_log" style="display:none;">{{ s['log_file_contents'] }}</div>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% endif %}
@@ -166,8 +173,20 @@
 {% endblock %}
 
 {% block javascript %}
+
     {% autoescape off %}
         $(document).ready(function(){
+
+            $(".log_dialog").click(function(event)
+                                    {divid=event.target.id+"_log";
+                                      $(divid).dialog();})
+
+
+            $('.log_dialog').click(function(event){
+                div_id = "#"+event.target.id+"_log"
+                $(div_id).dialog();
+            })
+
 
             var source_products = {
                 'source_data': 'original input products',
