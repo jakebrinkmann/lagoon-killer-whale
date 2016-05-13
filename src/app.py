@@ -135,10 +135,10 @@ def submit_order():
     scene_dict_all_prods = api_post("/api/v0/available-products", {'inputs': _ipl}).json()
 
     # create a list of requested products
-    product_list = [key for key in data.keys() if key in conversions['products'].keys()]
+    landsat_list = [key for key in data.keys() if key in conversions['products'].keys()]
     # now that we have the product list, lets remove
     # this key from the form inputs
-    for p in product_list:
+    for p in landsat_list:
         data.pop(p)
 
     # the image extents parameters also come in under
@@ -170,6 +170,13 @@ def submit_order():
         # deep_update updates the dictionary
         deep_update(out_dict, tdict)
 
+    # MODIS only receive l1 or stats
+    modis_list = []
+    if 'l1' in landsat_list:
+        modis_list.append('l1')
+    if 'stats' in landsat_list:
+        modis_list.append('stats')
+
     # the response from available-products returns... all possible products
     # pop the 'outputs' key, add 'products' key with values indicated
     # by user
@@ -179,16 +186,25 @@ def submit_order():
         scene_dict_all_prods.pop('date_restricted')
 
     for key in scene_dict_all_prods.keys():
-            if key != 'not_implemented':
-                sensor_prod_list = set(product_list).intersection(set(scene_dict_all_prods[key]['outputs']))
-                scene_dict_all_prods[key]['products'] = list(sensor_prod_list)
+            if ('mod' or 'myd') in key:
+                scene_dict_all_prods[key]['products'] = modis_list
+                scene_dict_all_prods[key].pop('outputs')
+            elif key not in ('not_implemented', 'date_restricted'):
+                # Probably better to let the user know if there
+                # are invalid landsat/product combinations rather than
+                # just making them disappear from the order, MODIS
+                # being the exception
+
+                # sensor_prod_list = set(landsat_list).intersection(set(scene_dict_all_prods[key]['outputs']))
+                # scene_dict_all_prods[key]['products'] = list(sensor_prod_list)
+                scene_dict_all_prods[key]['products'] = landsat_list
                 scene_dict_all_prods[key].pop('outputs')
 
     # combine order options with product lists
     out_dict.update(scene_dict_all_prods)
 
     # keys to clean up
-    cleankeys = ['not_implemented', 'target_projection']
+    cleankeys = ['not_implemented', 'target_projection', 'date_restricted']
     for item in cleankeys:
         if item in out_dict.keys():
             if item == 'target_projection' and out_dict[item] == 'lonlat':
