@@ -177,14 +177,9 @@
     {% autoescape off %}
         $(document).ready(function(){
 
-            $(".log_dialog").click(function(event)
-                                    {divid=event.target.id+"_log";
-                                      $(divid).dialog();})
-
-
             $('.log_dialog').click(function(event){
                 div_id = "#"+event.target.id+"_log"
-                $(div_id).dialog();
+                $(div_id).dialog({height: 500, width: 600, title: 'Log File Contents'});
             })
 
 
