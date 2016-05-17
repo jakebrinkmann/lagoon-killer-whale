@@ -10,6 +10,7 @@ from utils import conversions, deep_update, is_num, gen_nested_dict, User, forma
 import requests
 import json
 import PyRSS2Gen
+import os
 
 espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
@@ -379,5 +380,8 @@ def console_config():
     return render_template('config.html', config_data=config_data)
 
 if __name__ == '__main__':
-    espaweb.run(debug=True, use_evalex=False, host='0.0.0.0', port=8889)
+    debug = False
+    if 'ESPA_DEBUG' in os.environ.keys() and os.environ['ESPA_DEBUG'] == 'True':
+        debug = True
+    espaweb.run(debug=debug, use_evalex=False, host='0.0.0.0', port=8889)
 
