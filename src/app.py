@@ -187,7 +187,7 @@ def submit_order():
         scene_dict_all_prods.pop('date_restricted')
 
     for key in scene_dict_all_prods.keys():
-            if ('mod' or 'myd') in key:
+            if 'mod' in key or 'myd' in key:
                 scene_dict_all_prods[key]['products'] = modis_list
                 scene_dict_all_prods[key].pop('outputs')
             elif key not in ('not_implemented', 'date_restricted'):
