@@ -73,6 +73,10 @@ def login_required(f):
     return decorated_function
 
 
+def request_wants_json():
+    return 'Content-Type' in request.headers and request.headers['Content-Type'] == 'application/json'
+
+
 @espaweb.route('/login', methods=['GET', 'POST'])
 def login():
     next = request.args.get('next')
@@ -249,7 +253,6 @@ def list_orders(email=None):
 
 
 @espaweb.route('/ordering/status/<email>/rss/')
-@login_required
 def list_orders_feed(email):
     url = "/api/v0/list-orders-feed/{}".format(email)
     response = api_get(url)
@@ -285,8 +288,8 @@ def list_orders_feed(email):
 @login_required
 def view_order(orderid):
     order_dict = api_get("/api/v0/order/{}".format(orderid))
-
     scenes_resp = api_get("/api/v0/item-status/{}".format(orderid))
+
     scenes = scenes_resp['orderid'][orderid]
 
     statuses = {'complete': ['complete', 'unavailable'],
@@ -377,7 +380,9 @@ def statusmsg():
 @login_required
 def console_config():
     config_data = api_get("/api/v0/system/config")
-    return render_template('config.html', config_data=config_data)
+    sorted_keys = sorted(config_data)
+    return render_template('config.html', config_data=config_data, sorted_keys=sorted_keys)
+
 
 if __name__ == '__main__':
     debug = False

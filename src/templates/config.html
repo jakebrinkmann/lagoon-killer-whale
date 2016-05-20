@@ -12,10 +12,10 @@
     <table id='statistics' class='display' width=100%>
     <thead><tr><th>Name</th><th>Value</th></thead>
     <tbody>
-    {% for k, v in config_data.iteritems() %}
+    {% for key in sorted_keys %}
         <tr>
-        <td>{{ k }}</td>
-        <td>{{ v }}</td>
+        <td>{{ key }}</td>
+        <td>{{ config_data[key] }}</td>
         </tr>
     {% endfor %}
     </tbody>
