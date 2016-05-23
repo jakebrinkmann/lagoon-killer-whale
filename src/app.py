@@ -7,10 +7,12 @@ from datetime import timedelta
 from flask.ext.session import Session
 from functools import wraps
 from utils import conversions, deep_update, is_num, gen_nested_dict, User, format_errors
+from logger import ilogger as logger
 import requests
 import json
 import PyRSS2Gen
 import os
+import base64
 
 espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
@@ -87,7 +89,7 @@ def login():
             resp_json['wurd'] = request.form['password']
             session['user'] = User(**resp_json)
             update_status_details()
-
+            logger.info("User %s logged in\n" % session['user'].username)
             # send the user back to their
             # originally requested destination
             if next and next != 'None':
@@ -95,6 +97,7 @@ def login():
             else:
                 return redirect(url_for('index'))
         else:
+            logger.info("**** Failed user login %s \n" % request.form['username'])
             flash(format_errors(resp_json['msg']), 'error')
             _status = 401
     else:
@@ -106,6 +109,7 @@ def login():
 
 @espaweb.route('/logout')
 def logout():
+    logger.info("Logging out user %s \n" % session['user'].username)
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
                  'stat_products_complete_24_hrs', 'stat_backlog_depth']:
         session.pop(item, None)
@@ -130,7 +134,7 @@ def new_order():
 def submit_order():
     # form values come in as an ImmutableMultiDict
     data = request.form.to_dict()
-
+    logger.info("* new order submission for user %s\n\n order details: %s\n\n\n" % (session['user'].username, data))
     # grab sceneids from the file in input_product_list field
     _ipl_list = request.files.get('input_product_list').read().splitlines()
     _ipl = [i.strip().split("/r") for i in _ipl_list]
@@ -230,9 +234,13 @@ def submit_order():
 
     if response.status_code == 200:
         flash("Order submitted successfully! Your OrderId is {}".format(response_data['orderid']))
+        logger.info("successful order submission for user %s\n\n orderid: %s" % (session['user'].username,
+                                                                                 response_data['orderid']))
         rdest = redirect('/ordering/order-status/{}/'.format(response_data['orderid']))
     else:
         flash(format_errors(response_data["msg"]), 'error')
+        logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['username'].username,
+                                                                                       response_data['msg']))
         rdest = redirect(url_for('new_order'))
 
     return rdest
@@ -254,11 +262,26 @@ def list_orders(email=None):
 
 @espaweb.route('/ordering/status/<email>/rss/')
 def list_orders_feed(email):
+    # bulk downloader and the browser hit this url, need to handle
+    # user auth for both use cases
     url = "/api/v0/list-orders-feed/{}".format(email)
-    response = api_get(url)
+    if 'Authorization' in request.headers:
+        # coming in from bulk downloader
+        logger.info("Apparent bulk download attempt, headers: %s" % request.headers)
+        auth_header_dec = base64.b64decode(request.headers['Authorization'])
+        response = api_get(url, uauth=tuple(auth_header_dec.split(":")))
+    else:
+        if 'logged_in' not in session.keys() or session['logged_in'] is not True:
+            return redirect(url_for('login', next=request.url))
+        else:
+            response = api_get(url)
+
     if response.keys() == ["msg"]:
-        # there was an issue
-        return jsonify(response), 404
+        logger.info("Problem retrieving rss for email: %s \n message: %s\n" % (email, response['msg']))
+        status_code = 404
+        if "Invalid username/password" in response['msg']:
+            status_code = 403
+        return jsonify(response), status_code
     else:
         rss = PyRSS2Gen.RSS2(
             title='ESPA Status Feed',
