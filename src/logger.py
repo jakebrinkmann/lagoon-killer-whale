@@ -6,8 +6,8 @@ from logging import Formatter
 from logging import Filter
 from logging.handlers import SMTPHandler
 
-if not os.path.exists("logs"):
-    os.mkdir("logs")
+if not os.path.exists("../logs"):
+    os.mkdir("../logs")
 
 LOG_FORMAT = ('%(asctime)s [%(levelname)s]: %(message)s in %(pathname)s:%(lineno)d')
 
@@ -19,8 +19,8 @@ class DbgFilter(Filter):
 ilogger = logging.getLogger("espa-web")
 ilogger.setLevel(logging.DEBUG)
 
-ih = FileHandler("logs/espa-web-info.log")
-dh = FileHandler("logs/espa-web-debug.log")
+ih = FileHandler("../logs/espa-web-info.log")
+dh = FileHandler("../logs/espa-web-debug.log")
 eh = SMTPHandler(mailhost='localhost', fromaddr='espa@usgs.gov', toaddrs='gs-n-edc_espa_api@usgs.gov', subject='ESPA WEB ERROR')
 
 ih.setLevel(logging.INFO)
