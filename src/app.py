@@ -104,7 +104,15 @@ def login():
         _status = 200
         if 'user' not in session.keys():
             session['user'] = None
-    return render_template('login.html', next=next), _status
+
+    in_ops = 'ESPA_ENV' in os.environ.keys() and os.environ['ESPA_ENV'] == 'ops'
+    explorer = "http://earthexplorer.usgs.gov" if in_ops else "http://eedevmast.cr.usgs.gov"
+    reg_host = "https://ers.cr.usgs.gov" if in_ops else "http://ersdevmast.cr.usgs.gov"
+
+    return render_template('login.html', next=next,
+                           earthexplorer=explorer,
+                           register_user=reg_host+"/register",
+                           forgot_login=reg_host+"/password/request"), _status
 
 
 @espaweb.route('/logout')
