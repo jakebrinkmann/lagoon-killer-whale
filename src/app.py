@@ -54,12 +54,11 @@ def update_status_details():
 def staff_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        try:
+        is_staff = False
+        if 'user' in session:
             is_staff = session['user'].is_staff
-        except:
-            is_staff = False
 
-        if 'user' not in session.keys() or is_staff is False:
+        if is_staff is False:
             flash('staff only', 'error')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
@@ -69,7 +68,7 @@ def staff_only(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'logged_in' not in session.keys() or session['logged_in'] is not True:
+        if 'logged_in' not in session or session['logged_in'] is not True:
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
@@ -81,10 +80,10 @@ def request_wants_json():
 
 @espaweb.route('/login', methods=['GET', 'POST'])
 def login():
-    next = request.args.get('next')
+    destination = request.args.get('next')
     if request.method == 'POST':
         resp_json = api_get("/api/v0/user", uauth=(request.form['username'], request.form['password']))
-        if 'username' in resp_json.keys():
+        if 'username' in resp_json:
             session['logged_in'] = True
             resp_json['wurd'] = request.form['password']
             session['user'] = User(**resp_json)
@@ -92,8 +91,8 @@ def login():
             logger.info("User %s logged in\n" % session['user'].username)
             # send the user back to their
             # originally requested destination
-            if next and next != 'None':
-                return redirect(next)
+            if destination and destination != 'None':
+                return redirect(destination)
             else:
                 return redirect(url_for('index'))
         else:
@@ -102,14 +101,14 @@ def login():
             _status = 401
     else:
         _status = 200
-        if 'user' not in session.keys():
+        if 'user' not in session:
             session['user'] = None
 
-    in_ops = 'ESPA_ENV' in os.environ.keys() and os.environ['ESPA_ENV'] == 'ops'
+    in_ops = 'ESPA_ENV' in os.environ and os.environ['ESPA_ENV'] == 'ops'
     explorer = "http://earthexplorer.usgs.gov" if in_ops else "http://eedevmast.cr.usgs.gov"
     reg_host = "https://ers.cr.usgs.gov" if in_ops else "http://ersdevmast.cr.usgs.gov"
 
-    return render_template('login.html', next=next,
+    return render_template('login.html', next=destination,
                            earthexplorer=explorer,
                            register_user=reg_host+"/register",
                            forgot_login=reg_host+"/password/request"), _status
@@ -152,7 +151,7 @@ def submit_order():
     scene_dict_all_prods = api_post("/api/v0/available-products", {'inputs': _ipl}).json()
 
     # create a list of requested products
-    landsat_list = [key for key in data.keys() if key in conversions['products'].keys()]
+    landsat_list = [key for key in data if key in conversions['products']]
     # now that we have the product list, lets remove
     # this key from the form inputs
     for p in landsat_list:
@@ -164,7 +163,7 @@ def submit_order():
     # image extents in the deep_update function
     clk = ['image_extents', 'projection', 'resize']
     for k in clk:
-        if k in data.keys():
+        if k in data:
             # 'image_extents', 'projection', 'resize'
             # are in data.keys().  if there are child
             # keys, remove k
@@ -199,10 +198,10 @@ def submit_order():
     # by user
 
     # we dont need these values returned by the available-products query
-    if 'date_restricted' in scene_dict_all_prods.keys():
+    if 'date_restricted' in scene_dict_all_prods:
         scene_dict_all_prods.pop('date_restricted')
 
-    for key in scene_dict_all_prods.keys():
+    for key in scene_dict_all_prods:
             if 'mod' in key or 'myd' in key:
                 scene_dict_all_prods[key]['products'] = modis_list
                 scene_dict_all_prods[key].pop('outputs')
@@ -223,21 +222,21 @@ def submit_order():
     # keys to clean up
     cleankeys = ['not_implemented', 'target_projection', 'date_restricted']
     for item in cleankeys:
-        if item in out_dict.keys():
+        if item in out_dict:
             if item == 'target_projection' and out_dict[item] == 'lonlat':
                 # there are no other parameters needed for a geographic
                 # projection, so assign 'lonlat' to the projection key
                 out_dict['projection'] = {'lonlat': None}
             out_dict.pop(item)
 
-    if 'plot_statistics' in out_dict.keys():
+    if 'plot_statistics' in out_dict:
         out_dict['plot_statistics'] = True
 
     response = api_post("/api/v0/order", out_dict)
     response_data = response.json()
 
     # hack till we settle on msg or message
-    if 'message' in response_data.keys():
+    if 'message' in response_data:
         response_data['msg'] = response_data['message']
 
     if response.status_code == 200:
@@ -279,12 +278,12 @@ def list_orders_feed(email):
         auth_header_dec = base64.b64decode(request.headers['Authorization'])
         response = api_get(url, uauth=tuple(auth_header_dec.split(":")))
     else:
-        if 'logged_in' not in session.keys() or session['logged_in'] is not True:
+        if 'logged_in' not in session or session['logged_in'] is not True:
             return redirect(url_for('login', next=request.url))
         else:
             response = api_get(url)
 
-    if response.keys() == ["msg"]:
+    if "msg" in response:
         logger.info("Problem retrieving rss for email: %s \n message: %s\n" % (email, response['msg']))
         status_code = 404
         if "Invalid username/password" in response['msg']:
@@ -339,7 +338,7 @@ def view_order(orderid):
     options_by_sensor = {}
     for key in order_dict['product_opts']:
         _kval = order_dict['product_opts'][key]
-        if isinstance(_kval, dict) and 'products' in _kval.keys():
+        if isinstance(_kval, dict) and 'products' in _kval:
             _spl = _kval['products']
             _out_spl = [conversions['products'][item] for item in _spl]
             options_by_sensor[key] = _out_spl
@@ -385,7 +384,7 @@ def console():
 @login_required
 def statusmsg():
     if request.method == 'POST':
-        dsm = 'True' if 'display_system_message' in request.form.keys() else 'False'
+        dsm = 'True' if 'display_system_message' in request.form else 'False'
         api_args = {'system_message_title': request.form['system_message_title'],
                     'system_message_body': request.form['system_message_body'],
                     'display_system_message': dsm}
@@ -417,7 +416,7 @@ def console_config():
 
 if __name__ == '__main__':
     debug = False
-    if 'ESPA_DEBUG' in os.environ.keys() and os.environ['ESPA_DEBUG'] == 'True':
+    if 'ESPA_DEBUG' in os.environ and os.environ['ESPA_DEBUG'] == 'True':
         debug = True
     espaweb.run(debug=debug, use_evalex=False, host='0.0.0.0', port=8889)
 
