@@ -188,9 +188,7 @@ def submit_order():
         deep_update(out_dict, tdict)
 
     # MODIS only receive l1 or stats
-    modis_list = []
-    if 'l1' in landsat_list:
-        modis_list.append('l1')
+    modis_list = ['l1']
     if 'stats' in landsat_list:
         modis_list.append('stats')
 
