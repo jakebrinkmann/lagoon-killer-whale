@@ -187,9 +187,7 @@ def submit_order():
         deep_update(out_dict, tdict)
 
     # MODIS only receive l1 or stats
-    modis_list = []
-    if 'l1' in landsat_list:
-        modis_list.append('l1')
+    modis_list = ['l1']
     if 'stats' in landsat_list:
         modis_list.append('stats')
 
@@ -232,8 +230,10 @@ def submit_order():
     if 'plot_statistics' in out_dict:
         out_dict['plot_statistics'] = True
 
+    logger.info('Order out to API: {}'.format(out_dict))
     response = api_post("/api/v0/order", out_dict)
     response_data = response.json()
+    logger.info('Response from API: {}'.format(response_data))
 
     # hack till we settle on msg or message
     if 'message' in response_data:
@@ -246,7 +246,7 @@ def submit_order():
         rdest = redirect('/ordering/order-status/{}/'.format(response_data['orderid']))
     else:
         flash(format_errors(response_data["msg"]), 'error')
-        logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['username'].username,
+        logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
                                                                                        response_data['msg']))
         rdest = redirect(url_for('new_order'))
 
