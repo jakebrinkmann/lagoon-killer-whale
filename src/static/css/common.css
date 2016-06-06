@@ -41,13 +41,14 @@ You can customize some areas of the header ONLY by making the changes in the cus
 }
 #usgstitle {
     /*background-color: #006633;*/
+    background-color: black;
     clear: both;
     width: 100%;
     border-bottom: 1px solid #ffffff;
     border-top: 1px solid #ffffff;
     font: 14px Verdana, Arial, Helvetica, sans-serif;
     color: #ffffff;
-    height: 35px;
+    height: 32px;
 }
 #usgstitle p {
     font: bold 1.2em Verdana, Arial, Helvetica, sans-serif;
