@@ -6,9 +6,6 @@ from logging import Formatter
 from logging import Filter
 from logging.handlers import SMTPHandler
 
-if not os.path.exists("../logs"):
-    os.mkdir("../logs")
-
 LOG_FORMAT = ('%(asctime)s [%(levelname)s]: %(message)s in %(pathname)s:%(lineno)d')
 
 
