@@ -10,18 +10,60 @@
 {% block stylesheets %}
     <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css"/>
 {% endblock %}
-
+q
 {% block js_files %}
   <script type="text/javascript" src="http://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
 {% endblock %}
 
 {% block javascript %}
+    /**
+    * detect IE
+    * returns version of IE or false, if browser is not Internet Explorer
+    */
+
+    function detectIE() {
+        var ua = window.navigator.userAgent;
+
+        var msie = ua.indexOf('MSIE ');
+        if (msie > 0) {
+            // IE 10 or older => return version number
+            return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+        }
+
+        var trident = ua.indexOf('Trident/');
+        if (trident > 0) {
+            // IE 11 => return version number
+            var rv = ua.indexOf('rv:');
+            return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+        }
+
+        var edge = ua.indexOf('Edge/');
+        if (edge > 0) {
+           // Edge (IE 12+) => return version number
+           return parseInt(ua.substring(edge + 5, ua.indexOf('.', edge)), 10);
+        }
+
+        // other browser
+        return false;
+    }
+
+    function gethostname() {
+        var a = document.createElement('a');
+        a.href = url;
+        return a.hostname;
+    }
 
     function switchUrl() {
-        var path = "ordering/status/fake@val.com";
+        var hostname = gethostname();
+        if (detectIE()) {
+          var path = hostname + "/ordering/status/fake@val.com";
+        } else {
+          var path = "/ordering/status/fake@val.com";
+        }
         var email_addr = document.getElementById('id_email');
         path = path.replace('fake@val.com', $.trim(email_addr.value));
-        window.location = path;
+        $(location).attr('href', path);
+
         return false;
     }
 
