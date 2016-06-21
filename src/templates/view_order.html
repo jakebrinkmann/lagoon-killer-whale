@@ -158,7 +158,7 @@
                                         {{ s['note'] }}
                                         {% if s['status'] == 'error' and session['user'].is_staff %}
                                             <button class="log_dialog" id="{{ s['scene_id'] }}">Log</button>
-                                            <div id="{{ s['scene_id'] }}_log" style="display:none;">{{ s['log_file_contents'] }}</div>
+                                            <div id="{{ s['scene_id'] }}_log" style="display:none;">{{ s['log_file_contents'].replace('\n', '<br><br>')|safe }}</div>
                                         {% endif %}
                                     </td>
                                 </tr>
