@@ -14,6 +14,12 @@ import PyRSS2Gen
 import os
 import base64
 
+# occassionally see UnicodeDecodeError in reports
+# importing sys and setting default encoding resolved
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
 espaweb.secret_key = '@ijn@@d)h@8f8avh+h=lzed2gy=hp2w+6+nbgl2sdyh$!x!%3+'
