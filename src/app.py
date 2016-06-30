@@ -14,11 +14,6 @@ import PyRSS2Gen
 import os
 import base64
 
-# occassionally see UnicodeDecodeError in reports
-# importing sys and setting default encoding resolved
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
@@ -370,6 +365,11 @@ def list_reports():
 def show_report(name):
     response = api_get("/api/v0/reports/{0}/".format(name))
     res_data = eval(response)
+    # occassionally see UnicodeDecodeError in reports
+    # lets decode the response
+    for rpt in res_data:
+      for k,v in rpt.items():
+        rpt[k] = str(v).decode('utf8', 'strict')
     return render_template('report.html', report_name=name, report=res_data)
 
 
