@@ -1,0 +1,139 @@
+/* These three are to pin the footer at the bottom of the window but not 
+have it fixed there */
+html{position:relative; min-height: 100% }
+body {
+  margin-bottom:100px;
+
+}
+#footer{height: 100px; width:100%; position: absolute; left: 0; bottom: 0;}
+
+#header {height:71px; margin-bottom:0px;overflow:hidden;}
+/*#usgstitle {position:absolute; left:0; top:71px; z-index:3000;
+              background:#222; width:100%; 
+              color:#ffffff; font-weight:bold; padding-top:4px;}*/
+
+#usgsidentifier {position:absolute; left:0; top:0; z-index:3000;}
+#identifierbg {position:absolute; left:0; top:0; z-index:2900;}
+#rot {
+    overflow:hidden;
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:71px;
+    z-index:1000;
+}
+
+
+
+#usgsccsabox {
+    position:relative;
+    z-index:3000;
+    float:right;
+    background-color:#222;
+    min-height:150px;
+    padding-left:10px;
+}
+#usgsccsabox a{color:white;}
+#usgsccsabox table {margin-top:5px; margin-right:5px; font: Verdana, Arial, Helvetica, sans-serif;}
+#usgsccsabox a {text-decoration:none}
+#usgsccsabox a:hover {text-decoration:underline}
+
+#usgstitle { color:#ffffff; font-weight:bold;
+             padding-top:4px; padding-left:10px;
+             height:30px; background-color:#000;}
+
+#usgscssa {
+  min-height: 100px;
+}
+
+#nav a {
+  color: #FFFFFF;
+}
+
+#nav {
+  color: #FFFFFF;
+}
+
+#usgsfooter {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  color: #000000;
+  font-size: small;
+  margin: 0;
+  padding-top: 2px;
+}
+
+#usgsfooter {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: small;
+  clear: both;
+  margin: 0;
+}
+
+#usgsfooterbar {
+  background-color: #666666;
+  padding: 4px;
+  margin: 0;
+}
+
+#usgsfooterbar a:link {
+  margin-right: 40px;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#usgsfootertext{
+  padding: 4px;
+  margin: 0;
+}
+
+#usgsfootertext img {
+  border: none;
+  float: right;
+  margin-right: 5px;
+}
+
+a {
+  background-color: transparent;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+
+a:-webkit-any-link {
+  color: -webkit-link;
+  text-decoration: underline;
+  cursor: auto;
+}
+
+p {
+  font-family: Verdana, Arial, Helvetica, sans-serif, Times New Roman;
+  line-height: 1.6em;
+}
+
+span.navitemleft {
+  padding-left: 15px;
+  font-weight: bold;
+  line-height: 20px;
+  display: inline-block;
+  zoom: 1;
+  float: left;
+}
+
+span.navitemright {
+  padding-left: 15px;
+  font-weight: bold;
+  line-height: 20px;
+  display: inline-block;
+  zoom: 1;
+  float: right;
+}
+
+.gap-top { margin-top:10px; }
+.gap-bottom { margin-bottom:10px; }
+.gap-left { margin-left:10px; }
+.gap-right { margin-right:10px; }
+
+
+

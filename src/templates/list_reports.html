@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %} ESPA Reports {% endblock %}
+{% block header %} All Reports {% endblock %}
+
+{% block nav %}{% include 'ordering/bulk_ordering_nav.html' %}{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css"/>
+{% endblock %}
+
+{% block js_files %}
+  <script type="text/javascript" src="http://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+    $(document).ready(function(){
+        $('#reports').DataTable();
+      });
+{% endblock %}
+
+{% block content %}
+    <h4>Reports</h4>
+    <table id='reports' class='display' width='100%'>
+    <thead>
+    <tr><th>Report</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+    {% for k, v in reports.iteritems() %}
+       <tr>
+       <td><a href="reports/{{ k }}">{{ v.display_name }}</a></td>
+       <td>{{ v.description }}</td>
+       </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}

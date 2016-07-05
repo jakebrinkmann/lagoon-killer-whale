@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}New Bulk Order{% endblock %}
+
+{% block usgstitle %}
+  <p>New Bulk Order</p>
+{% endblock %}
+
+{% block style %}
+  {# new_order.css is a sym-link, configuring jinja to allow
+    includes outside of the templates dir is a pain #}
+  {% include "new_order.css" %}
+{% endblock %}
+
+{% block content %}
+
+  <form action="{{ form_action }}" method="post" id="request_form" name="request_form" enctype="multipart/form-data"> {#% csrf_token %#}
+		<div class="espa_lightbox" id="available_input_products">
+			<h2>ESPA Input Products & Options</h2>
+
+			<table>
+			<tr>
+				<th>&nbsp;</th>
+				<th>Landsat 4, 5, 7, 8</th>
+				<th>MODIS Aqua & Terra</th>
+			</tr>
+			<tr>
+				<th>&nbsp;</th>
+				<th>TM, ETM+, OLI/TIRS</th>
+				<th>09A1/GA/GQ/Q1, 13Q1/A1/A2/A3</th>
+			</tr>
+			<tr>
+				<td>Input Products</td>
+				<td>X</td>
+				<td>X</td>
+			</tr>
+			<tr>
+				<td>Input Product Metadata</td>
+				<td>X</td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td>Climate Data Records</td>
+				<td>X</td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td>Spectral Indices</td>
+				<td>X</td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td>Customized Outputs</td>
+				<td>X</td>
+				<td>X</td>
+			</tr>
+
+			</table>
+
+		</div>
+
+		<h4 class="inlineb topspace20 new_order_section_label">Add Input Products (<a href="ordering/new" id="available_input_products_open">Show Available Products</a>)</h4>
+
+		<div class="product_box">
+			<div class="product_boxheader">
+			Scene List
+			</div>
+			 <div class="product_boxbody">
+				 <div class="inputitem">
+				 <input type="file" id="input_product_list" name="input_product_list">
+				 </div>
+			 </div>
+		 </div>
+
+		<h4 class="inlineb new_order_section_label">Select Product Contents</h4>
+
+		<div class="product_box">
+			<div class="product_boxheader">
+			Source Products
+			</div>
+			<div class="product_boxbody">
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_customized_source_data" name="l1">
+				<label class="tooltip" title="Input Products (as ESPA product)">Input Products</label>
+			</div>
+
+			<div class="inputitem">
+				<input class="product" type="checkbox" id="include_source_metadata" name="source_metadata">
+				<label class="tooltip" title="Deliver Unmodified Input Product Metadata">Input Product Metadata</label>
+			</div>
+
+
+			</div>
+		</div>
+
+		<h4 class="inlineb new_order_section_label">Additional Processing (Landsat Only)</h4>
+
+		<div class="product_box">
+			<div class="product_boxheader">
+			Climate Data Records
+			</div>
+			<div class="product_boxbody">
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_toa" name="toa"></input>
+				<label class="tooltip" title="Top of Atmosphere Reflectance " for="toa_reflectance">Top of Atmosphere Reflectance</label>
+			</div>
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_thermal" name="bt"></input>
+				<label class="tooltip" title="Surface Reflectance Brightness Temperature" for="sr_thermal">Brightness Temperature</label>
+			</div>
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_cfmask" name="cloud"></input>
+				<label class="tooltip" title="CFMask" for="sr_thermal">CFMask</label>
+			</div>
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr" name="sr"></input>
+				<label class="tooltip" title="Surface Reflectance" for="surface_reflectance">Surface Reflectance</label>
+			</div>
+
+					{% if session['user'].is_staff %}
+						<div class="inputitem">
+							<input class="product custom_product" type="checkbox" id="include_lst" name="lst"></input>
+							<label class="tooltip" title="Land Surface Temperature" for="include_lst">Land Surface Temperature</label>
+						</div>
+					{% endif %}
+			</div>
+		</div>
+
+		{% if session['user'].is_staff %}
+		<div class="product_box">
+			<div class="product_boxheader">
+			Essential Climate Variables
+			</div>
+			<div class="product_boxbody">
+			<div class="inputitem">
+				   <input class="product custom_product" type="checkbox" id="include_dswe" name="swe"></input>
+				<label class="tooltip" title="Dynamic Surface Water Extent" for="include_dwse">Dynamic Surface Water Extent</label>
+			   </div>
+			</div>
+		</div>
+		{% endif %}
+
+		<div class="product_box">
+			<div class="product_boxheader">
+			Spectral Indices
+			</div>
+			<div class="product_boxbody">
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_ndvi" name="sr_ndvi"></input>
+				<label class="tooltip" title="Normalized Difference Vegetation Index" for="include_sr_ndvi">Surface Reflectance NDVI</label>
+			</div>
+
+			   <div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_evi" name="sr_evi"></input>
+				<label class="tooltip" title="Enhanced Vegetation Index" for="include_sr_evi">Surface Reflectance EVI</label>
+			</div>
+
+			   <div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_savi" name="sr_savi"></input>
+				<label class="tooltip" title="Soil Adjusted Vegetation Index" for="include_sr_savi">Surface Reflectance SAVI</label>
+			</div>
+
+				<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_msavi" name="sr_msavi"></input>
+				<label class="tooltip" title="Modified Soil Adjusted Vegetation Index" for="include_sr_msavi">Surface Reflectance MSAVI</label>
+			</div>
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_ndmi" name="sr_ndmi"></input>
+				<label class="tooltip" title="Normalized Difference Moisture Index" for="include_sr_ndmi">Surface Reflectance NDMI</label>
+			</div>
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_nbr" name="sr_nbr"></input>
+				<label class="tooltip" title="Normalized Burn Ratio using bands 4 &amp; 7" for="include_sr_nbr">Surface Reflectance NBR</label>
+			</div>
+
+			<div class="inputitem">
+				<input class="product custom_product" type="checkbox" id="include_sr_nbr2" name="sr_nbr2"></input>
+				<label class="tooltip" title="Normalized Burn Ratio using bands 5 &amp; 7" for="include_sr_nbr2">Surface Reflectance NBR2</label>
+			</div>
+
+			</div>
+		</div>
+
+		<h4 class="inlineb new_order_section_label">Customize Outputs</h4>
+
+		<div class="product_box">
+
+			<div class="product_boxheader">
+			Customization Options
+			</div>
+
+			<div class="product_boxbody">
+
+			   <div class="inputitem" id="output_formats">
+				   <label class="tooltip" title="Output format for ESPA products">Output Format</label>
+				   <input type="radio" id="output_format" name="format" value="gtiff" checked="checked">GeoTiff</input>
+				   <input type="radio" id="output_format" name="format" value="envi">ENVI</input>
+				   <!--<input type="radio" id="output_format" name="output_format" value="envi-bip">ENVI-BIP</input>-->
+				   <input type="radio" id="output_format" name="format" value="hdf-eos2">HDF-EOS2</input>
+			   </div>
+
+				<div class="inputitem">
+					<input class="custom_control needs_resample_opts" type="checkbox" id="reproject" name="projection">
+					<label class="tooltip" title="Specify custom image projection for output products" for="reproject">Reproject Products</label>
+					   <div class="custom_control_options" id="reprojection">
+							<label for="projection">Projection:</label>
+							<select id="select_target_projection" form="request_form">
+								<option value="aea">Albers Equal Area</option>
+								<option value="utm">Universal Transverse Mercator</option>
+								<option value="lonlat">Geographic</option>
+								<option value="sinu">Sinusoidal</option>
+								<option value="ps">Polar Stereographic</option>
+							</select>
+						   <input type="hidden" id="target_projection" name="target_projection" />
+						   <div id="projection_parameters"></div>
+					</div>
+				</div><!-- End inputitem -->
+
+				<div class="inputitem" id="custom_control_div">
+					<input class="custom_control" type="checkbox" id="image_extents" name="image_extents">
+					<label class="tooltip" title="Enter user defined extents for output products (minimum X,Y maximum X,Y in meters or decimal degrees)" for="include_solr_index">Modify Image Extents</label>
+					<div class="custom_control_options" id="scene_extents">
+						 <div class="inputitem" id="box_units">
+							 <input class="image_extents_units image_extents_units_dd" type="radio" name="image_extents|units" value="dd" />
+							 <label class="image_extents_units image_extents_units_dd">Decimal Degrees</label>
+							 <input class="image_extents_units image_extents_units_meters" type="radio" name="image_extents|units" value="meters" />
+							 <label class="image_extents_units image_extents_units_meters">Meters</label>
+						 </div>
+						 <div class="inputitem" id="minx_div">
+							 <input class="bounding_box_params" type="text" id="minx" name="image_extents|west" />
+							 <label for="minx">Upper left X coordinate</label>
+						 </div>
+						 <div class="inputitem" id="maxy_div">
+							<input class="bounding_box_params" type="text" id="maxy" name="image_extents|north" />
+							<label for="maxy">Upper left Y coordinate</label>
+						 </div>
+						 <div class="inputitem" id="maxx_div">
+							<input class="bounding_box_params" type="text" id="maxx" name="image_extents|east" />
+							<label for="maxx">Lower right X coordinate</label>
+						 </div>
+						 <div class="inputitem" id="miny_div">
+							<input class="bounding_box_params" type="text" id="miny" name="image_extents|south" />
+							<label for="miny">Lower right Y coordinate</label>
+						 </div>
+					</div>
+				</div>
+
+				<div class="inputitem">
+					<input class="custom_control needs_resample_opts" type="checkbox" id="resize" name="resize">
+					<label class="tooltip inline" title="Specify desired pixel size" for="resize">Pixel Resizing</label>
+					<div class="custom_control_options" id="resize_options">
+						<input placeholder="30 to 5000" type="text" name="resize|pixel_size" id="pixel_size" />
+						<input type="hidden" id="pixel_size_units" name="resize|pixel_size_units" />
+						<label id="pixel_size_unit_label" form="request_form"></label>
+					</div>
+				</div>
+
+				<div id="resample_options">
+					<label class="tooltip" title="Select method for resampling" for="resample_method">Resample Method:</label>
+					<input id="resample_method" name="resampling_method" type="hidden" value="nn" />
+					<select id="select_resample_method" form="request_form">
+						<option value="nn">Nearest Neighbor</option>
+						<option value="bil">Bilinear Interpolation</option>
+						<option value="cc">Cubic Convolution</option>
+					</select>
+				</div>
+
+			</div> <!-- End Product Box Body -->
+
+		</div> <!-- End Product Box -->
+
+		<!-- Include statistics -->
+		<div class="product_box">
+			<div class="product_boxheader">
+				Intercomparison &amp; Statistics
+			</div>
+			<div class="product_boxbody">
+				<div class="inputitem">
+					<input class="product" type="checkbox" id="include_statistics" name="plot_statistics"></input>
+					<label class="tooltip" title="Generate Intercomparision Statistics and Plots" for="include_statistics">Plot Output Product Statistics</label>
+				</div>
+			</div>
+		</div>
+
+		<h4 class="inlineb new_order_section_label">Add Order Description</h4>
+
+		<div class="product_box">
+			<div class="product_boxheader">
+				Order Description (optional)
+			 </div>
+			<div class="product_boxbody" id="order_description_productbox">
+				<textarea id="order_description" name="note" maxlength="2048"></textarea>
+			</div>
+		</div>
+
+		<input type="submit" id="submit" value="Submit" />
+  </form>
+{% endblock %}
+
+{% block new_order_javascript %}
+  {% include "new_order.js" %}
+{% endblock %}

@@ -1,0 +1,112 @@
+h4#lsrd_offerings {
+   clear:both;
+}
+
+
+div.marketing_box {
+   width:29%;
+   margin:0 auto;
+   float:left;
+   margin:10px;
+   border:1px solid #d0d0d0;
+   clear:right;
+   -moz-border-radius: 5px;
+   -webkit-border-radius: 5px;
+}
+
+div.marketing_header{
+   width:100%;
+   text-align:center;
+   font-size:14px;
+   font-weight:bold;
+   background:#577196;
+   overflow:hidden;
+   color:white;
+}
+
+div.marketing_header p {
+    line-height:36px;
+    font-size:14px;
+}
+
+div.marketing_footer p {
+    line-height:36px;
+    font-size:14px;
+}
+
+div.marketing_footer {
+   text-align: center;
+   line-height: 30px;
+   font-size: 14px;
+   color:white;
+   background:#577196;
+   overflow:hidden;
+}
+
+div.marketing_footer a{
+    color:white;
+    font-weight:bold;
+}
+
+
+div.marketing_content {
+    width:100%;
+    text-align:left;
+    border-top:1px solid #d0d0d0;
+    border-bottom:1px solid #d0d0d0;
+    height:250px;
+    overflow:hidden;
+}
+
+div.marketing_content p{
+    padding-left:10px;
+    padding-right:10px;
+}
+
+div#opensource_box {
+    margin-top:45px;
+    margin-right:60px;
+    padding:10px;
+    width:400px;
+    border:7px solid #577196;
+    overflow:hidden;
+    float:right;
+}
+
+div#opensource_box h3 {
+    text-align:center;
+    margin-top:10px;
+}
+
+div#logo_box {
+    margin-top:10px;
+    padding:0px;
+    width:270px;
+    height:200px;
+    overflow:hidden;
+    float:left;
+}
+
+div#logo_box img {
+    width:270px;
+    height:200px;
+    margin:0 auto;
+    margin-left: 0px;
+    text-align:center;
+    /*box-shadow:10px 10px 5px #888888;*/
+}
+
+.coming_soon {
+    color:yellow;
+    font-weight:bold;
+ }
+
+ .shadow {
+    -moz-box-shadow: 10px 10px 5px #888888;
+    -webkit-box-shadow: 10px 10px 5px #888888;
+    box-shadow: 10px 10px 5px #888888;
+    /* For IE 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=5, Direction=135, Color='#888888')";
+    /* For IE 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.Shadow(Strength=5, Direction=135, Color='#888888');
+}

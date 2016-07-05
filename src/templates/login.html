@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %} Ordering Interface {% endblock %}
+{% block usgstitle %}
+  <p>ESPA Ordering Interface</p>
+{% endblock %}
+{% block content %}
+  <div class='row'>
+    <h2 class='col-sm-offset-4'>Please login to continue</h2>
+  </div>
+  <br/>
+  <form method="post" action="login?next={{ next }}">
+    <div class='form-group row col-sm-8 col-sm-offset-2'>
+      <label class='col-sm-2 form-control-label' for='username'>
+        <p class="form-control-static" style='line-height: 0.6em;'>Username</p>
+      </label>
+      <div class='col-sm-6'>
+        <input name="username" class='form-control form-control-lg' type='text' id='username' placeholder='username'></input>
+      </div>
+    </div>
+    <br/>
+    <div class='form-group row col-sm-8 col-sm-offset-2'>
+      <label class='col-sm-2 form-control-label' for='password'>
+        <p class="form-control-static" style='line-height: 0.6em;'>Password</p>
+      </label>
+      <div class='col-sm-6'>
+        <input name="password" class='form-control form-control-lg' type='password' id='password' placeholder='password'></input>
+      </div>
+    </div>
+    <div class='form-group row col-md-4 col-md-offset-4'>
+      <div style="padding-top: 30px;">
+        <button class='btn btn-large btn-primary' type='submit' id='submit'>Sign In</button>
+      </div>
+    </div>
+  </form>
+  <p style="padding-top:25px">A USGS username and password are required to access this interface.</p>
+  <p>You may enter the same credentials used to access <a href="{{ earthexplorer }}">EarthExplorer</a>.</p>
+  <h5 style="padding-top:30px">
+    <a href="{{ register_user }}">Register for an account</a>
+    <span style="padding-left:15px;padding-right:15px" />
+    <a href="{{ forgot_login }}">Forgot your password?</a>
+  </h5>
+
+
+
+{% endblock %}

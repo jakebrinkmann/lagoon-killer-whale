@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %} ESPA Message Console {% endblock %}
+{% block stylelinks %}{% endblock %}
+{% block scriptlinks %}{% endblock %}
+{% block usgstitle %}
+  <p>ESPA Console</p>
+{% endblock %}
+{% block javascript %}{% endblock %}
+{% block content %}
+    <h4>ESPA Console</h4>
+    <div>
+    <span style='margin-right:10px;'><a href="console/statusmsg">Status Message</a></span>
+    <span><a href="reports">Reports</a></span>
+    </div>
+
+    <div style='margin-top:30px;'>
+    <h4>Summary Stats</h4>
+    <table id='statistics' class='display' width=100%>
+    <thead><tr><th>Name</th><th>Value</th></thead>
+    <tbody>
+    {% for k, v in stats.iteritems() %}
+        <tr>
+        <td>{{ k }}</td>
+        <td>{{ v }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div>
+
+    <div style='margin-top:30px;'>
+    <h4>Configuration</h4>
+    <div style='margin-top:15px'><a href="console/config">Show Configuration Values</a></div>
+    </div>
+{% endblock %}

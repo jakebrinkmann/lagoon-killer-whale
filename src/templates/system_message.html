@@ -1,0 +1,23 @@
+{% autoescape off %}
+<div id='system_message_wrapper'>
+<br/>
+
+{% if session['system_message_title'] %}
+<div id='system_message_title'>
+{{ session['system_message_title']  }}
+</div>
+{% endif %}
+
+{% if session['system_message_body'] %}
+<div id='system_message_body'>
+    {{ session['system_message_body'] }}
+</div>
+{% endif %}
+
+<br/>
+</div>
+{% endautoescape %}
+
+
+
+

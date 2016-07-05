@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% block title %}Order Details{% endblock %}
+
+{% block usgstitle %}
+  <p>Details for: {{ order['orderid'] }} </p>
+{% endblock %}
+
+{% block style %}
+    th.product, td.product {width:250px;}
+    th.status,  td.status {width:100px;}
+    th.purl, td.purl {width:100px;}
+    th.cksum, td.cksum {width:100px;}
+    th.note, td.note {width:*;}
+
+    .list_label {
+        font-size:14px;
+        margin-top:10px;
+        margin-bottom:10px;
+        margin-left: 0px;
+        margin-right:10px;
+        font-weight: bold;
+    }
+
+    .details {
+        padding-left:35px;
+        padding-right:35px;
+        padding-top:0px;
+        padding-bottom:10px;
+
+     }
+
+    .details p {
+        line-height:1.2em;
+    }
+
+    .left-block {
+       width:300px;
+       display:inline-block;
+       margin-right:150px;
+     }
+
+     .right-block {
+         width:inherit;
+         display:inline-block;
+     }
+
+    .requested_processing {
+        margin-bottom:15px;
+        overflow:hidden;
+        padding:0px 0px 5px 0px;
+    }
+
+    .product_stats {
+        background:#577196;
+        color:white;
+        font-weight:bold;
+        text-align:center;
+        margin-top:15px;
+     }
+
+    .product_stats p {
+        margin:0px;
+        padding-top:7px;
+        padding-bottom:8px;
+    }
+
+    .product_stats span.status_item{
+        margin-right:90px;
+    }
+
+    .column1 { width:500px; }
+    .column2 { width:500px; }
+{% endblock %}
+
+{% block content %}
+        {% if scenes %}
+            <div class='product_stats'>
+                <p>
+                    <span>Requested: </span><span class='status_item' id='requested_prods'>{{ product_counts['total'] }}</span>
+                    <span>Completed: </span><span class='status_item' id='completed_prods'>{{ product_counts['complete'] }}</span>
+                    <span>Open: </span><span class='status_item' id='open_prods'>{{ product_counts['open'] }}</span>
+                    <span>Waiting on data: </span><span class='status_item' id='waiting_prods'>{{ product_counts['waiting'] }}</span>
+                </p>
+            </div>
+            <div class='details'>
+                <table class='noborder'>
+                    <tbody>
+                        <tr class='noborder'>
+                            <td class='noborder column1'>
+                                <span class='list_label'>Order:</span><span>{{ order['orderid'] }}</span>
+                            </td>
+                            <td class='noborder column2'>
+                                <span class='list_label'>Date Ordered:</span><span>{{ order['order_date'] }}</span>
+                            </td>
+                        </tr>
+                        <tr class='noborder'>
+                            <td class='noborder'>
+                                <span class='list_label'>Status:</span><span>{{ order['status'] }}</span>
+                            </td>
+                            <td class='noborder'>
+                                <span class='list_label'>Date Completed:</span><span>{{ order['completion_date'] }}</span>
+                            </td>
+                        </tr>
+                        <tr class='noborder'>
+                            <td class='noborder' colspan="2" id='requested_products'></td>
+                        </tr>
+                        <tr class="noborder">
+                            <td class="noborder" colspan="2">
+                                <span class='list_label'>Products by sensor:</span>{{ prod_str }}
+                            </td>
+                        </tr>
+                        <tr class='noborder'>
+                            <td class='noborder' colspan="2"><i>The ESPA Bulk Downloader is available on <a href="https://github.com/USGS-EROS/espa-bulk-downloader">GitHub</a></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="boxbody">
+                <table>
+                    <tbody>
+                       <tr class='header_row'>
+                          <th class='header_row product noborder'>Product</th>
+                          <th class='header_row status noborder'>Status</th>
+                          <th class='header_row purl noborder'>Product URL</th>
+                          <th class='header_row cksum noborder'>Chksum URL</th>
+                          <th class='header_row note noborder'>Note</th>
+                       </tr>
+                       {% for s in scenes %}
+                            {% if s['name'] %}
+                                {% set rowclass = loop.cycle('evenrow', 'oddrow') %}
+                                <tr class="{{ rowclass }}">
+                                    <td class="{} product noborder">
+                                        {% if session['user'].is_staff %}
+                                            {{ s['scene_id'] }} -
+                                        {% endif %}
+                                        {% if s['name'] == 'plot' %}
+                                            Plotting & Statistics
+                                        {% else %}
+                                            {{ s['name'] }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="{{ rowclass }} status noborder">
+                                        {{ s['status'] }}
+                                    </td>
+                                    <td class="{{ rowclass }} purl noborder">
+                                        {% if s['status'] == 'complete'%}
+                                             <a href="{{ s['product_dload_url'] }}">Download</a>
+                                        {% else %}
+                                            &nbsp;
+                                        {% endif %}
+                                    </td>
+                                    <td class="{{ rowclass }} cksum noborder">
+                                        {% if s['status'] == 'complete' %}
+                                           <a href="{{s['cksum_download_url'] }}">Checksum</a>
+                                        {% else %}
+                                           &nbsp;
+                                        {% endif %}
+                                    </td>
+                                    <td class="{{ rowclass }} note noborder">
+                                        {{ s['note'] }}
+                                        {% if s['status'] == 'error' and session['user'].is_staff %}
+                                            <button class="log_dialog" id="{{ s['scene_id'] }}">Log</button>
+                                            <div id="{{ s['scene_id'] }}_log" style="display:none;">{{ s['log_file_contents'].replace('\n', '<br><br>')|safe }}</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                      {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h4>No scenes found for {{ order['orderid'] }}</h4>
+        {% endif %}
+{% endblock %}
+
+{% block javascript %}
+
+    {% autoescape off %}
+        $(document).ready(function(){
+
+            $('.log_dialog').click(function(event){
+                div_id = "#"+event.target.id+"_log"
+                $(div_id).dialog({height: 500, width: 600, title: 'Log File Contents'});
+            })
+
+
+            var source_products = {
+                'source_data': 'original input products',
+                'source_metadata': 'original input metadata',
+                'customized_source_data': 'input products'
+            };
+
+            var products = {'sr': 'surface reflectance',
+                            'sr_toa':'top of atmosphere',
+                            'cfmask': 'cfmask',
+                            'lst': 'land surface temperature',
+                            'sr_thermal': 'brightness temperature',
+                            'statistics': 'plots & statistics',
+                            'dswe': 'dynamic surface water extent'};
+
+            var customization = {'projection': 'reproject',
+                                 'resize': 'resize',
+                                 'image_extents': 'image extents',
+                                 'format': 'output format'};
+
+            var product_options = {{ product_opts }};
+
+            function buildOutputFormatString() {
+                var s = '';
+                switch(product_options['format']) {
+                    case "gtiff":
+                        s = "geotiff";
+                        break;
+                    case "envi":
+                        s = "envi";
+                        break;
+                    case "envi-bip":
+                        s = "envi-bip"
+                        break;
+                    case "hdf-eos2":
+                        s = "hdf-eos2";
+                        break;
+                    default:
+                       break;
+                }
+                return s;
+            }
+
+            function buildProjectionString() {
+                if (! product_options['projection'] ) { return ''; }
+
+                var s = '';
+
+                if (product_options['projection']["aea"]) {
+                    lo = product_options['projection']["aea"]['latitude_of_origin'];
+                    cm = product_options['projection']["aea"]['central_meridian'];
+                    stdp1 = product_options['projection']["aea"]['standard_parallel_1'];
+                    stdp2 = product_options['projection']["aea"]['standard_parallel_2'];
+                    fe = product_options['projection']["aea"]['false_easting'];
+                    fn = product_options['projection']["aea"]['false_northing'];
+                    dt = product_options['projection']["aea"]['datum'];
+
+                    s = "albers equal area with latitude of origin:" + lo +
+                        " central meridian:" + cm +
+                        " 1st standard parallel:" + stdp1 +
+                        " 2nd standard parallel:" + stdp2 +
+                        " false easting:" + fe +
+                        " false northing:" + fn +
+                        " datum:" + dt;
+                    }
+                else if (product_options['projection']["utm"]) {
+                    zone = product_options['projection']["utm"]['zone'];
+                    ns = product_options['projection']["utm"]['zone_ns'];
+                    s = "universal transverse mercator with zone:" + zone +
+                        " " + ns;
+                    }
+                else if (product_options['projection']["sinu"]) {
+                    cm = product_options['projection']["sinu"]['central_meridian'];
+                    fe = product_options['projection']["sinu"]['false_easting'];
+                    fn = product_options['projection']["sinu"]['false_northing'];
+                    s = "sinusoidal with central meridian:" + cm +
+                        " false easting:" + fe +
+                        " false northing:" + fn;
+                    }
+                else if (product_options['projection']["ps"]) {
+                    lp = product_options['projection']["ps"]['longitude_pole'];
+                    ls = product_options['projection']["ps"]['latitude_true_scale'];
+                    fe = product_options['projection']["ps"]['false_easting'];
+                    fn = product_options['projection']["ps"]['false_northing'];
+                    s = "polar stereographic with longitudinal pole:" + lp +
+                        " latitude true scale:" + ls +
+                        " false easting:" + fe +
+                        " false northing:" + fn;
+                    }
+                else if (product_options['projection'].hasOwnProperty('lonlat')) {
+                    return "geographic";
+                    }
+                else {
+                    s = '';
+                }
+                return s;
+            }
+
+            function buildExtentsString() {
+
+                if (! product_options['image_extents'] == true) { return ''; }
+
+                var ulx = product_options['image_extents']['west'];
+                var uly = product_options['image_extents']['north'];
+                var lrx = product_options['image_extents']['east'];
+                var lry = product_options['image_extents']['south'];
+                var s = "ulx:" + ulx + " " + "uly:" + uly + " " +
+                        "lrx:" + lrx + " " + "lry:" + lry;
+                return s
+            }
+
+            function buildResizeString() {
+
+                if (! product_options['resize'] == true) { return ''; }
+
+                var s = product_options['resize']['pixel_size'] + " " +
+                        product_options['resize']['pixel_size_units'];
+                return s;
+            }
+
+            function buildOrderedOptionString() {
+                var return_list = [];
+                var groups = [source_products, products, customization];
+
+                for (g=0; g< groups.length; g++) {
+                    for (var item in groups[g]) {
+                        var value = product_options[item];
+
+                        var return_item = '';
+
+                        if (value) {
+                            if (item == 'projection') {
+                                return_item = "Reproject to " + buildProjectionString();
+                            }
+                            else if (item == 'resize') {
+                                return_item = groups[g][item] +
+                                              " pixels to " + buildResizeString();
+                            }
+                            else if (item == 'image_extents') {
+                                return_item = groups[g][item] +
+                                              " set to " + buildExtentsString();
+                            }
+                            else if (item == 'format') {
+                                return_item = "Output Format is " + buildOutputFormatString();
+                            } else {
+                                return_item = groups[g][item];
+                                alert(return_item);
+                            }
+                        }
+
+                        if (return_item.length > 0) { return_list.push(return_item); }
+                    }
+                }
+               return return_list;
+            }
+
+            function populateOrderedOptions() {
+                var items = buildOrderedOptionString();
+
+                var output = "<span class='list_label'>Requested Processing:</span><span>";
+
+                for (i=0; i< items.length; i++) {
+                    if (i > 0) { output = output + ", " + items[i]; }
+                    else { output = output + items[i]; }
+                }
+
+                output = output + "</span>";
+                $('#requested_products').append(output);
+            }
+
+            populateOrderedOptions();
+
+        });
+    {% endautoescape %}
+{% endblock %}
