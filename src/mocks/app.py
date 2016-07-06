@@ -42,7 +42,7 @@ def api_get_order_status(*args):
 def api_post_order(*args):
     if 'available-products' in args[0]:
         avail_prods = {'tm4': {'inputs': ['LT42181092013069PFS00'],
-                                'outputs': ['source_metadata', 'l1', 'toa', 'bt', 'cloud',
+                                'products': ['source_metadata', 'l1', 'toa', 'bt', 'cloud',
                                             'sr', 'swe', 'sr_ndvi', 'sr_evi', 'sr_msavi',
                                             'sr_ndmi', 'sr_nbr', 'sr_nbr2', 'stats']}}
         ap = JSpoof(avail_prods)

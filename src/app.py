@@ -192,10 +192,6 @@ def submit_order():
     if 'stats' in landsat_list:
         modis_list.append('stats')
 
-    # the response from available-products returns... all possible products
-    # pop the 'outputs' key, add 'products' key with values indicated
-    # by user
-
     # we dont need these values returned by the available-products query
     if 'date_restricted' in scene_dict_all_prods:
         scene_dict_all_prods.pop('date_restricted')
@@ -203,17 +199,12 @@ def submit_order():
     for key in scene_dict_all_prods:
             if 'mod' in key or 'myd' in key:
                 scene_dict_all_prods[key]['products'] = modis_list
-                scene_dict_all_prods[key].pop('outputs')
             elif key not in ('not_implemented', 'date_restricted'):
                 # Probably better to let the user know if there
                 # are invalid landsat/product combinations rather than
                 # just making them disappear from the order, MODIS
                 # being the exception
-
-                # sensor_prod_list = set(landsat_list).intersection(set(scene_dict_all_prods[key]['outputs']))
-                # scene_dict_all_prods[key]['products'] = list(sensor_prod_list)
                 scene_dict_all_prods[key]['products'] = landsat_list
-                scene_dict_all_prods[key].pop('outputs')
 
     # combine order options with product lists
     out_dict.update(scene_dict_all_prods)
