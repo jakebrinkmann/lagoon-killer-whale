@@ -22,7 +22,9 @@ espaweb.config['SESSION_TYPE'] = 'memcached'
 espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=120)
 
 Session(espaweb)
-api_base_url = "http://{0}:{1}".format(espaweb.config['APIHOST'], espaweb.config['APIPORT'])
+api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
+                                               espaweb.config['APIPORT'],
+                                               espaweb.config['APIVERSION'])
 
 
 def api_get(url, response_type='json', json=None, uauth=None):
@@ -44,12 +46,12 @@ def api_post(url, json):
 
 
 def update_status_details():
-    status_response = api_get('/api/v0/system-status')
+    status_response = api_get('/system-status')
     for item in ['system_message_body', 'system_message_title', 'display_system_message']:
         session[item] = status_response[item]
 
     for item in ['stat_products_complete_24_hrs', 'stat_backlog_depth']:
-        session[item] = api_get('/api/v0/statistics/' + item, 'text')
+        session[item] = api_get('/statistics/' + item, 'text')
 
 
 def staff_only(f):
@@ -83,7 +85,7 @@ def request_wants_json():
 def login():
     destination = request.args.get('next')
     if request.method == 'POST':
-        resp_json = api_get("/api/v0/user", uauth=(request.form['username'], request.form['password']))
+        resp_json = api_get("/user", uauth=(request.form['username'], request.form['password']))
         if 'username' in resp_json:
             session['logged_in'] = True
             resp_json['wurd'] = request.form['password']
@@ -149,7 +151,7 @@ def submit_order():
     _ipl = [item for sublist in _ipl for item in sublist if item]
 
     # convert our list of sceneids into format required for new orders
-    scene_dict_all_prods = api_post("/api/v0/available-products", {'inputs': _ipl}).json()
+    scene_dict_all_prods = api_post("/available-products", {'inputs': _ipl}).json()
 
     # create a list of requested products
     landsat_list = [key for key in data if key in conversions['products']]
@@ -223,7 +225,7 @@ def submit_order():
         out_dict['plot_statistics'] = True
 
     logger.info('Order out to API: {}'.format(out_dict))
-    response = api_post("/api/v0/order", out_dict)
+    response = api_post("/order", out_dict)
     response_data = response.json()
     logger.info('Response from API: {}'.format(response_data))
 
@@ -249,7 +251,7 @@ def submit_order():
 @espaweb.route('/ordering/status/<email>/')
 @login_required
 def list_orders(email=None):
-    url = "/api/v0/list-orders-ext"
+    url = "/list-orders-ext"
     for_user = session['user'].email
     if email:
         url += "/{}".format(email)
@@ -263,7 +265,7 @@ def list_orders(email=None):
 def list_orders_feed(email):
     # bulk downloader and the browser hit this url, need to handle
     # user auth for both use cases
-    url = "/api/v0/list-orders-feed/{}".format(email)
+    url = "/list-orders-feed/{}".format(email)
     if 'Authorization' in request.headers:
         # coming in from bulk downloader
         logger.info("Apparent bulk download attempt, headers: %s" % request.headers)
@@ -309,8 +311,8 @@ def list_orders_feed(email):
 @espaweb.route('/ordering/order-status/<orderid>/')
 @login_required
 def view_order(orderid):
-    order_dict = api_get("/api/v0/order/{}".format(orderid))
-    scenes_resp = api_get("/api/v0/item-status/{}".format(orderid))
+    order_dict = api_get("/order/{}".format(orderid))
+    scenes_resp = api_get("/item-status/{}".format(orderid))
 
     scenes = scenes_resp['orderid'][orderid]
 
@@ -346,7 +348,7 @@ def view_order(orderid):
 @staff_only
 @login_required
 def list_reports():
-    res_data = api_get("/api/v0/reports/")
+    res_data = api_get("/reports/")
     return render_template('list_reports.html', reports=res_data)
 
 
@@ -354,7 +356,7 @@ def list_reports():
 @staff_only
 @login_required
 def show_report(name):
-    response = api_get("/api/v0/reports/{0}/".format(name))
+    response = api_get("/reports/{0}/".format(name))
     res_data = eval(response)
     # occassionally see UnicodeDecodeError in reports
     # lets decode the response
@@ -368,7 +370,7 @@ def show_report(name):
 @staff_only
 @login_required
 def console():
-    data = api_get("/api/v0/statistics/all")
+    data = api_get("/statistics/all")
     stats = {'Open Orders': data['stat_open_orders'],
              'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
              'Waiting Users': data['stat_waiting_users'],
@@ -385,7 +387,7 @@ def statusmsg():
         api_args = {'system_message_title': request.form['system_message_title'],
                     'system_message_body': request.form['system_message_body'],
                     'display_system_message': dsm}
-        response = api_post('/api/v0/system-status-update', api_args)
+        response = api_post('/system-status-update', api_args)
 
         if response.status_code == 200:
             update_status_details()
@@ -406,7 +408,7 @@ def statusmsg():
 @staff_only
 @login_required
 def console_config():
-    config_data = api_get("/api/v0/system/config")
+    config_data = api_get("/system/config")
     sorted_keys = sorted(config_data)
     return render_template('config.html', config_data=config_data, sorted_keys=sorted_keys)
 
