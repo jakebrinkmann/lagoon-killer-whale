@@ -139,16 +139,42 @@ def new_order():
     return render_template('new_order.html', form_action=url_for('submit_order'))
 
 
+@espaweb.route('/ordering/new_external/', methods=['GET', 'POST'])
+@login_required
+def new_external_order():
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        try:
+            scenelist = data['input_product_list']
+        except KeyError:
+            scenelist = ""
+        dest = url_for('submit_order')
+    else:
+        scenelist = ""
+        dest = url_for('new_external_order')
+
+    return render_template('new_order.html',
+                           form_action=dest,
+                           scenelist=scenelist)
+
+
 @espaweb.route('/ordering/submit/', methods=['POST'])
 @login_required
 def submit_order():
     # form values come in as an ImmutableMultiDict
     data = request.form.to_dict()
     logger.info("* new order submission for user %s\n\n order details: %s\n\n\n" % (session['user'].username, data))
-    # grab sceneids from the file in input_product_list field
-    _ipl_list = request.files.get('input_product_list').read().splitlines()
-    _ipl = [i.strip().split("/r") for i in _ipl_list]
-    _ipl = [item for sublist in _ipl for item in sublist if item]
+    try:
+        # grab sceneids from the file in input_product_list field
+        _ipl_list = request.files.get('input_product_list').read().splitlines()
+        _ipl = [i.strip().split("/r") for i in _ipl_list]
+        _ipl = [item for sublist in _ipl for item in sublist if item]
+    except AttributeError, e:
+        # must be coming from new_external_order
+        _ipl_list = data.pop('input_product_list')
+        _ipl = _ipl_list.split("\r\n")
+    print "** _ipl: ", _ipl
+
 
     # convert our list of sceneids into format required for new orders
     scene_dict_all_prods = api_post("/available-products", {'inputs': _ipl}).json()
