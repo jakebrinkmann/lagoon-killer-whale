@@ -17,7 +17,7 @@ import base64
 
 espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
-espaweb.secret_key = '@ijn@@d)h@8f8avh+h=lzed2gy=hp2w+6+nbgl2sdyh$!x!%3+'
+espaweb.secret_key = espaweb.config['SECRET_KEY']
 espaweb.config['SESSION_TYPE'] = 'memcached'
 espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=120)
 
