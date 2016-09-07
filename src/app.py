@@ -266,9 +266,10 @@ def list_orders(email=None):
         url += "/{}".format(email)
         for_user = email
     res_data = api_get(url, json={'status': ['complete', 'ordered']})
-    sorted_data = sorted(res_data, key=lambda k: k['orderid'], reverse=True)
+    if isinstance(res_data, list):
+        res_data = sorted(res_data, key=lambda k: k['orderid'], reverse=True)
 
-    return render_template('list_orders.html', order_list=sorted_data, for_user=for_user)
+    return render_template('list_orders.html', order_list=res_data, for_user=for_user)
 
 
 @espaweb.route('/ordering/status/<email>/rss/')
