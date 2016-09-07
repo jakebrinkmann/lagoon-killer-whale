@@ -423,7 +423,7 @@ def console_config():
     return render_template('config.html', config_data=config_data, sorted_keys=sorted_keys)
 
 
-@espaweb.route('/admin/<action>/<orderid>', methods=['PUT'])
+@espaweb.route('/adm/<action>/<orderid>', methods=['PUT'])
 @staff_only
 @login_required
 def admin_update(action, orderid):

@@ -195,7 +195,7 @@
                 $(".errTo").click(function(event){
                     event.preventDefault();
                     $.ajax({method: 'PUT',
-                                url: "/admin/" + this.id + "/{{ order['orderid'] }}"
+                                url: "/adm/" + this.id + "/{{ order['orderid'] }}"
                             }).done(function() {
                                 location.reload();
                             }).fail(function() {
