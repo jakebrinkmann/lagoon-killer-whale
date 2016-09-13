@@ -102,15 +102,21 @@
                             </td>
                         </tr>
                         <tr class='noborder'>
-                            <td class='noborder' colspan="2" id='requested_products'></td>
+                            <td class='noborder' colspan="3" id='requested_products'></td>
                         </tr>
                         <tr class="noborder">
-                            <td class="noborder" colspan="2">
+                            <td class="noborder" colspan="3">
                                 <span class='list_label'>Products by sensor:</span>{{ prod_str }}
                             </td>
                         </tr>
                         <tr class='noborder'>
-                            <td class='noborder' colspan="2"><i>The ESPA Bulk Downloader is available on <a href="https://github.com/USGS-EROS/espa-bulk-downloader">GitHub</a></i></td>
+                            <td class='noborder' colspan="1"><i>The ESPA Bulk Downloader is available on <a href="https://github.com/USGS-EROS/espa-bulk-downloader">GitHub</a></i></td>
+                            <td class='noborder'>
+                                {% if session['user'].is_staff and product_counts['error'] > 0 %}
+                                    <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_submitted" href="#">error to submitted</a>
+                                    <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_unavailable" href="#">error to unavailable</a>
+                                {% endif %}
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -159,7 +165,7 @@
                                     </td>
                                     <td class="{{ rowclass }} note noborder">
                                         {{ s['note'] }}
-                                        {% if s['status'] == 'error' and session['user'].is_staff %}
+                                        {% if s['status'] == 'error' and session['user'].is_staff and s['log_file_contents'] %}
                                             <button class="log_dialog" id="{{ s['scene_id'] }}">Log</button>
                                             <div id="{{ s['scene_id'] }}_log" style="display:none;">{{ s['log_file_contents'].replace('\n', '<br><br>')|safe }}</div>
                                         {% endif %}
@@ -185,6 +191,18 @@
                 $(div_id).dialog({height: 500, width: 600, title: 'Log File Contents'});
             })
 
+            {% if session['user'].is_staff %}
+                $(".errTo").click(function(event){
+                    event.preventDefault();
+                    $.ajax({method: 'PUT',
+                                url: "/adm/" + this.id + "/{{ order['orderid'] }}"
+                            }).done(function() {
+                                location.reload();
+                            }).fail(function() {
+                                alert('update appears to have failed. contact espa admin.');
+                    });
+                })
+            {% endif %}
 
             var source_products = {
                 'source_data': 'original input products',

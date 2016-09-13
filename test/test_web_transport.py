@@ -72,7 +72,7 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertTrue("<p>New Bulk Order</p>" in result.data)
         self.assertEqual(result.status_code, 200)
 
-    @patch('src.app.api_post', mock_app.api_post_order)
+    @patch('src.app.api_up', mock_app.api_post_order)
     def test_submit_order_post_success(self):
         data = self.form_order
         data['input_product_list'] = (StringIO(self.default_sceneid), 'in.txt')
@@ -113,7 +113,7 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
 
     @patch('src.app.update_status_details', mock_app.update_status_details_true)
-    @patch('src.app.api_post', mock_app.api_post_status)
+    @patch('src.app.api_up', mock_app.api_post_status)
     def test_post_statusmsg(self):
         data = {'display_system_message': 'on', 'system_message_title': 'foo',
                 'system_message_body': 'bar'}
