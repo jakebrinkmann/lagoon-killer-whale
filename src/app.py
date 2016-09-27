@@ -387,7 +387,21 @@ def console():
              'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
              'Waiting Users': data['stat_waiting_users'],
              'Backlog Depth': data['stat_backlog_depth']}
-    return render_template('console.html', stats=stats)
+    L17_aux = api_get("/aux_report/L17/")
+    L8_aux = api_get("/aux_report/L8/")
+
+    # Data gaps appearing in 2016, only one data source for L8
+    now = datetime.datetime.now()
+    years = [now.year] if now.year == 2016 else range(2016, now.year+1)
+
+    gap_dict = {'L8': L8_aux, 'L17': {'toms': {}, 'ncep': {}}}
+    for key in ['toms', 'ncep']:
+        for yr in years:
+            yr = str(yr)
+            if yr in L17_aux[key]:
+                gap_dict['L17'][key][yr] = L17_aux[key][yr]
+
+    return render_template('console.html', stats=stats, gaps=gap_dict)
 
 
 @espaweb.route('/console/statusmsg', methods=['GET', 'POST'])
