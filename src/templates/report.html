@@ -26,7 +26,11 @@
         {% for rpt in report %}
         <tr>
             {% for k,v in rpt.items() %}
-            <td> {{ v }} </td>
+              {% if '/ordering/' in v %}
+                <td><a href="{{ v }}" style="text-decoration: none;">㋡</a></td>
+              {% else %}
+                <td> {{ v }} </td>
+              {% endif %}
             {% endfor %}
         </tr>
         {% endfor %}
