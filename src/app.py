@@ -52,7 +52,7 @@ def update_status_details():
     for item in ['system_message_body', 'system_message_title', 'display_system_message']:
         session[item] = status_response[item]
 
-    for item in ['stat_products_complete_24_hrs', 'stat_backlog_depth']:
+    for item in ['stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
         session[item] = api_get('/statistics/' + item, 'text')
 
 
@@ -123,7 +123,7 @@ def login():
 def logout():
     logger.info("Logging out user %s \n" % session['user'].username)
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
-                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
+                 'stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
         session.pop(item, None)
     return redirect(url_for('login'))
 
@@ -160,7 +160,6 @@ def submit_order():
         logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
                                                                                        e.message))
         return redirect(url_for('new_order'))
-
 
     # create a list of requested products
     landsat_list = [key for key in data if key in conversions['products']]
@@ -386,7 +385,8 @@ def console():
     stats = {'Open Orders': data['stat_open_orders'],
              'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
              'Waiting Users': data['stat_waiting_users'],
-             'Backlog Depth': data['stat_backlog_depth']}
+             'Backlog Depth': data['stat_backlog_depth'],
+             'Scenes \'onorder\'': data['stat_onorder_depth']}
     L17_aux = api_get("/aux_report/L17/")
     L8_aux = api_get("/aux_report/L8/")
 
