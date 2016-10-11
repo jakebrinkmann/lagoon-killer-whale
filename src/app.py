@@ -170,12 +170,6 @@ def new_external_order():
                            scenelist=scenelist)
 
 
-@espaweb.route('/foo/', methods=['GET'])
-def get_foo():
-    resp = make_response(render_template('foo.html'))
-    return resp
-
-
 @espaweb.route('/ordering/submit/', methods=['POST'])
 @login_required
 def submit_order():
