@@ -66,7 +66,14 @@
 			</div>
 			 <div class="product_boxbody">
 				 <div class="inputitem">
-				 <input type="file" id="input_product_list" name="input_product_list">
+					 {% if scenelist or scenelist == "" %}
+					 	{% if not scenelist %}
+					 		<span style="color: red">No Scene list received in payload...</span>
+					 	{% endif %}
+					 	<textarea rows="7" cols="80" id="input_product_list" name="input_product_list">{{ scenelist }}</textarea>
+					 {% else %}
+					 	<input type="file" id="input_product_list" name="input_product_list" >
+					 {% endif %}
 				 </div>
 			 </div>
 		 </div>

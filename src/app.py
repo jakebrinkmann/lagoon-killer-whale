@@ -1,4 +1,4 @@
-from flask import Flask, request, flash, session, redirect, render_template, url_for, jsonify
+from flask import Flask, request, flash, session, redirect, render_template, url_for, jsonify, make_response, Response
 # OrderedDict used by reports
 # leave this import
 from collections import OrderedDict
@@ -141,16 +141,53 @@ def new_order():
     return render_template('new_order.html', form_action=url_for('submit_order'))
 
 
+@espaweb.route('/ordering/new_external/', methods=['GET','POST'])
+def new_external_order():
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        try:
+            scenelist = data['input_product_list']
+            _u, _p = base64.b64decode(data['user']).split(':')
+            resp_json = api_get('/user', uauth=(_u, _p))
+            if 'username' in resp_json:
+                session['logged_in'] = True
+                resp_json['wurd'] = _p
+                session['user'] = User(**resp_json)
+            else:
+                logger.info('*** Failed external order user login: {}'.format(_u))
+                return jsonify({'msg': 'user auth failed'}), 401
+        except KeyError:
+            return jsonify({'error': "'input_product_list' and 'user' fields are required"}), 401
+        except Exception as e:
+            logger.info("*** espa-web exception - problem parsing external order request. message: {}".format(e.message))
+            return jsonify({'error': 'problem parsing request'}), 400
+    else:
+        # GET redirect from ESPA after order validation
+        scenelist = session['ipl']
+
+    return render_template('new_order.html',
+                           form_action=url_for('submit_order'),
+                           scenelist=scenelist)
+
+
 @espaweb.route('/ordering/submit/', methods=['POST'])
 @login_required
 def submit_order():
     # form values come in as an ImmutableMultiDict
     data = request.form.to_dict()
     logger.info("* new order submission for user %s\n\n order details: %s\n\n\n" % (session['user'].username, data))
-    # grab sceneids from the file in input_product_list field
-    _ipl_list = request.files.get('input_product_list').read().splitlines()
-    _ipl = [i.strip().split("/r") for i in _ipl_list]
-    _ipl = [item for sublist in _ipl for item in sublist if item]
+    _external = False
+    try:
+        # grab sceneids from the file in input_product_list field
+        _ipl_list = request.files.get('input_product_list').read().splitlines()
+        _ipl = [i.strip().split("/r") for i in _ipl_list]
+        _ipl = [item for sublist in _ipl for item in sublist if item]
+    except AttributeError, e:
+        # must be coming from new_external_order
+        _ipl_list = data.pop('input_product_list')
+        _ipl = _ipl_list.split(",")
+        session['ipl'] = _ipl_list
+        _external = True
 
     try:
         # convert our list of sceneids into format required for new orders
@@ -159,6 +196,7 @@ def submit_order():
         flash('Decoding Error with input file. Please check input file encoding', 'error')
         logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
                                                                                        e.message))
+
         return redirect(url_for('new_order'))
 
     # create a list of requested products
@@ -250,7 +288,8 @@ def submit_order():
         flash(format_errors(response_data["msg"]), 'error')
         logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
                                                                                        response_data['msg']))
-        rdest = redirect(url_for('new_order'))
+        _dest = url_for('new_external_order') if _external else url_for('new_order')
+        rdest = redirect(_dest)
 
     return rdest
 
