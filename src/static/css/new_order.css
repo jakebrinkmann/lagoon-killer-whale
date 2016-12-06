@@ -63,7 +63,7 @@ div.input_move_right {
     padding-left: 45px;
 }
 
-div#resize_options, div#reprojection, div#scene_extents {
+div#resize_options, div#reprojection, div#scene_extents, div#indices_select {
     height:auto;
     margin:10px auto;
     padding:10px;

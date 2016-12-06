@@ -206,6 +206,10 @@ def submit_order():
     for p in landsat_list:
         data.pop(p)
 
+    # scrub the 'spectral_indices' value from data
+    # used simply for toggling display of spectral indice products
+    data.pop('spectral_indices')
+
     # the image extents parameters also come in under
     # this key in the form, and this causes a conflict
     # with the 'image_extents' used to enable modifying
