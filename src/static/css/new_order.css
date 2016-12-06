@@ -59,6 +59,10 @@ div.inputitem label{
     display:inline;
 }
 
+div.input_move_right {
+    padding-left: 45px;
+}
+
 div#resize_options, div#reprojection, div#scene_extents {
     height:auto;
     margin:10px auto;
