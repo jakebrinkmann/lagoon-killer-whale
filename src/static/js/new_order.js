@@ -25,6 +25,9 @@ var selected_resample_option = "#select_resample_method option:selected";
 var reproject = "#reproject";
 var reproject_div = "#reprojection";
 
+var indices = "#indices";
+var indices_div = "#indices_select";
+
 var resize = "#resize";
 var resize_option_div = "#resize_options";
 
@@ -221,6 +224,18 @@ $(document).ready(function(){
             $("#target_projection").val(undefined);
             update_pixelsize_units(meters);
             update_bounding_box_placeholders(meters);
+        }
+   });
+
+   /*******************************************************************
+       Event handler to deal with spectral indices selection
+   *******************************************************************/
+   $(indices).change(function(item) {
+        if ( $(this).is(":checked") ) {
+            $(indices_div).show();
+        } else {
+            $(indices_div).hide();
+            $(".indice_product").prop('checked', false);
         }
    });
 
