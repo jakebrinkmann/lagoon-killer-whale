@@ -208,7 +208,8 @@ def submit_order():
 
     # scrub the 'spectral_indices' value from data
     # used simply for toggling display of spectral indice products
-    data.pop('spectral_indices')
+    if 'spectral_indices' in data:
+        data.pop('spectral_indices')
 
     # the image extents parameters also come in under
     # this key in the form, and this causes a conflict
