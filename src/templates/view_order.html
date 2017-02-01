@@ -70,6 +70,8 @@
 
     .column1 { width:500px; }
     .column2 { width:500px; }
+
+    .ui-dialog { z-index: 100000; }
 {% endblock %}
 
 {% block content %}
@@ -181,14 +183,27 @@
         {% endif %}
 {% endblock %}
 
+{% block scriptlinks %}
+  <script src="static/js/jquery.dialogextend.min.js"></script>
+{% endblock %}
+
 {% block javascript %}
 
     {% autoescape off %}
         $(document).ready(function(){
+            var dialogOptions = {
+                height: 500,
+                width: 600,
+                title: 'Log File Contents'
+            }, dialogExtendOptions = {
+                closable: true,
+                maximizable: true,
+                dblclick: 'maximize'
+            };
 
             $('.log_dialog').click(function(event){
                 div_id = "#"+event.target.id+"_log"
-                $(div_id).dialog({height: 500, width: 600, title: 'Log File Contents'});
+                $(div_id).dialog(dialogOptions).dialogExtend(dialogExtendOptions).dialog('open');
             })
 
             {% if session['user'].is_staff %}
