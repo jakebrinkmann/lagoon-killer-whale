@@ -275,6 +275,8 @@ def submit_order():
     if 'plot_statistics' in out_dict:
         out_dict['plot_statistics'] = True
 
+    out_dict['response-readable'] = True  # Informs the API to output special validation messages
+
     logger.info('Order out to API: {}'.format(out_dict))
     response = api_up("/order", out_dict)
     response_data = response.json()
