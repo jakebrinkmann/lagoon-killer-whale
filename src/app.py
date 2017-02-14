@@ -19,6 +19,7 @@ espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
 espaweb.secret_key = espaweb.config['SECRET_KEY']
 espaweb.config['SESSION_TYPE'] = 'memcached'
+espaweb.config['SESSION_PERMANENT'] = False
 espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=120)
 espaweb.config['SESSION_COOKIE_SECURE'] = True
 
