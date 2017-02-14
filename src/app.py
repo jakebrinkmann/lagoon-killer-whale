@@ -491,6 +491,12 @@ def console_config():
 def admin_update(action, orderid):
     return api_up('/{}/{}'.format(action, orderid), {}, 'put').text
 
+
+@espaweb.after_request
+def apply_xframe_options(response):
+    response.headers['X-Frame-Options'] = 'DENY'
+    return response
+
 if __name__ == '__main__':
     debug = False
     if 'ESPA_DEBUG' in os.environ and os.environ['ESPA_DEBUG'] == 'True':
