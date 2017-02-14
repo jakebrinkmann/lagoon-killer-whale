@@ -20,6 +20,7 @@ espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
 espaweb.secret_key = espaweb.config['SECRET_KEY']
 espaweb.config['SESSION_TYPE'] = 'memcached'
 espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=120)
+espaweb.config['SESSION_COOKIE_SECURE'] = True
 
 Session(espaweb)
 api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
