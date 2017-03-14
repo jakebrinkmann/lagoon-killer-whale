@@ -401,6 +401,16 @@ def view_order(orderid):
                            product_counts=product_counts, product_opts=joptions)
 
 
+@espaweb.route('/logfile/<orderid>/<sceneid>')
+@staff_only
+@login_required
+def cat_logfile(orderid, sceneid):
+    scenes_resp = api_get("/item-status/{}".format(orderid))
+    scenes = scenes_resp['orderid'][orderid]
+    scene = [s for s in scenes if s['name'] == sceneid].pop()
+    return '<br>'.join(scene['log_file_contents'].split('\n'))
+
+
 @espaweb.route('/reports/')
 @staff_only
 @login_required
