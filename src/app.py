@@ -19,7 +19,9 @@ espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
 espaweb.secret_key = espaweb.config['SECRET_KEY']
 espaweb.config['SESSION_TYPE'] = 'memcached'
+espaweb.config['SESSION_PERMANENT'] = False
 espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=120)
+espaweb.config['SESSION_COOKIE_SECURE'] = True
 
 Session(espaweb)
 api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
@@ -490,6 +492,12 @@ def console_config():
 @login_required
 def admin_update(action, orderid):
     return api_up('/{}/{}'.format(action, orderid), {}, 'put').text
+
+
+@espaweb.after_request
+def apply_xframe_options(response):
+    response.headers['X-Frame-Options'] = 'DENY'
+    return response
 
 if __name__ == '__main__':
     debug = False
