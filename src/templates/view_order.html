@@ -168,8 +168,7 @@
                                     <td class="{{ rowclass }} note noborder">
                                         {{ s['note'] }}
                                         {% if s['status'] == 'error' and session['user'].is_staff and s['log_file_contents'] %}
-                                            <button class="log_dialog" id="{{ s['scene_id'] }}">Log</button>
-                                            <div id="{{ s['scene_id'] }}_log" style="display:none;">{{ s['log_file_contents'].replace('\n', '<br><br>')|safe }}</div>
+                                            <button onclick=" window.open('/logfile/{{ order['orderid'] }}/{{ s['name'] }}','_blank')">Log</button>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -183,28 +182,10 @@
         {% endif %}
 {% endblock %}
 
-{% block scriptlinks %}
-  <script src="static/js/jquery.dialogextend.min.js"></script>
-{% endblock %}
-
 {% block javascript %}
 
     {% autoescape off %}
         $(document).ready(function(){
-            var dialogOptions = {
-                height: 500,
-                width: 600,
-                title: 'Log File Contents'
-            }, dialogExtendOptions = {
-                closable: true,
-                maximizable: true,
-                dblclick: 'maximize'
-            };
-
-            $('.log_dialog').click(function(event){
-                div_id = "#"+event.target.id+"_log"
-                $(div_id).dialog(dialogOptions).dialogExtend(dialogExtendOptions).dialog('open');
-            })
 
             {% if session['user'].is_staff %}
                 $(".errTo").click(function(event){
