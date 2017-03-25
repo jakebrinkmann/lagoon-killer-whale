@@ -4,6 +4,9 @@ from functools import wraps
 import json
 import os
 import base64
+# OrderedDict is returned by the API reports (see `eval(response)` below)
+# leave this import
+from collections import OrderedDict
 
 from flask import (Flask, request, flash, session, redirect, render_template,
                    url_for, jsonify, make_response, Response)
