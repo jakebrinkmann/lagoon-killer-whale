@@ -8,6 +8,7 @@ import base64
 from flask import (Flask, request, flash, session, redirect, render_template,
                    url_for, jsonify, make_response, Response)
 from flask.ext.session import Session
+import memcache
 import PyRSS2Gen
 import requests
 
@@ -28,6 +29,7 @@ Session(espaweb)
 api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
                                                espaweb.config['APIPORT'],
                                                espaweb.config['APIVERSION'])
+cache = memcache.Client(['127.0.0.1:11211'], debug=0)  # Uses system cache
 
 
 def api_get(url, response_type='json', json=None, uauth=None):
@@ -82,18 +84,21 @@ def login_required(f):
     return decorated_function
 
 
-def request_wants_json():
-    return 'Content-Type' in request.headers and request.headers['Content-Type'] == 'application/json'
-
-
 @espaweb.route('/login', methods=['GET', 'POST'])
 def login():
     destination = request.args.get('next')
     if request.method == 'POST':
-        resp_json = api_get("/user", uauth=(request.form['username'], request.form['password']))
+        username, password = request.form['username'], request.form['password']
+        cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
+        resp_json = cache.get(cache_key)
+        if resp_json is None:
+            resp_json = api_get("/user", uauth=(username, password))
+            resp_json['wurd'] = password
+            two_hours = 7200  # seconds
+            cache.set(cache_key, resp_json, two_hours)
+
         if 'username' in resp_json:
             session['logged_in'] = True
-            resp_json['wurd'] = request.form['password']
             session['user'] = User(**resp_json)
             update_status_details()
             logger.info("User %s logged in\n" % session['user'].username)
@@ -104,7 +109,7 @@ def login():
             else:
                 return redirect(url_for('index'))
         else:
-            logger.info("**** Failed user login %s \n" % request.form['username'])
+            logger.info("**** Failed user login %s \n" % username)
             flash(format_errors(resp_json['msg']), 'error')
             _status = 401
     else:
@@ -124,6 +129,8 @@ def login():
 @espaweb.route('/logout')
 def logout():
     logger.info("Logging out user %s \n" % session['user'].username)
+    cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
+    cache.delete(cache_key)
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
                  'stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
         session.pop(item, None)
