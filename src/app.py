@@ -259,19 +259,24 @@ def submit_order():
     if 'stats' in landsat_list:
         modis_list.append('stats')
 
-    # we dont need these values returned by the available-products query
-    if 'date_restricted' in scene_dict_all_prods:
-        scene_dict_all_prods.pop('date_restricted')
+    key_with_no_sensor = 'not_implemented'
+    not_implemented_ids = scene_dict_all_prods.pop(key_with_no_sensor, None)
+    returns_all_restricted = 'date_restricted'
+    date_restricted_prods = scene_dict_all_prods.pop(returns_all_restricted, dict())
 
+    # Key here is usually the "sensor" name (e.g. "tm4") but can be other stuff
     for key in scene_dict_all_prods:
-            if 'mod' in key or 'myd' in key:
-                scene_dict_all_prods[key]['products'] = modis_list
-            elif key not in ('not_implemented', 'date_restricted'):
-                # Probably better to let the user know if there
-                # are invalid landsat/product combinations rather than
-                # just making them disappear from the order, MODIS
-                # being the exception
-                scene_dict_all_prods[key]['products'] = landsat_list
+        if key.startswith('mod') or key.startswith('myd'):
+            scene_dict_all_prods[key]['products'] = modis_list
+        else:
+            if key in date_restricted_prods:  # Assume only landsat is date restricted
+                scene_dict_all_prods[key]['inputs'] += date_restricted_prods.pop(key)
+
+            scene_dict_all_prods[key]['products'] = landsat_list
+
+            if not_implemented_ids:  # Assume this was intended as landsat
+                scene_dict_all_prods[key]['inputs'] += not_implemented_ids
+                not_implemented_ids = None
 
     # combine order options with product lists
     out_dict.update(scene_dict_all_prods)
