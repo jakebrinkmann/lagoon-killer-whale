@@ -70,7 +70,7 @@ def staff_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         is_staff = False
-        if 'user' in session:
+        if 'user' in session and session.get('user', None):
             is_staff = session['user'].is_staff
 
         if is_staff is False:
