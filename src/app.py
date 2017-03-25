@@ -1,18 +1,19 @@
-from flask import Flask, request, flash, session, redirect, render_template, url_for, jsonify, make_response, Response
-# OrderedDict used by reports
-# leave this import
-from collections import OrderedDict
 import datetime
 from datetime import timedelta
-from flask.ext.session import Session
 from functools import wraps
-from utils import conversions, deep_update, is_num, gen_nested_dict, User, format_errors
-from logger import ilogger as logger
-import requests
 import json
-import PyRSS2Gen
 import os
 import base64
+
+from flask import (Flask, request, flash, session, redirect, render_template,
+                   url_for, jsonify, make_response, Response)
+from flask.ext.session import Session
+import PyRSS2Gen
+import requests
+
+from utils import (conversions, deep_update, is_num, gen_nested_dict, User,
+                   format_errors)
+from logger import ilogger as logger
 
 
 espaweb = Flask(__name__)
@@ -111,9 +112,8 @@ def login():
         if 'user' not in session:
             session['user'] = None
 
-    in_ops = 'ESPA_ENV' in os.environ and os.environ['ESPA_ENV'] == 'ops'
-    explorer = "http://earthexplorer.usgs.gov" if in_ops else "http://eedevmast.cr.usgs.gov"
-    reg_host = "https://ers.cr.usgs.gov" if in_ops else "http://ersdevmast.cr.usgs.gov"
+    explorer = espaweb.config.get('earth-explorer', 'https://earthexplorer.usgs.gov')
+    reg_host = espaweb.config.get('eros-registration-system', 'https://ers.cr.usgs.gov')
 
     return render_template('login.html', next=destination,
                            earthexplorer=explorer,
