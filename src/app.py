@@ -66,7 +66,12 @@ def update_status_details():
         session[item] = status_response[item]
 
     for item in ['stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
-        session[item] = api_get('/statistics/' + item, 'text')
+        cache_statkey = cache_key + item
+        stat_resp = cache.get(cache_statkey)
+        if stat_resp is None:
+            stat_resp = api_get('/statistics/' + item, 'text')
+            cache.set(cache_statkey, stat_resp, fifteen_minutes)
+        session[item] = stat_resp
 
 
 def staff_only(f):
