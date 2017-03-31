@@ -101,10 +101,10 @@ def login():
         resp_json = cache.get(cache_key)
         if (resp_json is None) or (isinstance(resp_json, dict) and resp_json.get('password') != password):
             resp_json = api_get("/user", uauth=(username, password))
-            resp_json['wurd'] = password
 
         if 'username' in resp_json:
             session['logged_in'] = True
+            resp_json['wurd'] = password
             session['user'] = User(**resp_json)
             two_hours = 7200  # seconds
             cache.set(cache_key, resp_json, two_hours)
