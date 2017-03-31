@@ -99,7 +99,7 @@ def login():
         username, password = request.form['username'], request.form['password']
         cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
         resp_json = cache.get(cache_key)
-        if resp_json is None:
+        if (resp_json is None) or (isinstance(resp_json, dict) and resp_json.get('password') != password):
             resp_json = api_get("/user", uauth=(username, password))
             resp_json['wurd'] = password
             two_hours = 7200  # seconds
