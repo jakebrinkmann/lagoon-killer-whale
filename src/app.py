@@ -1,18 +1,23 @@
-from flask import Flask, request, flash, session, redirect, render_template, url_for, jsonify, make_response, Response
-# OrderedDict used by reports
-# leave this import
-from collections import OrderedDict
 import datetime
 from datetime import timedelta
-from flask.ext.session import Session
 from functools import wraps
-from utils import conversions, deep_update, is_num, gen_nested_dict, User, format_errors
-from logger import ilogger as logger
-import requests
 import json
-import PyRSS2Gen
 import os
 import base64
+# OrderedDict is returned by the API reports (see `eval(response)` below)
+# leave this import
+from collections import OrderedDict
+
+from flask import (Flask, request, flash, session, redirect, render_template,
+                   url_for, jsonify, make_response, Response)
+from flask.ext.session import Session
+import memcache
+import PyRSS2Gen
+import requests
+
+from utils import (conversions, deep_update, is_num, gen_nested_dict, User,
+                   format_errors)
+from logger import ilogger as logger
 
 
 espaweb = Flask(__name__)
@@ -27,6 +32,7 @@ Session(espaweb)
 api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
                                                espaweb.config['APIPORT'],
                                                espaweb.config['APIVERSION'])
+cache = memcache.Client(['127.0.0.1:11211'], debug=0)  # Uses system cache
 
 
 def api_get(url, response_type='json', json=None, uauth=None):
@@ -50,19 +56,29 @@ def api_up(url, json, verb='post'):
 
 
 def update_status_details():
-    status_response = api_get('/system-status')
+    cache_key = 'espa_web_system_status'  # WARNING: cached across all sessions
+    status_response = cache.get(cache_key)
+    if status_response is None:
+        status_response = api_get('/system-status')
+        fifteen_minutes = 900  # seconds
+        cache.set(cache_key, status_response, fifteen_minutes)
     for item in ['system_message_body', 'system_message_title', 'display_system_message']:
         session[item] = status_response[item]
 
     for item in ['stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
-        session[item] = api_get('/statistics/' + item, 'text')
+        cache_statkey = cache_key + item
+        stat_resp = cache.get(cache_statkey)
+        if stat_resp is None:
+            stat_resp = api_get('/statistics/' + item, 'text')
+            cache.set(cache_statkey, stat_resp, fifteen_minutes)
+        session[item] = stat_resp
 
 
 def staff_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         is_staff = False
-        if 'user' in session:
+        if 'user' in session and session.get('user', None):
             is_staff = session['user'].is_staff
 
         if is_staff is False:
@@ -81,19 +97,22 @@ def login_required(f):
     return decorated_function
 
 
-def request_wants_json():
-    return 'Content-Type' in request.headers and request.headers['Content-Type'] == 'application/json'
-
-
 @espaweb.route('/login', methods=['GET', 'POST'])
 def login():
     destination = request.args.get('next')
     if request.method == 'POST':
-        resp_json = api_get("/user", uauth=(request.form['username'], request.form['password']))
+        username, password = request.form['username'], request.form['password']
+        cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
+        resp_json = cache.get(cache_key)
+        if (resp_json is None) or (isinstance(resp_json, dict) and resp_json.get('password') != password):
+            resp_json = api_get("/user", uauth=(username, password))
+
         if 'username' in resp_json:
             session['logged_in'] = True
-            resp_json['wurd'] = request.form['password']
+            resp_json['wurd'] = password
             session['user'] = User(**resp_json)
+            two_hours = 7200  # seconds
+            cache.set(cache_key, resp_json, two_hours)
             update_status_details()
             logger.info("User %s logged in\n" % session['user'].username)
             # send the user back to their
@@ -103,7 +122,7 @@ def login():
             else:
                 return redirect(url_for('index'))
         else:
-            logger.info("**** Failed user login %s \n" % request.form['username'])
+            logger.info("**** Failed user login %s \n" % username)
             flash(format_errors(resp_json['msg']), 'error')
             _status = 401
     else:
@@ -111,9 +130,8 @@ def login():
         if 'user' not in session:
             session['user'] = None
 
-    in_ops = 'ESPA_ENV' in os.environ and os.environ['ESPA_ENV'] == 'ops'
-    explorer = "http://earthexplorer.usgs.gov" if in_ops else "http://eedevmast.cr.usgs.gov"
-    reg_host = "https://ers.cr.usgs.gov" if in_ops else "http://ersdevmast.cr.usgs.gov"
+    explorer = espaweb.config.get('earth-explorer', 'https://earthexplorer.usgs.gov')
+    reg_host = espaweb.config.get('eros-registration-system', 'https://ers.cr.usgs.gov')
 
     return render_template('login.html', next=destination,
                            earthexplorer=explorer,
@@ -124,6 +142,8 @@ def login():
 @espaweb.route('/logout')
 def logout():
     logger.info("Logging out user %s \n" % session['user'].username)
+    cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
+    cache.delete(cache_key)
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
                  'stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
         session.pop(item, None)
@@ -247,19 +267,24 @@ def submit_order():
     if 'stats' in landsat_list:
         modis_list.append('stats')
 
-    # we dont need these values returned by the available-products query
-    if 'date_restricted' in scene_dict_all_prods:
-        scene_dict_all_prods.pop('date_restricted')
+    key_with_no_sensor = 'not_implemented'
+    not_implemented_ids = scene_dict_all_prods.pop(key_with_no_sensor, None)
+    returns_all_restricted = 'date_restricted'
+    date_restricted_prods = scene_dict_all_prods.pop(returns_all_restricted, dict())
 
+    # Key here is usually the "sensor" name (e.g. "tm4") but can be other stuff
     for key in scene_dict_all_prods:
-            if 'mod' in key or 'myd' in key:
-                scene_dict_all_prods[key]['products'] = modis_list
-            elif key not in ('not_implemented', 'date_restricted'):
-                # Probably better to let the user know if there
-                # are invalid landsat/product combinations rather than
-                # just making them disappear from the order, MODIS
-                # being the exception
-                scene_dict_all_prods[key]['products'] = landsat_list
+        if key.startswith('mod') or key.startswith('myd'):
+            scene_dict_all_prods[key]['products'] = modis_list
+        else:
+            if key in date_restricted_prods:  # Assume only landsat is date restricted
+                scene_dict_all_prods[key]['inputs'] += date_restricted_prods.pop(key)
+
+            scene_dict_all_prods[key]['products'] = landsat_list
+
+            if not_implemented_ids:  # Assume this was intended as landsat
+                scene_dict_all_prods[key]['inputs'] += not_implemented_ids
+                not_implemented_ids = None
 
     # combine order options with product lists
     out_dict.update(scene_dict_all_prods)
