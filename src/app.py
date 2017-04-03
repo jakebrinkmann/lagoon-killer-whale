@@ -55,10 +55,10 @@ def api_up(url, json, verb='post'):
     return response
 
 
-def update_status_details():
+def update_status_details(force=False):
     cache_key = 'espa_web_system_status'  # WARNING: cached across all sessions
     status_response = cache.get(cache_key)
-    if status_response is None:
+    if (status_response is None) or force:
         status_response = api_get('/system-status')
         fifteen_minutes = 900  # seconds
         cache.set(cache_key, status_response, fifteen_minutes)
@@ -68,7 +68,7 @@ def update_status_details():
     for item in ['stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
         cache_statkey = cache_key + item
         stat_resp = cache.get(cache_statkey)
-        if stat_resp is None:
+        if (stat_resp is None) or force:
             stat_resp = api_get('/statistics/' + item, 'text')
             cache.set(cache_statkey, stat_resp, fifteen_minutes)
         session[item] = stat_resp
@@ -498,7 +498,7 @@ def statusmsg():
         response = api_up('/system-status-update', api_args)
 
         if response.status_code == 200:
-            update_status_details()
+            update_status_details(force=True)
             flash('update successful')
             rurl = 'index'
         else:
