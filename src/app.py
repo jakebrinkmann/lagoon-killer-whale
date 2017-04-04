@@ -58,9 +58,9 @@ def api_up(url, json, verb='post'):
 def update_status_details(force=False):
     cache_key = 'espa_web_system_status'  # WARNING: cached across all sessions
     status_response = cache.get(cache_key)
+    fifteen_minutes = 900  # seconds
     if (status_response is None) or force:
         status_response = api_get('/system-status')
-        fifteen_minutes = 900  # seconds
         cache.set(cache_key, status_response, fifteen_minutes)
     for item in ['system_message_body', 'system_message_title', 'display_system_message']:
         session[item] = status_response[item]
