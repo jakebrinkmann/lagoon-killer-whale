@@ -92,11 +92,13 @@ $(document).ready(function(){
    *******************************************************************/
     $(cfmask).click(function(item) {
         var cfmaskpopup="#cfmask_popup";
-        if ( $(cfmaskpopup).is(":hidden") ) {
+        if ( $(cfmaskpopup).is(":hidden") && $(cfmask).is(':checked') ) {
             $(cfmaskpopup).dialog({
                 height: 200, width: 500,
                 title: 'Notice of Upcoming CFMask Discontinuation'
             });
+       } else {
+            $(cfmaskpopup).dialog('close')
        }
     });
 
