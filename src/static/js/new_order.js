@@ -95,7 +95,7 @@ $(document).ready(function(){
         if ( $(cfmaskpopup).is(":hidden") ) {
             $(cfmaskpopup).dialog({
                 height: 200, width: 500,
-                title: 'Notice of Upcoming Product Deprecation'
+                title: 'Notice of Upcoming CFMask Discontinuation'
             });
        }
     });
