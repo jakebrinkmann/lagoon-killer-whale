@@ -36,10 +36,11 @@ cache = memcache.Client(['127.0.0.1:11211'], debug=0)  # Uses system cache
 
 
 def api_up(url, json=None, verb='get', uauth=None):
+    headers = {'X-Forwarded-For': request.remote_addr}
     auth_tup = uauth if uauth else (session['user'].username, session['user'].wurd)
     retdata = dict()
     try:
-        response = getattr(requests, verb)(api_base_url + url, json=json, auth=auth_tup)
+        response = getattr(requests, verb)(api_base_url + url, json=json, auth=auth_tup, headers=headers)
         retdata = response.json()
     except Exception as e:
         logger.error('+! Unable to contact API !+')
