@@ -16,7 +16,7 @@ import PyRSS2Gen
 import requests
 
 from utils import (conversions, deep_update, is_num, gen_nested_dict, User,
-                   format_errors)
+                   format_messages)
 from logger import ilogger as logger
 
 
@@ -35,24 +35,22 @@ api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
 cache = memcache.Client(['127.0.0.1:11211'], debug=0)  # Uses system cache
 
 
-def api_get(url, response_type='json', json=None, uauth=None):
+def api_up(url, json=None, verb='get', uauth=None):
     auth_tup = uauth if uauth else (session['user'].username, session['user'].wurd)
-    response = requests.get(api_base_url + url, auth=auth_tup, json=json)
-    if response_type == 'json':
-        _resp = response.json()
-    elif response_type == 'text':
-        _resp = response.text
-    else:
-        _resp = response
-    return _resp
+    retdata = dict()
+    try:
+        response = getattr(requests, verb)(api_base_url + url, json=json, auth=auth_tup)
+        retdata = response.json()
+    except Exception as e:
+        logger.error('+! Unable to contact API !+')
+        flash('Critical error contacting ESPA-API', 'error')
 
-
-def api_up(url, json, verb='post'):
-    auth_tup = (session['user'].username, session['user'].wurd)
-    if verb not in ('post', 'put'):
-        return {'message': 'api verb not found: {}'.format(verb)}, 404
-    response = getattr(requests, verb)(api_base_url + url, json=json, auth=auth_tup)
-    return response
+    messages = retdata.pop('messages', dict())
+    if 'errors' in messages:
+        flash(format_messages(messages.get('errors')), 'error')
+    if 'warnings' in messages:
+        flash(format_messages(messages.get('warnings')), 'warning')
+    return retdata
 
 
 def update_status_details(force=False):
@@ -60,7 +58,7 @@ def update_status_details(force=False):
     status_response = cache.get(cache_key)
     fifteen_minutes = 900  # seconds
     if (status_response is None) or force:
-        status_response = api_get('/system-status')
+        status_response = api_up('/system-status')
         cache.set(cache_key, status_response, fifteen_minutes)
     for item in ['system_message_body', 'system_message_title', 'display_system_message']:
         session[item] = status_response[item]
@@ -69,7 +67,7 @@ def update_status_details(force=False):
         cache_statkey = cache_key + item
         stat_resp = cache.get(cache_statkey)
         if (stat_resp is None) or force:
-            stat_resp = api_get('/statistics/' + item, 'text')
+            stat_resp = api_up('/statistics/' + item, 'text')
             cache.set(cache_statkey, stat_resp, fifteen_minutes)
         session[item] = stat_resp
 
@@ -105,7 +103,7 @@ def login():
         cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
         resp_json = cache.get(cache_key)
         if (resp_json is None) or (isinstance(resp_json, dict) and resp_json.get('password') != password):
-            resp_json = api_get("/user", uauth=(username, password))
+            resp_json = api_up("/user", uauth=(username, password))
 
         if 'username' in resp_json:
             session['logged_in'] = True
@@ -123,7 +121,6 @@ def login():
                 return redirect(url_for('index'))
         else:
             logger.info("**** Failed user login %s \n" % username)
-            flash(format_errors(resp_json['msg']), 'error')
             _status = 401
     else:
         _status = 200
@@ -170,7 +167,7 @@ def new_external_order():
         try:
             scenelist = data['input_product_list']
             _u, _p = base64.b64decode(data['user']).split(':')
-            resp_json = api_get('/user', uauth=(_u, _p))
+            resp_json = api_up('/user', uauth=(_u, _p))
             if 'username' in resp_json:
                 session['logged_in'] = True
                 resp_json['wurd'] = _p
@@ -305,13 +302,9 @@ def submit_order():
     out_dict['response-readable'] = True  # Informs the API to output special validation messages
 
     logger.info('Order out to API: {}'.format(out_dict))
-    response = api_up("/order", out_dict)
+    response = api_up("/order", json=out_dict, verb='post')
     response_data = response.json()
     logger.info('Response from API: {}'.format(response_data))
-
-    # hack till we settle on msg or message
-    if 'message' in response_data:
-        response_data['msg'] = response_data['message']
 
     if response.status_code == 200:
         flash("Order submitted successfully! Your OrderId is {}".format(response_data['orderid']))
@@ -319,7 +312,6 @@ def submit_order():
                                                                                  response_data['orderid']))
         rdest = redirect('/ordering/order-status/{}/'.format(response_data['orderid']))
     else:
-        flash(format_errors(response_data["msg"]), 'error')
         logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
                                                                                        response_data['msg']))
         _dest = url_for('new_external_order') if _external else url_for('new_order')
@@ -337,7 +329,7 @@ def list_orders(email=None):
     if email:
         url += "/{}".format(email)
         for_user = email
-    res_data = api_get(url, json={'status': ['complete', 'ordered']})
+    res_data = api_up(url, json={'status': ['complete', 'ordered']})
     if isinstance(res_data, list):
         res_data = sorted(res_data, key=lambda k: k['orderid'], reverse=True)
 
@@ -353,12 +345,12 @@ def list_orders_feed(email):
         # coming in from bulk downloader
         logger.info("Apparent bulk download attempt, headers: %s" % request.headers)
         auth_header_dec = base64.b64decode(request.headers['Authorization'])
-        response = api_get(url, uauth=tuple(auth_header_dec.split(":")))
+        response = api_up(url, uauth=tuple(auth_header_dec.split(":")))
     else:
         if 'logged_in' not in session or session['logged_in'] is not True:
             return redirect(url_for('login', next=request.url))
         else:
-            response = api_get(url)
+            response = api_up(url)
 
     if "msg" in response:
         logger.info("Problem retrieving rss for email: %s \n message: %s\n" % (email, response['msg']))
@@ -394,8 +386,8 @@ def list_orders_feed(email):
 @espaweb.route('/ordering/order-status/<orderid>/')
 @login_required
 def view_order(orderid):
-    order_dict = api_get("/order/{}".format(orderid))
-    scenes_resp = api_get("/item-status/{}".format(orderid))
+    order_dict = api_up("/order/{}".format(orderid))
+    scenes_resp = api_up("/item-status/{}".format(orderid))
 
     scenes = scenes_resp['orderid'][orderid]
 
@@ -432,7 +424,7 @@ def view_order(orderid):
 @staff_only
 @login_required
 def cat_logfile(orderid, sceneid):
-    scenes_resp = api_get("/item-status/{}/{}".format(orderid, sceneid))
+    scenes_resp = api_up("/item-status/{}/{}".format(orderid, sceneid))
     scene = scenes_resp['orderid'][orderid].pop()
     return '<br>'.join(scene['log_file_contents'].split('\n'))
 
@@ -441,7 +433,7 @@ def cat_logfile(orderid, sceneid):
 @staff_only
 @login_required
 def list_reports():
-    res_data = api_get("/reports/")
+    res_data = api_up("/reports/")
     return render_template('list_reports.html', reports=res_data)
 
 
@@ -449,7 +441,7 @@ def list_reports():
 @staff_only
 @login_required
 def show_report(name):
-    response = api_get("/reports/{0}/".format(name))
+    response = api_up("/reports/{0}/".format(name))
     res_data = eval(response)
     # occassionally see UnicodeDecodeError in reports
     # lets decode the response
@@ -502,7 +494,6 @@ def statusmsg():
             flash('update successful')
             rurl = 'index'
         else:
-            flash('update failed', 'error')
             rurl = 'statusmsg'
         action = redirect(url_for(rurl))
     else:
