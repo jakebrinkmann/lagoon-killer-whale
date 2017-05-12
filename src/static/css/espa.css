@@ -436,9 +436,3 @@ div#messagebox{
     padding:15px;
 }
 
-div#errorbox h4 {
-    border:none;
-    padding:0px;
-    margin:0px;
-    line-height:1.5em;
-}
