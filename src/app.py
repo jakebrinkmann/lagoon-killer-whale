@@ -452,7 +452,7 @@ def show_report(name):
     return render_template('report.html', report_name=name, report=res_data)
 
 
-@espaweb.route('/console', methods=['GET'])
+@espaweb.route('/admin_console', methods=['GET'])
 @staff_only
 @login_required
 def console():
@@ -479,7 +479,7 @@ def console():
     return render_template('console.html', stats=stats, gaps=gap_dict)
 
 
-@espaweb.route('/console/statusmsg', methods=['GET', 'POST'])
+@espaweb.route('/admin_console/statusmsg', methods=['GET', 'POST'])
 @staff_only
 @login_required
 def statusmsg():
@@ -504,7 +504,7 @@ def statusmsg():
     return action
 
 
-@espaweb.route('/console/config', methods=['GET'])
+@espaweb.route('/admin_console/config', methods=['GET'])
 @staff_only
 @login_required
 def console_config():
