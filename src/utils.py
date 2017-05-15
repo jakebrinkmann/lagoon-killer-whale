@@ -71,7 +71,6 @@ conversions = {
          'l1': 'original input products',
          'swe': 'dynamic surface water extent',
          'sr_evi': 'sr_evi',
-         'cloud': 'cfmask',
          'sr_savi': 'sr_savi',
          'sr_nbr2': 'sr_nbr2',
          'sr_nbr': 'sr_nbr',
