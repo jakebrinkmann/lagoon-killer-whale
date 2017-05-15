@@ -155,8 +155,12 @@
 					<label class="tooltip" title="Top of Atmosphere Brightness Temperature" for="sr_thermal">Brightness Temperature</label>
 				</div>
 
+				{% if session['user'].is_staff %}
 				<div class="inputitem">
+					<input class="product custom_product" type="checkbox" id="include_pixel_qa" name="pixel_qa"></input>
+					<label class="tooltip" title="Level-2 Pixel Quality Assurance band" for="include_pixel_qa">Pixel QA</label>
 				</div>
+				{% endif %}
 				<div class="inputitem">
 					<input type="checkbox" id="indices" class="product" name="spectral_indices">
 					<label class="tooltip" title="Select spectral indices for output products" for="spectral_indices">Spectral Indices</label>
