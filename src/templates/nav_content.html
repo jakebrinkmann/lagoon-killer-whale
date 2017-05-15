@@ -20,9 +20,5 @@
 <span class="navitemright">|</span>
 <span class="navitemright">{{ session['user'].username}} ({{ session['user'].email }})</span>
 <span class="navitemright">|</span>
-<span class="navitemright">Products Completed Last Day: {{ session['stat_products_complete_24_hrs'] }}</span>
-<span class="navitemright">|</span>
-<span class="navitemright">Product Backlog: {{ session['stat_backlog_depth'] }}</span>
-<span class="navitemright">|</span>
-<span class="navitemright">Products 'onorder': {{ session['stat_onorder_depth'] }}</span>
+<span class="navitemright">Global Product Backlog: {{ session['stat_backlog_depth'] }}</span>
 {% endif %}
