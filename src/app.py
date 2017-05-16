@@ -517,12 +517,12 @@ def console_config():
 @staff_only
 @login_required
 def admin_update(action, orderid):
-    return api_up('/{}/{}'.format(action, orderid), {}, 'put').text
+    return api_up('/{}/{}'.format(action, orderid), {}, 'put')
 
 
 @espaweb.route('/ordering/cancel_order/<orderid>', methods=['PUT'])
 @login_required
-def admin_update(orderid):
+def cancel_order(orderid):
     payload = {'orderid': orderid, 'status': 'cancelled'}
     response = api_up('/order', json=payload, verb='put')
     if response.get('orderid') == orderid:
