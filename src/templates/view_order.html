@@ -114,6 +114,15 @@
                         <tr class='noborder'>
                             <td class='noborder' colspan="1"><i>The ESPA Bulk Downloader is available on <a href="https://github.com/USGS-EROS/espa-bulk-downloader">GitHub</a></i></td>
                             <td class='noborder'>
+                                {% if session['user'].email in order['orderid'] or session['user'].is_staff %}
+                                {% if order['status'] == 'ordered' %}
+                                <a class="ui-button ui-widget ui-corner-all cancellation" style="padding:3px;float: right;" id="cancel_order" href="#"><b>CANCEL</b></a>
+                                <div class="cancellation" id="cancellation_warning" style="display:none;">
+                                    All scenes ordered for processing will be immediately cancelled. <br>
+                                    Any output data will be deleted from disk. This action cannot be undone.
+                                </div>
+                                {% endif %}
+                                {% endif %}
                                 {% if session['user'].is_staff and product_counts['error'] > 0 %}
                                     <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_submitted" href="#">error to submitted</a>
                                     <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_unavailable" href="#">error to unavailable</a>
@@ -207,6 +216,36 @@
                                 alert('update appears to have failed. contact espa admin.');
                     });
                 })
+            {% endif %}
+            {% if session['user'].email in order['orderid'] or session['user'].is_staff %}
+            {% if order['status'] == 'ordered' %}
+                $("#cancel_order").click(function(event){
+                    event.preventDefault();
+                    var orderid = "{{ order['orderid'] }}";
+                    $('#cancellation_warning').dialog({
+                        title: 'WARNING! Emergency Order Cancellation!',
+                        resizable: false,
+                        height: "auto",
+                        width: "auto",
+                        modal: true,
+                        buttons: {
+                            "Delete all items!": function() {
+                                $( this ).dialog( "close" );
+                                $.ajax({method: 'PUT',
+                                            url: "/ordering/cancel_order/{{ order['orderid'] }}"
+                                        }).done(function() {
+                                            location.reload();
+                                        }).fail(function() {
+                                            alert('update appears to have failed. contact espa admin.');
+                                });
+                            },
+                            "Go back": function() {
+                                $( this ).dialog( "close" );
+                            }
+                        }
+                    });
+                });
+            {% endif %}
             {% endif %}
 
             var source_products = {
