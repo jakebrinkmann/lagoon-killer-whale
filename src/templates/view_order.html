@@ -127,7 +127,11 @@
                 </table>
             </div>
 
-            <pre class="boxbody" style="display:none; margin: 0cm 5cm 1cm 5cm;" id="order_json"></pre>
+
+            <div class="boxbody" style="display:none; margin: 0cm 5cm 1cm 5cm;" id="json_placeholder">
+                JSON message body for the <a href="https://github.com/USGS-EROS/espa-api#user-api">espa-api</a>:<br><br>
+                <pre id="order_json"></pre>
+            </div>
 
             <div class="boxbody">
                 <table>
@@ -231,7 +235,7 @@
 
             $('.show_json').click(function(event) {
                 event.preventDefault();
-                $('#order_json').toggle();
+                $('#json_placeholder').toggle();
             });
 
             function buildOutputFormatString() {

@@ -153,3 +153,10 @@ th, td {
     margin: 0;
     padding-top: 2px;
 }
+
+
+#json_placeholder {
+    border: 1px;
+    border-style: solid;
+    border-color: #bcbddc;
+}
