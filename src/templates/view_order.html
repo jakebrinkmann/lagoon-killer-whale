@@ -138,7 +138,7 @@
                             {% if s['name'] %}
                                 {% set rowclass = loop.cycle('evenrow', 'oddrow') %}
                                 <tr class="{{ rowclass }}">
-                                    <td class="{} product noborder">
+                                    <td class="product noborder">
                                         {% if session['user'].is_staff %}
                                             {{ s['scene_id'] }} -
                                         {% endif %}
