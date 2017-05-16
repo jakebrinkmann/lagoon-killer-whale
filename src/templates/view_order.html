@@ -118,11 +118,16 @@
                                     <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_submitted" href="#">error to submitted</a>
                                     <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_unavailable" href="#">error to unavailable</a>
                                 {% endif %}
+                                {% if session['user'].is_staff %} <!--temporary feature testing-->
+                                <a class="ui-button ui-widget ui-corner-all show_json" style="padding:3px" id="show_order_json" href="#">Show JSON</a>
+                                {% endif %}
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <pre class="boxbody" style="display:none; margin: 0cm 5cm 1cm 5cm;" id="order_json"></pre>
 
             <div class="boxbody">
                 <table>
@@ -220,6 +225,14 @@
                                  'format': 'output format'};
 
             var product_options = {{ product_opts }};
+
+            var str = JSON.stringify(product_options, null, 2);
+            $('#order_json').text(str);
+
+            $('.show_json').click(function(event) {
+                event.preventDefault();
+                $('#order_json').toggle();
+            });
 
             function buildOutputFormatString() {
                 var s = '';
