@@ -11,6 +11,18 @@ class User(object):
         return 'staff' in self.roles
 
 
+class Order(object):
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            self.__setattr__(k, v)
+
+
+class Scene(object):
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            self.__setattr__(k, v)
+
+
 def deep_update(source, overrides):
     """
     update a nested dictionary. modify source in place

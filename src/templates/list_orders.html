@@ -120,11 +120,11 @@ q
                             {% endif %}
                             <a href=" /ordering/order-status/{{ order.orderid }}/">{{ order.orderid }}</a>
                         </td>
-                        <td class="{{ rowclass }}" id='{{ order.id }}_total_ordered'>{{ order.products_ordered }}</td>
-                        <td class="{{ rowclass }}" id='{{ order.id }}_finished'>{{ order.products_complete }}</td>
+                        <td class="{{ rowclass }}">{{ order.products_ordered }}</td>
+                        <td class="{{ rowclass }}">{{ order.products_complete }}</td>
 
-                        <td class="{{ rowclass }}">{{ order.order_status }}</td>
-                        <td class="{{ rowclass }}">{{ order.order_note }}</td>
+                        <td class="{{ rowclass }}">{{ order.status }}</td>
+                        <td class="{{ rowclass }}">{{ order.note }}</td>
                     </tr>
                 {% endfor %}
             </table>

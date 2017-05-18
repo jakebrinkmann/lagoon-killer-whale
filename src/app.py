@@ -16,7 +16,7 @@ import PyRSS2Gen
 import requests
 
 from utils import (conversions, deep_update, is_num, gen_nested_dict, User,
-                   format_messages)
+                   format_messages, Order, Scene)
 from logger import ilogger as logger
 
 
@@ -338,11 +338,10 @@ def list_orders(email=None):
         order = api_up('/order/{}'.format(orderid))
         item_status = api_up('/item-status/{}'.format(orderid))
         item_status = item_status.get('orderid', {}).get(orderid, {})
+        item_status = map(lambda x: Scene(**x), item_status)
         count_ordered = len(item_status)
-        count_complete = len([s for s in item_status
-                              if s['status'] == 'complete'])
-        count_error = len([s for s in item_status
-                           if s['status'] == 'error'])
+        count_complete = len([s for s in item_status if s.status == 'complete'])
+        count_error = len([s for s in item_status if s.status == 'error'])
         order.update(products_ordered=count_ordered)
         order.update(products_complete=count_complete)
         order.update(products_error=count_error)
@@ -371,9 +370,11 @@ def list_orders_feed(email):
 
     order_items = dict()
     for orderid in orders:
-        response = api_up('/item-status/{}'.format(orderid), uauth=uauth)
+        item_status = api_up('/item-status/{}'.format(orderid), uauth=uauth)
+        item_status = item_status.get('orderid', {}).get(orderid, {})
+        item_status = map(lambda x: Scene(**x), item_status)
         order_info = api_up('/order/{}'.format(orderid), uauth=uauth)
-        order_items[orderid] = dict(scenes=response['orderid'][orderid],
+        order_items[orderid] = dict(scenes=item_status,
                                     orderdate=order_info['order_date'])
 
 
@@ -388,15 +389,15 @@ def list_orders_feed(email):
 
     for orderid, order in order_items.items():
         for scene in order['scenes']:
-            if scene['status'] != 'complete':
+            if scene.status != 'complete':
                 continue
             description = ('scene_status:{0},orderid:{1},orderdate:{2}'
-                           .format(scene['status'], orderid, order['orderdate']))
+                           .format(scene.status, orderid, order['orderdate']))
             new_rss_item = PyRSS2Gen.RSSItem(
-                title=scene['name'],
-                link=scene['product_dload_url'],
+                title=scene.name,
+                link=scene.product_dload_url,
                 description=description,
-                guid=PyRSS2Gen.Guid(scene['product_dload_url'])
+                guid=PyRSS2Gen.Guid(scene.product_dload_url)
             )
 
             rss.items.append(new_rss_item)
@@ -407,10 +408,10 @@ def list_orders_feed(email):
 @espaweb.route('/ordering/order-status/<orderid>/')
 @login_required
 def view_order(orderid):
-    order_dict = api_up("/order/{}".format(orderid))
-    scenes_resp = api_up("/item-status/{}".format(orderid))
-
-    scenes = scenes_resp['orderid'][orderid]
+    order_dict = Order(**api_up("/order/{}".format(orderid)))
+    item_status = api_up('/item-status/{}'.format(orderid))
+    item_status = item_status.get('orderid', {}).get(orderid, {})
+    scenes = map(lambda x: Scene(**x), item_status)
 
     statuses = {'complete': ['complete', 'unavailable'],
                 'open': ['oncache', 'queued', 'processing', 'error', 'submitted'],
@@ -419,16 +420,17 @@ def view_order(orderid):
 
     product_counts = {}
     for status in statuses:
-        product_counts[status] = len([s for s in scenes if s['status'] in statuses[status]])
+        product_counts[status] = len([s for s in scenes
+                                      if s.status in statuses[status]])
     product_counts['total'] = len(scenes)
 
     # get away from unicode
-    joptions = json.dumps(order_dict['product_opts'])
+    joptions = json.dumps(order_dict.product_opts)
 
     # sensor/products
     options_by_sensor = {}
-    for key in order_dict['product_opts']:
-        _kval = order_dict['product_opts'][key]
+    for key in order_dict.product_opts:
+        _kval = order_dict.product_opts[key]
         if isinstance(_kval, dict) and 'products' in _kval:
             _spl = _kval['products']
             _out_spl = [conversions['products'][item] for item in _spl]
