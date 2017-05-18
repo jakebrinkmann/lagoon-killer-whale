@@ -300,88 +300,104 @@ def submit_order():
     if 'plot_statistics' in out_dict:
         out_dict['plot_statistics'] = True
 
-    out_dict['response-readable'] = True  # Informs the API to output special validation messages
-
     logger.info('Order out to API: {}'.format(out_dict))
-    response = api_up("/order", json=out_dict, verb='post')
-    response_data = response.json()
+    response_data = api_up("/order", json=out_dict, verb='post')
     logger.info('Response from API: {}'.format(response_data))
 
-    if response.status_code == 200:
+    if 'orderid' in response_data:
         flash("Order submitted successfully! Your OrderId is {}".format(response_data['orderid']))
         logger.info("successful order submission for user %s\n\n orderid: %s" % (session['user'].username,
                                                                                  response_data['orderid']))
         rdest = redirect('/ordering/order-status/{}/'.format(response_data['orderid']))
     else:
-        logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
-                                                                                       response_data['msg']))
+        logger.info("problem with order submission for user {0}\n\n "
+                    "message: {1}\n\n".format(session['user'].username,
+                                              response_data.get('messages')))
         _dest = url_for('new_external_order') if _external else url_for('new_order')
         rdest = redirect(_dest)
 
     return rdest
 
-
 @espaweb.route('/ordering/status/')
 @espaweb.route('/ordering/status/<email>/')
 @login_required
 def list_orders(email=None):
-    url = "/list-orders-ext"
+    url = "/list-orders"
     for_user = session['user'].email
     if email:
         url += "/{}".format(email)
         for_user = email
     res_data = api_up(url, json={'status': ['complete', 'ordered']})
     if isinstance(res_data, list):
-        res_data = sorted(res_data, key=lambda k: k['orderid'], reverse=True)
+        res_data = sorted(res_data, reverse=True)
 
-    return render_template('list_orders.html', order_list=res_data, for_user=for_user)
+    order_info = []
+    for orderid in res_data:
+        order = api_up('/order/{}'.format(orderid))
+        item_status = api_up('/item-status/{}'.format(orderid))
+        item_status = item_status.get('orderid', {}).get(orderid, {})
+        count_ordered = len(item_status)
+        count_complete = len([s for s in item_status
+                              if s['status'] == 'complete'])
+        count_error = len([s for s in item_status
+                           if s['status'] == 'error'])
+        order.update(products_ordered=count_ordered)
+        order.update(products_complete=count_complete)
+        order.update(products_error=count_error)
+        order_info.append(order)
+
+    return render_template('list_orders.html', order_list=order_info, for_user=for_user)
 
 
 @espaweb.route('/ordering/status/<email>/rss/')
 def list_orders_feed(email):
-    # bulk downloader and the browser hit this url, need to handle
+    # browser hit this url, need to handle # TODO: Is this still used?
     # user auth for both use cases
-    url = "/list-orders-feed/{}".format(email)
-    if 'Authorization' in request.headers:
+    if 'Authorization' in request.headers:  # FIXME: pretty sure this is gone
         # coming in from bulk downloader
         logger.info("Apparent bulk download attempt, headers: %s" % request.headers)
         auth_header_dec = base64.b64decode(request.headers['Authorization'])
-        response = api_up(url, uauth=tuple(auth_header_dec.split(":")))
+        uauth = tuple(auth_header_dec.split(":"))
     else:
         if 'logged_in' not in session or session['logged_in'] is not True:
             return redirect(url_for('login', next=request.url))
         else:
-            response = api_up(url)
+            uauth = (session['user'].username, session['user'].wurd)
+    orders = api_up("/list-orders/{}".format(email), uauth=uauth)
 
-    if "msg" in response:
-        logger.info("Problem retrieving rss for email: %s \n message: %s\n" % (email, response['msg']))
-        status_code = 404
-        if "Invalid username/password" in response['msg']:
-            status_code = 403
-        return jsonify(response), status_code
-    else:
-        rss = PyRSS2Gen.RSS2(
-            title='ESPA Status Feed',
-            link='http://espa.cr.usgs.gov/ordering/status/{0}/rss/'.format(email),
-            description='ESPA scene status for:{0}'.format(email),
-            language='en-us',
-            lastBuildDate=datetime.datetime.now(),
-            items=[]
-        )
+    order_items = dict()
+    for orderid in orders:
+        response = api_up('/item-status/{}'.format(orderid), uauth=uauth)
+        order_info = api_up('/order/{}'.format(orderid), uauth=uauth)
+        order_items[orderid] = dict(scenes=response['orderid'][orderid],
+                                    orderdate=order_info['order_date'])
 
-        for item in response:
-            for scene in response[item]['scenes']:
-                description = 'scene_status:{0},orderid:{1},orderdate:{2}'.format(scene['status'], item, response[item]['orderdate'])
-                new_rss_item = PyRSS2Gen.RSSItem(
-                    title=scene['name'],
-                    link=scene['url'],
-                    description=description,
-                    guid=PyRSS2Gen.Guid(scene['url'])
-                )
 
-                rss.items.append(new_rss_item)
+    rss = PyRSS2Gen.RSS2(
+        title='ESPA Status Feed',
+        link='http://espa.cr.usgs.gov/ordering/status/{0}/rss/'.format(email),
+        description='ESPA scene status for:{0}'.format(email),
+        language='en-us',
+        lastBuildDate=datetime.datetime.now(),
+        items=[]
+    )
 
-        return rss.to_xml(encoding='utf-8')
+    for orderid, order in order_items.items():
+        for scene in order['scenes']:
+            if scene['status'] != 'complete':
+                continue
+            description = ('scene_status:{0},orderid:{1},orderdate:{2}'
+                           .format(scene['status'], orderid, order['orderdate']))
+            new_rss_item = PyRSS2Gen.RSSItem(
+                title=scene['name'],
+                link=scene['product_dload_url'],
+                description=description,
+                guid=PyRSS2Gen.Guid(scene['product_dload_url'])
+            )
+
+            rss.items.append(new_rss_item)
+
+    return rss.to_xml(encoding='utf-8')
 
 
 @espaweb.route('/ordering/order-status/<orderid>/')
