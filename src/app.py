@@ -332,6 +332,7 @@ def list_orders(email=None):
     if isinstance(res_data, list):
         res_data = sorted(res_data, reverse=True)
 
+    backlog = 0
     order_info = []
     for orderid in res_data:
         order = api_up('/order/{}'.format(orderid))
@@ -345,9 +346,11 @@ def list_orders(email=None):
         order.update(products_ordered=count_ordered)
         order.update(products_complete=count_complete)
         order.update(products_error=count_error)
-        order_info.append(order)
+        order_info.append(Order(**order))
+        backlog += (count_ordered - count_complete)
 
-    return render_template('list_orders.html', order_list=order_info, for_user=for_user)
+    return render_template('list_orders.html', order_list=order_info,
+                           for_user=for_user, backlog=backlog)
 
 
 @espaweb.route('/ordering/status/<email>/rss/')
