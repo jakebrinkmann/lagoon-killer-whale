@@ -131,7 +131,7 @@ q
         </div>
     {% else %}
         <div style="margin:0 auto;text-align:center;">
-            <h4 style='margin-top:40px;'>No orders found for {{ session['user'].email }}</h4>
+            <h4 style='margin-top:40px;'>No orders found for {{ for_user }}</h4>
         </div>
     {% endif %}
 {% endblock %}
