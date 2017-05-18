@@ -219,6 +219,20 @@ def submit_order():
                                                                                        e.message))
 
         return redirect(url_for('new_order'))
+    finally:
+        # These are errors, and the API will not recognize them on validation
+        errors = []
+        error_lookup = {'not_implemented': "Unknown IDs",
+                        'date_restricted': "Missing Auxillary Data",
+                        'ordering_restricted': "Pre-Collection unavailable"}
+        for key in error_lookup:
+            if key in scene_dict_all_prods:
+                remove = scene_dict_all_prods.get(key)
+                errors.append('{}. Invalid IDs must be removed: {}'
+                              .format(error_lookup[key]))
+        if errors:
+            flash(format_messages(errors), category='error')
+            return redirect(url_for('new_order'))
 
     # create a list of requested products
     landsat_list = [key for key in data if key in conversions['products']]
@@ -266,30 +280,18 @@ def submit_order():
     if 'stats' in landsat_list:
         modis_list.append('stats')
 
-    key_with_no_sensor = 'not_implemented'
-    not_implemented_ids = scene_dict_all_prods.pop(key_with_no_sensor, None)
-    returns_all_restricted = 'date_restricted'
-    date_restricted_prods = scene_dict_all_prods.pop(returns_all_restricted, dict())
-
     # Key here is usually the "sensor" name (e.g. "tm4") but can be other stuff
     for key in scene_dict_all_prods:
         if key.startswith('mod') or key.startswith('myd'):
             scene_dict_all_prods[key]['products'] = modis_list
         else:
-            if key in date_restricted_prods:  # Assume only landsat is date restricted
-                scene_dict_all_prods[key]['inputs'] += date_restricted_prods.pop(key)
-
             scene_dict_all_prods[key]['products'] = landsat_list
-
-            if not_implemented_ids:  # Assume this was intended as landsat
-                scene_dict_all_prods[key]['inputs'] += not_implemented_ids
-                not_implemented_ids = None
 
     # combine order options with product lists
     out_dict.update(scene_dict_all_prods)
 
     # keys to clean up
-    cleankeys = ['not_implemented', 'target_projection', 'date_restricted']
+    cleankeys = ['target_projection']
     for item in cleankeys:
         if item in out_dict:
             if item == 'target_projection' and out_dict[item] == 'lonlat':
