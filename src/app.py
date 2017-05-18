@@ -421,6 +421,19 @@ def view_order(orderid):
                            product_counts=product_counts, product_opts=joptions)
 
 
+@espaweb.route('/ordering/cancel_order/<orderid>', methods=['PUT'])
+@login_required
+def cancel_order(orderid):
+    payload = {'orderid': orderid, 'status': 'cancelled'}
+    response = api_up('/order', json=payload, verb='put')
+    if response.get('orderid') == orderid:
+        flash("Order cancelled successfully!")
+        logger.info("order cancellation for user {0} ({1})\n\n orderid: {2}"
+                    .format(session['user'].username, request.remote_addr,
+                            response))
+    return ''
+
+
 @espaweb.route('/logfile/<orderid>/<sceneid>')
 @staff_only
 @login_required
