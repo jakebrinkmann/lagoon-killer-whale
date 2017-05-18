@@ -529,9 +529,9 @@ def statusmsg():
         api_args = {'system_message_title': request.form['system_message_title'],
                     'system_message_body': request.form['system_message_body'],
                     'display_system_message': dsm}
-        response = api_up('/system-status-update', api_args)
+        response = api_up('/system-status-update', api_args, verb='post')
 
-        if response.status_code == 200:
+        if response == 'success':
             update_status_details(force=True)
             flash('update successful')
             rurl = 'index'
@@ -549,7 +549,7 @@ def statusmsg():
 @staff_only
 @login_required
 def console_config():
-    config_data = api_get("/system/config")
+    config_data = api_up("/system/config")
     sorted_keys = sorted(config_data)
     return render_template('config.html', config_data=config_data, sorted_keys=sorted_keys)
 
