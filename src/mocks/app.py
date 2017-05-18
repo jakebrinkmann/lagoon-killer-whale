@@ -10,21 +10,21 @@ class JSpoof(object):
         return self.value
 
 
-def api_get_user(url, response_type='json', json=None, uauth=None):
+def api_up_user(url, response_type='json', json=None, uauth=None):
     return {'username': 'bob'}
 
 
-def api_get_user_fail(url, response_type='json', json=None, uauth=None):
-    return {'msg': 'user not found'}
+def api_up_user_fail(url, response_type='json', json=None, uauth=None):
+    return {'messages': {'errors': ['Invalid username/password']}}
 
 
-def api_get_list_orders(*args, **kwargs):
+def api_up_list_orders(*args, **kwargs):
     return [{'orderid': 'abc', 'products_ordered': 1,
              'products_complete': 1, 'order_status': 'complete',
              'order_note': 'comments'}]
 
 
-def api_get_order_status(*args):
+def api_up_order_status(*args):
     if 'order' in args[0]:
         orderid = args[0].split("/").pop()
         product_opts = {"etm7": {"inputs": ["LE70270292003144EDC00"],
@@ -52,7 +52,7 @@ def api_post_order(*args):
     return ap
 
 
-def api_get_system_config(*args):
+def api_up_system_config(*args):
     return {'retry.lta_soap_errors.timeout': '3600',
             'retry.retry_missing_l1.retries': '8',
             'url.dev.modis.datapool': 'e4ftl01.cr.usgs.gov'}
@@ -66,7 +66,7 @@ def update_status_details_true():
     return True
 
 
-def api_get_reports(*args):
+def api_up_reports(*args):
     return {u'backlog_input_product_types':
                 {u'query': u'',
                  u'display_name': u'Backlog - Input Types',
@@ -86,14 +86,14 @@ def api_get_reports(*args):
             }
 
 
-def api_get_stats_all(*args):
+def api_up_stats_all(*args):
     return {'stat_open_orders': 1,
             'stat_products_complete_24_hrs': 9,
             'stat_waiting_users': 99,
             'stat_backlog_depth': 100}
 
 
-def api_get_show_report(*args):
+def api_up_show_report(*args):
     return "[OrderedDict([('Total Orders', 11L), " \
            "('Complete', 1L), ('Open', 10L), ('Email', 'cgaustin@usgs.gov'), " \
            "('First Name', 'clay'), ('Last Name', 'austin')]), " \
@@ -107,7 +107,7 @@ def api_get_show_report(*args):
            "('Email', 'rdilley@usgs.gov'), ('First Name', 'Ron'), ('Last Name', 'Dilley')])]"
 
 
-def api_get_rss_feed(*args):
+def api_up_rss_feed(*args):
     return {u'cgaustin@usgs.gov-04112016-120349':
                 {u'orderdate': u'2016-04-11 12:03:49.948294',
                  u'scenes':
