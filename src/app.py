@@ -40,17 +40,18 @@ def api_up(url, json=None, verb='get', uauth=None):
     auth_tup = uauth if uauth else (session['user'].username, session['user'].wurd)
     retdata = dict()
     try:
-        response = getattr(requests, verb)(api_base_url + url, json=json, auth=auth_tup, headers=headers)
+        response = getattr(requests, verb)(api_base_url + url, json=json,
+                                           auth=auth_tup, headers=headers)
         retdata = response.json()
     except Exception as e:
         logger.error('+! Unable to contact API !+')
         flash('Critical error contacting ESPA-API', 'error')
-
-    messages = retdata.pop('messages', dict())
-    if 'errors' in messages:
-        flash(format_messages(messages.get('errors')), 'error')
-    if 'warnings' in messages:
-        flash(format_messages(messages.get('warnings')), 'warning')
+    if isinstance(retdata, dict):
+        messages = retdata.pop('messages', dict())
+        if 'errors' in messages:
+            flash(format_messages(messages.get('errors')), 'error')
+        if 'warnings' in messages:
+            flash(format_messages(messages.get('warnings')), 'warning')
     return retdata
 
 
