@@ -74,7 +74,10 @@ def format_messages(inmessages):
                     outlist.append("&#8594;"+item+"<br/>")
         return "".join(outlist)
     elif isinstance(inmessages, list):
-        return "<br/>".join(inmessages)
+        if all((isinstance(m, basestring) for m in inmessages)):
+            return "<br/>".join(inmessages)
+        else:
+            return "<br/>".join(format_messages(m) for m in inmessages)
     else:
         return inmessages
 
