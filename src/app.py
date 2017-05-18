@@ -212,7 +212,7 @@ def submit_order():
 
     try:
         # convert our list of sceneids into format required for new orders
-        scene_dict_all_prods = api_up("/available-products", {'inputs': _ipl}).json()
+        scene_dict_all_prods = api_up("/available-products", json={'inputs': _ipl})
     except UnicodeDecodeError as e:
         flash('Decoding Error with input file. Please check input file encoding', 'error')
         logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
