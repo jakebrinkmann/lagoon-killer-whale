@@ -366,7 +366,8 @@ def list_orders_feed(email):
             return redirect(url_for('login', next=request.url))
         else:
             uauth = (session['user'].username, session['user'].wurd)
-    orders = api_up("/list-orders/{}".format(email), uauth=uauth)
+    orders = api_up("/list-orders/{}".format(email), uauth=uauth,
+                    json={'status': 'complete'})
 
     order_items = dict()
     for orderid in orders:
