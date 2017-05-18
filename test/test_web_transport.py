@@ -22,7 +22,7 @@ class ApplicationTestCase(unittest.TestCase):
         user_parms = {'email': 'foo@gmail.com',
                       'username': 'foo',
                       'wurd': 'bar',
-                      'roles': ['staff']}
+                      'roles': ['active']}
 
         self.user = User(**user_parms)
 
@@ -41,7 +41,7 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
         self.assertTrue('Ordering Interface </title>' in result.data)
 
-    @patch('src.app.api_get', mock_app.api_get_user)
+    @patch('src.app.api_up', mock_app.api_up_user)
     @patch('src.app.update_status_details', mock_app.update_status_details_true)
     def test_login_post_success(self):
         data_dict = {'username': self.user.username, 'password': self.user.wurd}
@@ -50,7 +50,7 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertTrue(">/index/</a>" in result.data)
         self.assertEqual(result.status_code, 302)
 
-    @patch('src.app.api_get', mock_app.api_get_user_fail)
+    @patch('src.app.api_up', mock_app.api_up_user_fail)
     def test_login_post_fail(self):
         data_dict = {'username': self.user.username, 'password': self.user.wurd}
         result = self.client.post('/login', data=data_dict)
@@ -82,52 +82,25 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertTrue("/ordering/order-status/bob@google.com-03072016-085432/" in result.data)
         self.assertEqual(result.status_code, 302)
 
-    @patch('src.app.api_get', mock_app.api_get_list_orders)
+    @patch('src.app.api_up', mock_app.api_up_list_orders)
     def test_get_list_orders(self):
         result = self.client.get("/ordering/status/")
         self.assertTrue("<title>ESPA -  ESPA Reports </title>" in result.data)
         self.assertEqual(result.status_code, 200)
 
-    @patch('src.app.api_get', mock_app.api_get_order_status)
+    @patch('src.app.api_up', mock_app.api_up_order_status)
     def test_get_view_order(self):
         result = self.client.get("/ordering/order-status/bob@google.com-12345-9876/")
         self.assertTrue("Details for: bob@google.com-12345-9876" in result.data)
         self.assertEqual(result.status_code, 200)
 
-    @patch('src.app.api_get', mock_app.api_get_reports)
+    @patch('src.app.api_up', mock_app.api_up_reports)
     def test_get_list_reports(self):
         result = self.client.get("/reports/")
         self.assertTrue("<title>ESPA -  ESPA Reports" in result.data)
         self.assertEqual(result.status_code, 200)
 
-    @patch('src.app.api_get', mock_app.api_get_show_report)
-    def test_get_show_report(self):
-        result = self.client.get("/reports/orders_counts/")
-        self.assertTrue("<h4>orders_counts Report</h4>" in result.data)
-        self.assertEqual(result.status_code, 200)
-
-    @patch('src.app.api_get', mock_app.api_get_stats_all)
-    def test_get_console(self):
-        result = self.client.get("/console")
-        self.assertTrue("<h4>ESPA Console</h4>" in result.data)
-        self.assertEqual(result.status_code, 200)
-
-    @patch('src.app.update_status_details', mock_app.update_status_details_true)
-    @patch('src.app.api_up', mock_app.api_post_status)
-    def test_post_statusmsg(self):
-        data = {'display_system_message': 'on', 'system_message_title': 'foo',
-                'system_message_body': 'bar'}
-        result = self.client.post("/console/statusmsg", data=data)
-        self.assertTrue("<p>You should be redirected automatically to target URL: "
-                        "<a href=\"/index/\">/index/</a>" in result.data)
-        self.assertEqual(result.status_code, 302)
-
-    @patch('src.app.api_get', mock_app.api_get_system_config)
-    def test_get_console_config(self):
-        result = self.client.get("/console/config")
-        self.assertEqual(result.status_code, 200)
-
-    @patch('src.app.api_get', mock_app.api_get_rss_feed)
+    @patch('src.app.api_up', mock_app.api_up_rss_feed)
     def test_get_rss_feed(self):
         result = self.client.get("/ordering/status/bob@gmail.com/rss/")
         self.assertEquals(result.status_code, 200)
