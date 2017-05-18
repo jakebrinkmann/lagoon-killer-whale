@@ -561,19 +561,6 @@ def admin_update(action, orderid):
     return api_up('/{}/{}'.format(action, orderid), {}, 'put')
 
 
-@espaweb.route('/ordering/cancel_order/<orderid>', methods=['PUT'])
-@login_required
-def cancel_order(orderid):
-    payload = {'orderid': orderid, 'status': 'cancelled'}
-    response = api_up('/order', json=payload, verb='put')
-    if response.get('orderid') == orderid:
-        flash("Order cancelled successfully!")
-        logger.info("order cancellation for user {0} ({1})\n\n orderid: {2}"
-                    .format(session['user'].username, request.remote_addr,
-                            response))
-    return ''
-
-
 @espaweb.after_request
 def apply_xframe_options(response):
     response.headers['X-Frame-Options'] = 'DENY'
