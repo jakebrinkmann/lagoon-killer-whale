@@ -490,26 +490,32 @@ def show_report(name):
 @espaweb.route('/admin_console', methods=['GET'])
 @staff_only
 @login_required
-def console():
-    data = api_get("/statistics/all")
+def admin_console():
+    data = api_up("/statistics/all")
     stats = {'Open Orders': data['stat_open_orders'],
              'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
              'Waiting Users': data['stat_waiting_users'],
              'Backlog Depth': data['stat_backlog_depth'],
              'Scenes \'onorder\'': data['stat_onorder_depth']}
-    L17_aux = api_get("/aux_report/L17/")
-    L8_aux = api_get("/aux_report/L8/")
+    L17_aux = api_up("/aux_report/L17/")
+    L8_aux = api_up("/aux_report/L8/")
 
     # Data gaps appearing in 2016, only one data source for L8
     now = datetime.datetime.now()
     years = [now.year] if now.year == 2016 else range(2016, now.year+1)
 
-    gap_dict = {'L8': L8_aux, 'L17': {'toms': {}, 'ncep': {}}}
-    for key in ['toms', 'ncep']:
-        for yr in years:
-            yr = str(yr)
-            if yr in L17_aux[key]:
-                gap_dict['L17'][key][yr] = L17_aux[key][yr]
+    gap_dict = {'L8': {'lads': {}}, 'L17': {'toms': {}, 'ncep': {}}}
+    for key in ['toms', 'ncep', 'lads']:
+        if key == 'lads':
+            for yr in years:
+                yr = str(yr)
+                if yr in L8_aux.get(key, ''):
+                    gap_dict['L8'][key][yr] = L8_aux[key][yr]
+        else:
+            for yr in years:
+                yr = str(yr)
+                if yr in L17_aux.get(key, ''):
+                    gap_dict['L17'][key][yr] = L17_aux[key][yr]
 
     return render_template('console.html', stats=stats, gaps=gap_dict)
 
