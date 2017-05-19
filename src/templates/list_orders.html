@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %} ESPA Reports {% endblock %}
+{% block title %} Orders for {{ for_user }} {% endblock %}
 {% block header %} All Reports {% endblock %}
 
 {% block usgstitle %}
-  <p>LSDS Science Research and Development (LSRD)</p>
+  <p>Orders: {{ for_user }}</p>
 {% endblock %}
 
 {% block stylesheets %}
