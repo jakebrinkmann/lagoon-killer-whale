@@ -159,6 +159,15 @@ th, td {
     font-size: 130%;
 }
 
+.confirm_cancellation_button {
+    padding: 5px 5px 5px 5px !important;
+    font-weight: bold !important;
+    color: #ac1417 !important;
+}
+.abort_cancellation_button {
+    padding: 5px 5px 5px 5px !important;
+}
+
 #json_placeholder {
     border: 1px;
     border-style: solid;

@@ -228,19 +228,30 @@
                         height: "auto",
                         width: "auto",
                         modal: true,
+                        open: function() {
+                            $(this).siblings('.ui-dialog-buttonpane').find("button:contains('back')").focus();
+                        },
                         buttons: {
-                            "Delete all items!": function() {
-                                $( this ).dialog( "close" );
-                                $.ajax({method: 'PUT',
-                                            url: "/ordering/cancel_order/{{ order['orderid'] }}"
-                                        }).done(function() {
-                                            location.reload();
-                                        }).fail(function() {
-                                            alert('update appears to have failed. contact espa admin.');
-                                });
+                            "confirm": {
+                                text: 'Cancel all items!',
+                                class: 'ui-button ui-corner-all ui-widget confirm_cancellation_button',
+                                click: function() {
+                                    $( this ).dialog( "close" );
+                                    $.ajax({method: 'PUT',
+                                                url: "/ordering/cancel_order/{{ order['orderid'] }}"
+                                            }).done(function() {
+                                                location.reload();
+                                            }).fail(function() {
+                                                alert('update appears to have failed. contact espa admin.');
+                                    });
+                                }
                             },
-                            "Go back": function() {
-                                $( this ).dialog( "close" );
+                            "back": {
+                                text: "Go back",
+                                class: 'ui-button ui-corner-all ui-widget abort_cancellation_button',
+                                click: function() {
+                                    $( this ).dialog( "close" );
+                                }
                             }
                         }
                     });
