@@ -156,6 +156,7 @@ th, td {
 
 .cancellation {
     color: #ac1417 !important;
+    font-size: 130%;
 }
 
 #json_placeholder {

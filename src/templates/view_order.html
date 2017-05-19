@@ -118,8 +118,8 @@
                                 {% if order['status'] == 'ordered' %}
                                 <a class="ui-button ui-widget ui-corner-all cancellation" style="padding:3px;float: right;" id="cancel_order" href="#"><b>CANCEL</b></a>
                                 <div class="cancellation" id="cancellation_warning" style="display:none;">
-                                    All scenes ordered for processing will be immediately cancelled. <br>
-                                    Any output data will be deleted from disk. This action cannot be undone.
+                                    All scenes ordered for processing will attempt immediate graceful cancellation. <br>
+                                    Any output data will be deleted from disk. <u>This action cannot be undone.</u>
                                 </div>
                                 {% endif %}
                                 {% endif %}
@@ -223,7 +223,7 @@
                     event.preventDefault();
                     var orderid = "{{ order['orderid'] }}";
                     $('#cancellation_warning').dialog({
-                        title: 'WARNING! Emergency Order Cancellation!',
+                        title: 'WARNING! Permanent Order Cancellation!',
                         resizable: false,
                         height: "auto",
                         width: "auto",
