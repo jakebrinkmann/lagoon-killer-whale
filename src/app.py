@@ -339,7 +339,7 @@ def list_orders(email=None):
     for orderid in res_data:
         order = api_up('/order/{}'.format(orderid))
         item_status = api_up('/item-status/{}'.format(orderid))
-        item_status = item_status.get('orderid', {}).get(orderid, {})
+        item_status = item_status.get(orderid, {})
         item_status = map(lambda x: Scene(**x), item_status)
         count_ordered = len(item_status)
         count_complete = len([s for s in item_status if s.status == 'complete'])
@@ -413,7 +413,7 @@ def list_orders_feed(email):
 def view_order(orderid):
     order_dict = Order(**api_up("/order/{}".format(orderid)))
     item_status = api_up('/item-status/{}'.format(orderid))
-    item_status = item_status.get('orderid', {}).get(orderid, {})
+    item_status = item_status.get(orderid, {})
     scenes = map(lambda x: Scene(**x), item_status)
 
     statuses = {'complete': ['complete', 'unavailable'],
