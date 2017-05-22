@@ -334,6 +334,8 @@ def list_orders(email=None):
     if isinstance(res_data, list):
         res_data = sorted(res_data, reverse=True)
 
+    complete_statuses = ['complete', 'unavailable', 'cancelled']
+
     backlog = 0
     order_info = []
     for orderid in res_data:
@@ -348,7 +350,8 @@ def list_orders(email=None):
         order.update(products_complete=count_complete)
         order.update(products_error=count_error)
         order_info.append(Order(**order))
-        backlog += (count_ordered - count_complete)
+        backlog += (count_ordered - len([s for s in item_status
+                                         if s.status in complete_statuses]))
 
     return render_template('list_orders.html', order_list=order_info,
                            for_user=for_user, backlog=backlog)
