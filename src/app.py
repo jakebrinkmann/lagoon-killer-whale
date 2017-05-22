@@ -129,8 +129,8 @@ def login():
         if 'user' not in session:
             session['user'] = None
 
-    explorer = espaweb.config.get('earth-explorer', 'https://earthexplorer.usgs.gov')
-    reg_host = espaweb.config.get('eros-registration-system', 'https://ers.cr.usgs.gov')
+    explorer = espaweb.config.get('earth_explorer', 'https://earthexplorer.usgs.gov')
+    reg_host = espaweb.config.get('eros_registration_system', 'https://ers.cr.usgs.gov')
 
     return render_template('login.html', next=destination,
                            earthexplorer=explorer,
