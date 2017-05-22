@@ -1,26 +1,32 @@
 import collections
 
 
-class User(object):
+class APIObject(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.iteritems():
             self.__setattr__(k, v)
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class User(APIObject):
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
 
     @property
     def is_staff(self):
         return 'staff' in self.roles
 
 
-class Order(object):
+class Order(APIObject):
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
-            self.__setattr__(k, v)
+        super(Order, self).__init__(**kwargs)
 
 
-class Scene(object):
+class Scene(APIObject):
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
-            self.__setattr__(k, v)
+        super(Scene, self).__init__(**kwargs)
 
 
 def deep_update(source, overrides):
