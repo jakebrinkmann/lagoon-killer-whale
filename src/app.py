@@ -467,7 +467,7 @@ def cancel_order(orderid):
 @login_required
 def cat_logfile(orderid, sceneid):
     scenes_resp = api_up("/item-status/{}/{}".format(orderid, sceneid))
-    scene = scenes_resp['orderid'][orderid].pop()
+    scene = scenes_resp[orderid].pop()
     return '<br>'.join(scene['log_file_contents'].split('\n'))
 
 
