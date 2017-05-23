@@ -123,12 +123,14 @@
                                 </div>
                                 {% endif %}
                                 {% endif %}
-                                {% if session['user'].is_staff and product_counts['error'] > 0 %}
-                                    <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_submitted" href="#">error to submitted</a>
-                                    <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_unavailable" href="#">error to unavailable</a>
-                                {% endif %}
                                 {% if session['user'].is_staff %} <!--temporary feature testing-->
                                 <a class="ui-button ui-widget ui-corner-all show_json" style="padding:3px" id="show_order_json" href="#">Show JSON</a>
+                                {% endif %}
+                                {% if session['user'].is_staff and product_counts['error'] > 0 %}
+                                    <br /><br />
+                                    <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_submitted" href="#">error to submitted</a>
+                                    <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_unavailable" href="#">error to unavailable</a>
+                                    <br />
                                 {% endif %}
                             </td>
                         </tr>
