@@ -380,7 +380,7 @@ def list_orders_feed(email):
     order_items = dict()
     for orderid in orders:
         item_status = api_up('/item-status/{}'.format(orderid), uauth=uauth)
-        item_status = item_status.get('orderid', {}).get(orderid, {})
+        item_status = item_status.get(orderid, {})
         item_status = map(lambda x: Scene(**x), item_status)
         order_info = api_up('/order/{}'.format(orderid), uauth=uauth)
         order_items[orderid] = dict(scenes=item_status,
