@@ -140,6 +140,9 @@ def login():
 
 @espaweb.route('/logout')
 def logout():
+    if 'user' not in session:
+        logger.info('No user session found.')
+        return redirect(url_for('login'))
     logger.info("Logging out user %s \n" % session['user'].username)
     cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
     cache.delete(cache_key)
