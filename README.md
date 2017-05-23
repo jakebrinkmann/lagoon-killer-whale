@@ -1,37 +1,31 @@
 ## espa-web
 This project serves up the espa website and provides all the job ordering &
-scheduling functions.  This code is provided as reference only; internal EROS services are not externally available and their source code are not publicly available.
+scheduling functions, by being a Graphical User Interface (GUI) for the [ESPA-API](https://github.com/USGS-EROS/espa-api). 
+This code is provided as reference only; internal EROS services are not externally available and their source code are not publicly available.
+
+Access the site at [`https://espa.cr.usgs.gov/login`](https://espa.cr.usgs.gov/login).
 
 ## Installation
 * Clone this project: `git clone https://github.com/USGS-EROS/espa-web.git espa-web`
-* Satisfy system dependencies listed in system-requirements.txt
-* Create a virtualenv: `cd espa-web; virtualenv .`
-* Install dependencies: `. bin/activate; pip install -r requirements.txt`
-* Set `ESPA_DEBUG` env var to either True or False
+* Satisfy system dependencies listed in [requirements.txt](/setup/requirements.txt)
+  * Create a virtualenv: `cd espa-web; virtualenv .`
+  * Install dependencies: `. bin/activate; pip install -r requirements.txt`
 * Set `ESPA_LOG_DIR` env var.  Defaults to `/var/log/uwsgi/`
-* Set `ESPA_CONFIG_FILE` env var to point to db values (defaults to `~/.cfgnfo`)
-* Apply database migrations: `python ./manage.py migrate`
-* Dump the system configuration: `python ./manage.py shell; from ordering import core; core.dump_config('/dir/file.txt')`
-* Edit `file.txt` and then: `python ./manage.py shell; from ordering import core; core.load_config('/dir/file.txt')`
+* Set `ESPAWEB_SETTINGS` env var to point to db values (defaults to `~/.cfgnfo`)
 
-##### Required db & app config in ESPA_CONFIG_FILE
+##### Required API config in ESPAWEB_SETTINGS
 ```
-[config]
-dbhost=your db host
-dbport=your port (3306, 5432, etc)
-db=your db name (espa)
-dbuser=your db user
-dbpass=your db password
-key=your secret key (for Django)
+DEBUG = False                                                                      
+SECRET_KEY='superS3cre+'                      
+APIHOST = 'espa.cr.usgs.gov'                                                    
+APIVERSION = 'v1'  
 ```
 
 ## Testing
-Unit tests are included for the application to ensure system integrity.
-The tests may be run without fear of altering the operational database: Django 
-automatically creates a test database when tests are run and destroys it when the 
-tests have completed or failed.  See https://docs.djangoproject.com/en/1.7/topics/testing/overview
+Unit tests are included for the application to ensure system integrity. 
+To run them: `cd espa-web; . bin/activate; nose2 --verbose --fail-fast`
 
-To run them: `cd espa-web; . bin/activate; cd web; python ./manage.py test ordering.tests`
+**Note**: The tests currently require an active Memcache session (localhost).
 
 ## Running
 If uWSGI is installed to the system :`cd espa-web; uwsgi -i uwsgi.ini`
