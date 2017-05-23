@@ -239,6 +239,7 @@
                                 class: 'ui-button ui-corner-all ui-widget confirm_cancellation_button',
                                 click: function() {
                                     $( this ).dialog( "close" );
+                                    $('#cancel_order').hide();
                                     $.ajax({method: 'PUT',
                                                 url: "/ordering/cancel_order/{{ order['orderid'] }}"
                                             }).done(function() {
