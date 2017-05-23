@@ -147,7 +147,7 @@ def logout():
     cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
     cache.delete(cache_key)
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
-                 'stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
+                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
         session.pop(item, None)
     return redirect(url_for('login'))
 
@@ -504,8 +504,7 @@ def admin_console():
     stats = {'Open Orders': data['stat_open_orders'],
              'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
              'Waiting Users': data['stat_waiting_users'],
-             'Backlog Depth': data['stat_backlog_depth'],
-             'Scenes \'onorder\'': data['stat_onorder_depth']}
+             'Backlog Depth': data['stat_backlog_depth']}
     L17_aux = api_up("/aux_report/L17/")
     L8_aux = api_up("/aux_report/L8/")
 
