@@ -19,6 +19,9 @@ def api_up_user_fail(url, response_type='json', json=None, uauth=None):
 
 
 def api_up_list_orders(*args, **kwargs):
+    url = args[0]
+    if url == '/list-orders':
+        return []
     return [{'orderid': 'abc', 'products_ordered': 1,
              'products_complete': 1, 'order_status': 'complete',
              'order_note': 'comments'}]

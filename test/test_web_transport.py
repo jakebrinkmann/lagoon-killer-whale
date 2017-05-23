@@ -85,7 +85,8 @@ class ApplicationTestCase(unittest.TestCase):
     @patch('src.app.api_up', mock_app.api_up_list_orders)
     def test_get_list_orders(self):
         result = self.client.get("/ordering/status/")
-        self.assertTrue("<title>ESPA -  ESPA Reports </title>" in result.data)
+        title = "<title>ESPA -  Orders for {} </title>".format(self.user.email)
+        self.assertTrue(title in result.data)
         self.assertEqual(result.status_code, 200)
 
     @patch('src.app.api_up', mock_app.api_up_order_status)
