@@ -41,18 +41,18 @@ class ApplicationTestCase(unittest.TestCase):
     def test_login_get(self):
         result = self.app.get('/login')
         self.assertEqual(result.status_code, 200)
-        self.assertTrue('Ordering Interface </title>' in result.data)
+        self.assertIn('Ordering Interface </title>', result.data)
 
     @patch('src.app.api_up', mock_app.api_up_show_report)
     def test_get_show_report(self):
         result = self.client.get("/reports/orders_counts/")
-        self.assertTrue("<h4>orders_counts Report</h4>" in result.data)
+        self.assertIn("<h4>orders_counts Report</h4>", result.data)
         self.assertEqual(result.status_code, 200)
 
     @patch('src.app.api_up', mock_app.api_up_stats_all)
     def test_get_console(self):
         result = self.client.get("/admin_console")
-        self.assertTrue("<h4>ESPA Console</h4>" in result.data)
+        self.assertIn("<h4>ESPA Console</h4>", result.data)
         self.assertEqual(result.status_code, 200)
 
     @patch('src.app.api_up', mock_app.api_up_system_config)
@@ -63,9 +63,9 @@ class ApplicationTestCase(unittest.TestCase):
     @patch('src.app.update_status_details', mock_app.update_status_details_true)
     @patch('src.app.api_up', mock_app.api_post_status)
     def test_post_statusmsg(self):
-        data = {'display_system_message': 'on', 'system_message_title': 'foo',
+        data = {'display_system_message': 'true', 'system_message_title': 'foo',
                 'system_message_body': 'bar'}
         result = self.client.post("/admin_console/statusmsg", data=data)
-        self.assertTrue("<p>You should be redirected automatically to target URL: "
-                        "<a href=\"/index/\">/index/</a>" in result.data)
+        self.assertIn('Location', result.headers)
+        self.assertIn('/admin_console/statusmsg', result.headers['Location'])
         self.assertEqual(result.status_code, 302)
