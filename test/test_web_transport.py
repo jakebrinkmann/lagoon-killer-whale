@@ -39,16 +39,7 @@ class ApplicationTestCase(unittest.TestCase):
     def test_login_get(self):
         result = self.app.get('/login')
         self.assertEqual(result.status_code, 200)
-        self.assertTrue('Ordering Interface </title>' in result.data)
-
-    @patch('src.app.api_up', mock_app.api_up_user)
-    @patch('src.app.update_status_details', mock_app.update_status_details_true)
-    def test_login_post_success(self):
-        data_dict = {'username': self.user.username, 'password': self.user.wurd}
-        result = self.app.post('/login', data=data_dict)
-        # successful login redirects to /index
-        self.assertTrue(">/index/</a>" in result.data)
-        self.assertEqual(result.status_code, 302)
+        self.assertIn('Ordering Interface </title>', result.data)
 
     @patch('src.app.api_up', mock_app.api_up_user_fail)
     def test_login_post_fail(self):
@@ -56,20 +47,30 @@ class ApplicationTestCase(unittest.TestCase):
         result = self.client.post('/login', data=data_dict)
         self.assertEqual(result.status_code, 401)
 
+    @patch('src.app.api_up', mock_app.api_up_user)
+    @patch('src.app.update_status_details', mock_app.update_status_details_true)
     def test_get_logout(self):
         result = self.client.get('/logout')
         # results in a redirect to the login page
-        self.assertTrue(">/login</a>" in result.data)
+        self.assertIn(">/login</a>", result.data)
         self.assertEqual(result.status_code, 302)
+        self.assertIn('login', result.headers['Location'])
+        data_dict = {'username': self.user.username, 'password': self.user.wurd}
+        result = self.client.post('/login', data=data_dict)
+        # successful login redirects to /index
+        self.assertIn(">/index/</a>", result.data)
+        self.assertEqual(result.status_code, 302)
+        self.assertIn('Location', result.headers)
+        self.assertIn('index', result.headers['Location'])
 
     def test_get_index(self):
         result = self.client.get('/index/')
-        self.assertTrue("<title>ESPA - LSRD</title>" in result.data)
+        self.assertIn("<title>ESPA - LSRD</title>", result.data)
         self.assertEqual(result.status_code, 200)
 
     def test_get_new_order(self):
         result = self.client.get("/ordering/new/")
-        self.assertTrue("<p>New Bulk Order</p>" in result.data)
+        self.assertIn("<p>New Bulk Order</p>", result.data)
         self.assertEqual(result.status_code, 200)
 
     @patch('src.app.api_up', mock_app.api_post_order)
@@ -79,27 +80,27 @@ class ApplicationTestCase(unittest.TestCase):
         result = self.client.post("/ordering/submit/",
                                   content_type='multipart/form-data',
                                   data=data)
-        self.assertTrue("/ordering/order-status/bob@google.com-03072016-085432/" in result.data)
+        self.assertIn("/ordering/order-status/bob@google.com-03072016-085432/", result.data)
         self.assertEqual(result.status_code, 302)
 
     @patch('src.app.api_up', mock_app.api_up_list_orders)
     def test_get_list_orders(self):
         result = self.client.get("/ordering/status/")
         title = "<title>ESPA -  Orders for {} </title>".format(self.user.email)
-        self.assertTrue(title in result.data)
+        self.assertIn(title, result.data)
         self.assertEqual(result.status_code, 200)
 
     @patch('src.app.api_up', mock_app.api_up_order_status)
     def test_get_view_order(self):
         result = self.client.get("/ordering/order-status/bob@google.com-12345-9876/")
-        self.assertTrue("Details for: bob@google.com-12345-9876" in result.data)
+        self.assertIn("Details for: bob@google.com-12345-9876", result.data)
         self.assertEqual(result.status_code, 200)
 
     @patch('src.app.api_up', mock_app.api_up_reports)
-    def test_get_list_reports(self):
+    def test_get_list_reports_admin_only(self):
         result = self.client.get("/reports/")
-        self.assertTrue("<title>ESPA -  ESPA Reports" in result.data)
-        self.assertEqual(result.status_code, 200)
+        self.assertIn('index', result.data)
+        self.assertEqual(result.status_code, 302)
 
     @patch('src.app.api_up', mock_app.api_up_rss_feed)
     def test_get_rss_feed(self):
