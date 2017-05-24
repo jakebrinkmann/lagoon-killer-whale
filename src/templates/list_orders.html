@@ -47,23 +47,10 @@ q
         return false;
     }
 
-    function gethostname() {
-        var a = document.createElement('a');
-        a.href = url;
-        return a.hostname;
-    }
-
     function switchUrl() {
-        var hostname = gethostname();
-        if (detectIE()) {
-          var path = hostname + "/ordering/status/fake@val.com";
-        } else {
-          var path = "/ordering/status/fake@val.com";
-        }
         var email_addr = document.getElementById('id_email');
-        path = path.replace('fake@val.com', $.trim(email_addr.value));
+        var path = "/ordering/status/" + $.trim(email_addr.value);
         $(location).attr('href', path);
-
         return false;
     }
 
