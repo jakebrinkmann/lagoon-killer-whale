@@ -231,8 +231,12 @@ def submit_order():
         for key in error_lookup:
             if key in scene_dict_all_prods:
                 remove = scene_dict_all_prods.get(key)
+                if isinstance(remove, dict):  # Must be date_restricted products
+                    uniques = list(set([u for _, v in remove.items() for u in v]))
+                    remove = '{}: {}'.format(json.dumps(remove.keys()),
+                                             json.dumps(uniques))
                 errors.append('{}. Invalid IDs must be removed: {}'
-                              .format(error_lookup[key]))
+                              .format(error_lookup[key], remove))
         if errors:
             flash(format_messages(errors), category='error')
             return redirect(url_for('new_order'))
