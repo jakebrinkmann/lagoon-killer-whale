@@ -121,6 +121,11 @@
                                     All scenes ordered for processing will attempt immediate graceful cancellation. <br>
                                     Any output data will be deleted from disk. <u>This action cannot be undone.</u>
                                 </div>
+                                <div class="spinner">
+                                  <div class="bounce1"></div>
+                                  <div class="bounce2"></div>
+                                  <div class="bounce3"></div>
+                                </div>
                                 {% endif %}
                                 {% endif %}
                                 {% if session['user'].is_staff %} <!--temporary feature testing-->
@@ -240,6 +245,7 @@
                                 click: function() {
                                     $( this ).dialog( "close" );
                                     $('#cancel_order').hide();
+                                    $('.spinner').show();
                                     $.ajax({method: 'PUT',
                                                 url: "/ordering/cancel_order/{{ order['orderid'] }}"
                                             }).done(function() {
