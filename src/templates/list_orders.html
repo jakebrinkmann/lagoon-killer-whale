@@ -87,7 +87,11 @@ q
             <a href="/ordering/status/{{ for_user }}/rss" style="text-decoration: none">
                 <img border="0" alt="RSS Status Feed" title="Completed Scene RSS Feed" src="static/img/feed-icon-28x28.png"></img>
             </a>&nbsp;&nbsp;&nbsp;
-            Showing all orders for {{ for_user }} (Product Backlog: {{ backlog }})
+            Showing all orders for {{ for_user }} (
+                <span class="{% if backlog > 10000 %}user_backlog_warning{% endif %}">
+                    Product Backlog: {{ backlog }}
+                </span>
+                    )
         </h4>
         <div class='boxbody'>
             <table>
