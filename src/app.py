@@ -582,6 +582,16 @@ def page_not_found(e):
     return render_template('base.html')
 
 
+@espaweb.errorhandler(500)
+def internal_error(e):
+    message = {'500 Internal Server Error': ['Sorry, something went wrong.',
+                                             'A programming error has caused '
+                                             'the page to fail rendering.',
+                                             'Contact the Site Admin ASAP']}
+    flash(format_messages(message), category='error')
+    return render_template('base.html')
+
+
 @espaweb.after_request
 def apply_xframe_options(response):
     response.headers['X-Frame-Options'] = 'DENY'
