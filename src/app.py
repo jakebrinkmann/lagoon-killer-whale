@@ -573,6 +573,15 @@ def admin_update(action, orderid):
     return api_up('/{}/{}'.format(action, orderid), {}, 'put')
 
 
+@espaweb.errorhandler(404)
+def page_not_found(e):
+    message = {'404: Not Found': ['The requested URL was not found on the '
+                                  'server.', 'If you entered the URL manually '
+                                  'please check your spelling and try again.']}
+    flash(format_messages(message), category='warning')
+    return render_template('base.html')
+
+
 @espaweb.after_request
 def apply_xframe_options(response):
     response.headers['X-Frame-Options'] = 'DENY'
