@@ -3,11 +3,11 @@
 {% block title %} ESPA Message Console {% endblock %}
 
 {% block stylelinks %}
-  <link rel="stylesheet" type="text/css" href="static/css/jquery-te-1.4.0.css">
+    <link href="{{ url_for('static', filename='css/quill-1.2.4/quill.snow.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block scriptlinks %}
-  <script type="text/javascript" src="static/js/jquery-te-1.4.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/quill-1.2.4/quill.min.js') }}"></script>
 {% endblock %}
 
 {% block usgstitle %}
@@ -16,28 +16,52 @@
 
 {% block javascript %}
     $(document).ready(function() {
-        $("#msg_text_area").jqte({fsize: false, color: false, sub: false, sup: false, rule: false, strike: false});
+        Quill.register(Quill.import('attributors/style/direction'), true);
+        Quill.register(Quill.import('attributors/style/align'), true);
+
+        var quill = new Quill('#editor-container', {
+          modules: {
+            toolbar: [
+              ['bold', 'italic', 'underline'],
+              ['link', 'code'],
+              [{ list: 'ordered' }, { list: 'bullet' }],
+              [{ 'align': [] }],
+              ['clean']
+            ]
+          },
+          placeholder: 'The system status is...',
+          theme: 'snow'
+        });
+
+
+        quill.clipboard.dangerouslyPasteHTML(0, '{{ session['system_message_body']|safe }}' )
 
         {% if session['display_system_message'] == 'True' %}
             $("#msg_display").prop("checked", true);
         {% endif %}
 
+        $('#msg').submit( function (event) {
+                var message = document.querySelector('input[name=system_message_body]');
+                message.value = quill.container.firstChild.innerHTML;
+                return true;
+            });
     });
+
+
 {% endblock %}
 
 {% block content %}
 <div class="wrapper">
-    <form action="console/statusmsg" method="post">
+    <form action="/admin_console/statusmsg" method="post" id="msg">
         <h4>Publish Message</h4>
         <input type='checkbox' id="msg_display" name="display_system_message">
         <h4>Message Title</h4>
         <input type="text" name="system_message_title" size="35" value="{{ session['system_message_title'] }}">
-        <br />
+        <br>
         <h4>Message</h4>
-        <textarea cols="40" rows="5" id="msg_text_area" name="system_message_body">
-            {{ session['system_message_body'] }}
-        </textarea>
-        </br>
+        <input type="hidden" id="msg_text_area" name="system_message_body">
+        <div id="editor-container"></div>
+        <br>
         <input type="submit" value="Update">
     </form>
 

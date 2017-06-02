@@ -16,7 +16,7 @@ import PyRSS2Gen
 import requests
 
 from utils import (conversions, deep_update, is_num, gen_nested_dict, User,
-                   format_errors)
+                   format_messages, Order, Scene)
 from logger import ilogger as logger
 
 
@@ -35,24 +35,24 @@ api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
 cache = memcache.Client(['127.0.0.1:11211'], debug=0)  # Uses system cache
 
 
-def api_get(url, response_type='json', json=None, uauth=None):
+def api_up(url, json=None, verb='get', uauth=None):
+    headers = {'X-Forwarded-For': request.remote_addr}
     auth_tup = uauth if uauth else (session['user'].username, session['user'].wurd)
-    response = requests.get(api_base_url + url, auth=auth_tup, json=json)
-    if response_type == 'json':
-        _resp = response.json()
-    elif response_type == 'text':
-        _resp = response.text
-    else:
-        _resp = response
-    return _resp
-
-
-def api_up(url, json, verb='post'):
-    auth_tup = (session['user'].username, session['user'].wurd)
-    if verb not in ('post', 'put'):
-        return {'message': 'api verb not found: {}'.format(verb)}, 404
-    response = getattr(requests, verb)(api_base_url + url, json=json, auth=auth_tup)
-    return response
+    retdata = dict()
+    try:
+        response = getattr(requests, verb)(api_base_url + url, json=json,
+                                           auth=auth_tup, headers=headers)
+        retdata = response.json()
+    except Exception as e:
+        logger.error('+! Unable to contact API !+')
+        flash('Critical error contacting ESPA-API', 'error')
+    if isinstance(retdata, dict):
+        messages = retdata.pop('messages', dict())
+        if 'errors' in messages:
+            flash(format_messages(messages.get('errors')), 'error')
+        if 'warnings' in messages:
+            flash(format_messages(messages.get('warnings')), 'warning')
+    return retdata
 
 
 def update_status_details(force=False):
@@ -60,18 +60,18 @@ def update_status_details(force=False):
     status_response = cache.get(cache_key)
     fifteen_minutes = 900  # seconds
     if (status_response is None) or force:
-        status_response = api_get('/system-status')
+        status_response = api_up('/info/status')
         cache.set(cache_key, status_response, fifteen_minutes)
     for item in ['system_message_body', 'system_message_title', 'display_system_message']:
-        session[item] = status_response[item]
+        session[item] = status_response.get(item)
 
-    for item in ['stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
-        cache_statkey = cache_key + item
-        stat_resp = cache.get(cache_statkey)
-        if (stat_resp is None) or force:
-            stat_resp = api_get('/statistics/' + item, 'text')
-            cache.set(cache_statkey, stat_resp, fifteen_minutes)
-        session[item] = stat_resp
+    item = 'stat_backlog_depth'
+    cache_statkey = cache_key + item
+    stat_resp = cache.get(cache_statkey)
+    if (stat_resp is None) or force:
+        stat_resp = api_up('/info/backlog')
+        cache.set(cache_statkey, stat_resp, fifteen_minutes)
+    session[item] = stat_resp
 
 
 def staff_only(f):
@@ -105,7 +105,7 @@ def login():
         cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
         resp_json = cache.get(cache_key)
         if (resp_json is None) or (isinstance(resp_json, dict) and resp_json.get('password') != password):
-            resp_json = api_get("/user", uauth=(username, password))
+            resp_json = api_up("/user", uauth=(username, password))
 
         if 'username' in resp_json:
             session['logged_in'] = True
@@ -123,15 +123,14 @@ def login():
                 return redirect(url_for('index'))
         else:
             logger.info("**** Failed user login %s \n" % username)
-            flash(format_errors(resp_json['msg']), 'error')
             _status = 401
     else:
         _status = 200
         if 'user' not in session:
             session['user'] = None
 
-    explorer = espaweb.config.get('earth-explorer', 'https://earthexplorer.usgs.gov')
-    reg_host = espaweb.config.get('eros-registration-system', 'https://ers.cr.usgs.gov')
+    explorer = espaweb.config.get('earth_explorer', 'https://earthexplorer.usgs.gov')
+    reg_host = espaweb.config.get('eros_registration_system', 'https://ers.cr.usgs.gov')
 
     return render_template('login.html', next=destination,
                            earthexplorer=explorer,
@@ -141,11 +140,14 @@ def login():
 
 @espaweb.route('/logout')
 def logout():
+    if 'user' not in session:
+        logger.info('No user session found.')
+        return redirect(url_for('login'))
     logger.info("Logging out user %s \n" % session['user'].username)
     cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
     cache.delete(cache_key)
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
-                 'stat_products_complete_24_hrs', 'stat_backlog_depth', 'stat_onorder_depth']:
+                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
         session.pop(item, None)
     return redirect(url_for('login'))
 
@@ -170,7 +172,7 @@ def new_external_order():
         try:
             scenelist = data['input_product_list']
             _u, _p = base64.b64decode(data['user']).split(':')
-            resp_json = api_get('/user', uauth=(_u, _p))
+            resp_json = api_up('/user', uauth=(_u, _p))
             if 'username' in resp_json:
                 session['logged_in'] = True
                 resp_json['wurd'] = _p
@@ -213,13 +215,31 @@ def submit_order():
 
     try:
         # convert our list of sceneids into format required for new orders
-        scene_dict_all_prods = api_up("/available-products", {'inputs': _ipl}).json()
+        scene_dict_all_prods = api_up("/available-products", json={'inputs': _ipl})
     except UnicodeDecodeError as e:
         flash('Decoding Error with input file. Please check input file encoding', 'error')
         logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
                                                                                        e.message))
 
         return redirect(url_for('new_order'))
+    finally:
+        # These are errors, and the API will not recognize them on validation
+        errors = []
+        error_lookup = {'not_implemented': "Unknown IDs",
+                        'date_restricted': "Missing Auxillary Data",
+                        'ordering_restricted': "Pre-Collection unavailable"}
+        for key in error_lookup:
+            if key in scene_dict_all_prods:
+                remove = scene_dict_all_prods.get(key)
+                if isinstance(remove, dict):  # Must be date_restricted products
+                    uniques = list(set([u for _, v in remove.items() for u in v]))
+                    remove = '{}: {}'.format(json.dumps(remove.keys()),
+                                             json.dumps(uniques))
+                errors.append('{}. Invalid IDs must be removed: {}'
+                              .format(error_lookup[key], remove))
+        if errors:
+            flash(format_messages(errors), category='error')
+            return redirect(url_for('new_order'))
 
     # create a list of requested products
     landsat_list = [key for key in data if key in conversions['products']]
@@ -267,30 +287,18 @@ def submit_order():
     if 'stats' in landsat_list:
         modis_list.append('stats')
 
-    key_with_no_sensor = 'not_implemented'
-    not_implemented_ids = scene_dict_all_prods.pop(key_with_no_sensor, None)
-    returns_all_restricted = 'date_restricted'
-    date_restricted_prods = scene_dict_all_prods.pop(returns_all_restricted, dict())
-
     # Key here is usually the "sensor" name (e.g. "tm4") but can be other stuff
     for key in scene_dict_all_prods:
         if key.startswith('mod') or key.startswith('myd'):
             scene_dict_all_prods[key]['products'] = modis_list
         else:
-            if key in date_restricted_prods:  # Assume only landsat is date restricted
-                scene_dict_all_prods[key]['inputs'] += date_restricted_prods.pop(key)
-
             scene_dict_all_prods[key]['products'] = landsat_list
-
-            if not_implemented_ids:  # Assume this was intended as landsat
-                scene_dict_all_prods[key]['inputs'] += not_implemented_ids
-                not_implemented_ids = None
 
     # combine order options with product lists
     out_dict.update(scene_dict_all_prods)
 
     # keys to clean up
-    cleankeys = ['not_implemented', 'target_projection', 'date_restricted']
+    cleankeys = ['target_projection']
     for item in cleankeys:
         if item in out_dict:
             if item == 'target_projection' and out_dict[item] == 'lonlat':
@@ -302,102 +310,121 @@ def submit_order():
     if 'plot_statistics' in out_dict:
         out_dict['plot_statistics'] = True
 
-    out_dict['response-readable'] = True  # Informs the API to output special validation messages
-
     logger.info('Order out to API: {}'.format(out_dict))
-    response = api_up("/order", out_dict)
-    response_data = response.json()
+    response_data = api_up("/order", json=out_dict, verb='post')
     logger.info('Response from API: {}'.format(response_data))
 
-    # hack till we settle on msg or message
-    if 'message' in response_data:
-        response_data['msg'] = response_data['message']
-
-    if response.status_code == 200:
+    if 'orderid' in response_data:
         flash("Order submitted successfully! Your OrderId is {}".format(response_data['orderid']))
         logger.info("successful order submission for user %s\n\n orderid: %s" % (session['user'].username,
                                                                                  response_data['orderid']))
         rdest = redirect('/ordering/order-status/{}/'.format(response_data['orderid']))
     else:
-        flash(format_errors(response_data["msg"]), 'error')
-        logger.info("problem with order submission for user %s\n\n message: %s\n\n" % (session['user'].username,
-                                                                                       response_data['msg']))
+        logger.info("problem with order submission for user {0}\n\n "
+                    "message: {1}\n\n".format(session['user'].username,
+                                              response_data.get('messages')))
         _dest = url_for('new_external_order') if _external else url_for('new_order')
         rdest = redirect(_dest)
 
     return rdest
 
-
 @espaweb.route('/ordering/status/')
 @espaweb.route('/ordering/status/<email>/')
 @login_required
 def list_orders(email=None):
-    url = "/list-orders-ext"
+    url = "/list-orders"
     for_user = session['user'].email
     if email:
         url += "/{}".format(email)
         for_user = email
-    res_data = api_get(url, json={'status': ['complete', 'ordered']})
+    res_data = api_up(url, json={'status': ['complete', 'ordered']})
     if isinstance(res_data, list):
-        res_data = sorted(res_data, key=lambda k: k['orderid'], reverse=True)
+        res_data = sorted(res_data, reverse=True)
 
-    return render_template('list_orders.html', order_list=res_data, for_user=for_user)
+    complete_statuses = ['complete', 'unavailable', 'cancelled']
+
+    backlog = 0
+    order_info = []
+    for orderid in res_data:
+        order = api_up('/order/{}'.format(orderid))
+        item_status = api_up('/item-status/{}'.format(orderid))
+        item_status = item_status.get(orderid, {})
+        item_status = map(lambda x: Scene(**x), item_status)
+        count_ordered = len(item_status)
+        count_complete = len([s for s in item_status if s.status == 'complete'])
+        count_error = len([s for s in item_status if s.status == 'error'])
+        order.update(products_ordered=count_ordered)
+        order.update(products_complete=count_complete)
+        order.update(products_error=count_error)
+        order_info.append(Order(**order))
+        backlog += (count_ordered - len([s for s in item_status
+                                         if s.status in complete_statuses]))
+
+    return render_template('list_orders.html', order_list=order_info,
+                           for_user=for_user, backlog=backlog)
 
 
 @espaweb.route('/ordering/status/<email>/rss/')
 def list_orders_feed(email):
-    # bulk downloader and the browser hit this url, need to handle
+    # browser hit this url, need to handle # TODO: Is this still used?
     # user auth for both use cases
-    url = "/list-orders-feed/{}".format(email)
-    if 'Authorization' in request.headers:
+    if 'Authorization' in request.headers:  # FIXME: pretty sure this is gone
         # coming in from bulk downloader
         logger.info("Apparent bulk download attempt, headers: %s" % request.headers)
         auth_header_dec = base64.b64decode(request.headers['Authorization'])
-        response = api_get(url, uauth=tuple(auth_header_dec.split(":")))
+        uauth = tuple(auth_header_dec.split(":"))
     else:
         if 'logged_in' not in session or session['logged_in'] is not True:
             return redirect(url_for('login', next=request.url))
         else:
-            response = api_get(url)
+            uauth = (session['user'].username, session['user'].wurd)
+    orders = api_up("/list-orders/{}".format(email), uauth=uauth,
+                    json={'status': 'complete'})
 
-    if "msg" in response:
-        logger.info("Problem retrieving rss for email: %s \n message: %s\n" % (email, response['msg']))
-        status_code = 404
-        if "Invalid username/password" in response['msg']:
-            status_code = 403
-        return jsonify(response), status_code
-    else:
-        rss = PyRSS2Gen.RSS2(
-            title='ESPA Status Feed',
-            link='http://espa.cr.usgs.gov/ordering/status/{0}/rss/'.format(email),
-            description='ESPA scene status for:{0}'.format(email),
-            language='en-us',
-            lastBuildDate=datetime.datetime.now(),
-            items=[]
-        )
+    order_items = dict()
+    for orderid in orders:
+        item_status = api_up('/item-status/{}'.format(orderid), uauth=uauth)
+        item_status = item_status.get(orderid, {})
+        item_status = map(lambda x: Scene(**x), item_status)
+        order_info = api_up('/order/{}'.format(orderid), uauth=uauth)
+        order_items[orderid] = dict(scenes=item_status,
+                                    orderdate=order_info['order_date'])
 
-        for item in response:
-            for scene in response[item]['scenes']:
-                description = 'scene_status:{0},orderid:{1},orderdate:{2}'.format(scene['status'], item, response[item]['orderdate'])
-                new_rss_item = PyRSS2Gen.RSSItem(
-                    title=scene['name'],
-                    link=scene['url'],
-                    description=description,
-                    guid=PyRSS2Gen.Guid(scene['url'])
-                )
 
-                rss.items.append(new_rss_item)
+    rss = PyRSS2Gen.RSS2(
+        title='ESPA Status Feed',
+        link='http://espa.cr.usgs.gov/ordering/status/{0}/rss/'.format(email),
+        description='ESPA scene status for:{0}'.format(email),
+        language='en-us',
+        lastBuildDate=datetime.datetime.now(),
+        items=[]
+    )
 
-        return rss.to_xml(encoding='utf-8')
+    for orderid, order in order_items.items():
+        for scene in order['scenes']:
+            if scene.status != 'complete':
+                continue
+            description = ('scene_status:{0},orderid:{1},orderdate:{2}'
+                           .format(scene.status, orderid, order['orderdate']))
+            new_rss_item = PyRSS2Gen.RSSItem(
+                title=scene.name,
+                link=scene.product_dload_url,
+                description=description,
+                guid=PyRSS2Gen.Guid(scene.product_dload_url)
+            )
+
+            rss.items.append(new_rss_item)
+
+    return rss.to_xml(encoding='utf-8')
 
 
 @espaweb.route('/ordering/order-status/<orderid>/')
 @login_required
 def view_order(orderid):
-    order_dict = api_get("/order/{}".format(orderid))
-    scenes_resp = api_get("/item-status/{}".format(orderid))
-
-    scenes = scenes_resp['orderid'][orderid]
+    order_dict = Order(**api_up("/order/{}".format(orderid)))
+    item_status = api_up('/item-status/{}'.format(orderid))
+    item_status = item_status.get(orderid, {})
+    scenes = map(lambda x: Scene(**x), item_status)
 
     statuses = {'complete': ['complete', 'unavailable'],
                 'open': ['oncache', 'queued', 'processing', 'error', 'submitted'],
@@ -406,16 +433,17 @@ def view_order(orderid):
 
     product_counts = {}
     for status in statuses:
-        product_counts[status] = len([s for s in scenes if s['status'] in statuses[status]])
+        product_counts[status] = len([s for s in scenes
+                                      if s.status in statuses[status]])
     product_counts['total'] = len(scenes)
 
     # get away from unicode
-    joptions = json.dumps(order_dict['product_opts'])
+    joptions = json.dumps(order_dict.product_opts)
 
     # sensor/products
     options_by_sensor = {}
-    for key in order_dict['product_opts']:
-        _kval = order_dict['product_opts'][key]
+    for key in order_dict.product_opts:
+        _kval = order_dict.product_opts[key]
         if isinstance(_kval, dict) and 'products' in _kval:
             _spl = _kval['products']
             _out_spl = [conversions['products'][item] for item in _spl]
@@ -428,12 +456,25 @@ def view_order(orderid):
                            product_counts=product_counts, product_opts=joptions)
 
 
+@espaweb.route('/ordering/cancel_order/<orderid>', methods=['PUT'])
+@login_required
+def cancel_order(orderid):
+    payload = {'orderid': orderid, 'status': 'cancelled'}
+    response = api_up('/order', json=payload, verb='put')
+    if response.get('orderid') == orderid:
+        flash("Order cancelled successfully!")
+        logger.info("order cancellation for user {0} ({1})\n\n orderid: {2}"
+                    .format(session['user'].username, request.remote_addr,
+                            response))
+    return ''
+
+
 @espaweb.route('/logfile/<orderid>/<sceneid>')
 @staff_only
 @login_required
 def cat_logfile(orderid, sceneid):
-    scenes_resp = api_get("/item-status/{}/{}".format(orderid, sceneid))
-    scene = scenes_resp['orderid'][orderid].pop()
+    scenes_resp = api_up("/item-status/{}/{}".format(orderid, sceneid))
+    scene = scenes_resp[orderid].pop()
     return '<br>'.join(scene['log_file_contents'].split('\n'))
 
 
@@ -441,7 +482,7 @@ def cat_logfile(orderid, sceneid):
 @staff_only
 @login_required
 def list_reports():
-    res_data = api_get("/reports/")
+    res_data = api_up("/reports/")
     return render_template('list_reports.html', reports=res_data)
 
 
@@ -449,7 +490,7 @@ def list_reports():
 @staff_only
 @login_required
 def show_report(name):
-    response = api_get("/reports/{0}/".format(name))
+    response = api_up("/reports/{0}/".format(name))
     res_data = eval(response)
     # occassionally see UnicodeDecodeError in reports
     # lets decode the response
@@ -459,34 +500,39 @@ def show_report(name):
     return render_template('report.html', report_name=name, report=res_data)
 
 
-@espaweb.route('/console', methods=['GET'])
+@espaweb.route('/admin_console', methods=['GET'])
 @staff_only
 @login_required
-def console():
-    data = api_get("/statistics/all")
+def admin_console():
+    data = api_up("/statistics/all")
     stats = {'Open Orders': data['stat_open_orders'],
              'Products Complete 24hrs': data['stat_products_complete_24_hrs'],
              'Waiting Users': data['stat_waiting_users'],
-             'Backlog Depth': data['stat_backlog_depth'],
-             'Scenes \'onorder\'': data['stat_onorder_depth']}
-    L17_aux = api_get("/aux_report/L17/")
-    L8_aux = api_get("/aux_report/L8/")
+             'Backlog Depth': data['stat_backlog_depth']}
+    L17_aux = api_up("/aux_report/L17/")
+    L8_aux = api_up("/aux_report/L8/")
 
     # Data gaps appearing in 2016, only one data source for L8
     now = datetime.datetime.now()
     years = [now.year] if now.year == 2016 else range(2016, now.year+1)
 
-    gap_dict = {'L8': L8_aux, 'L17': {'toms': {}, 'ncep': {}}}
-    for key in ['toms', 'ncep']:
-        for yr in years:
-            yr = str(yr)
-            if yr in L17_aux[key]:
-                gap_dict['L17'][key][yr] = L17_aux[key][yr]
+    gap_dict = {'L8': {'lads': {}}, 'L17': {'toms': {}, 'ncep': {}}}
+    for key in ['toms', 'ncep', 'lads']:
+        if key == 'lads':
+            for yr in years:
+                yr = str(yr)
+                if yr in L8_aux.get(key, ''):
+                    gap_dict['L8'][key][yr] = L8_aux[key][yr]
+        else:
+            for yr in years:
+                yr = str(yr)
+                if yr in L17_aux.get(key, ''):
+                    gap_dict['L17'][key][yr] = L17_aux[key][yr]
 
     return render_template('console.html', stats=stats, gaps=gap_dict)
 
 
-@espaweb.route('/console/statusmsg', methods=['GET', 'POST'])
+@espaweb.route('/admin_console/statusmsg', methods=['GET', 'POST'])
 @staff_only
 @login_required
 def statusmsg():
@@ -495,14 +541,13 @@ def statusmsg():
         api_args = {'system_message_title': request.form['system_message_title'],
                     'system_message_body': request.form['system_message_body'],
                     'display_system_message': dsm}
-        response = api_up('/system-status-update', api_args)
+        response = api_up('/system-status-update', api_args, verb='post')
 
-        if response.status_code == 200:
+        if response == 'success':
             update_status_details(force=True)
             flash('update successful')
             rurl = 'index'
         else:
-            flash('update failed', 'error')
             rurl = 'statusmsg'
         action = redirect(url_for(rurl))
     else:
@@ -512,11 +557,11 @@ def statusmsg():
     return action
 
 
-@espaweb.route('/console/config', methods=['GET'])
+@espaweb.route('/admin_console/config', methods=['GET'])
 @staff_only
 @login_required
 def console_config():
-    config_data = api_get("/system/config")
+    config_data = api_up("/system/config")
     sorted_keys = sorted(config_data)
     return render_template('config.html', config_data=config_data, sorted_keys=sorted_keys)
 
@@ -525,7 +570,26 @@ def console_config():
 @staff_only
 @login_required
 def admin_update(action, orderid):
-    return api_up('/{}/{}'.format(action, orderid), {}, 'put').text
+    return api_up('/{}/{}'.format(action, orderid), {}, 'put')
+
+
+@espaweb.errorhandler(404)
+def page_not_found(e):
+    message = {'404: Not Found': ['The requested URL was not found on the '
+                                  'server.', 'If you entered the URL manually '
+                                  'please check your spelling and try again.']}
+    flash(format_messages(message), category='warning')
+    return render_template('base.html')
+
+
+@espaweb.errorhandler(500)
+def internal_error(e):
+    message = {'500 Internal Server Error': ['Sorry, something went wrong.',
+                                             'A programming error has caused '
+                                             'the page to fail rendering.',
+                                             'Contact the Site Admin ASAP']}
+    flash(format_messages(message), category='error')
+    return render_template('base.html')
 
 
 @espaweb.after_request

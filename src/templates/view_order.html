@@ -114,14 +114,34 @@
                         <tr class='noborder'>
                             <td class='noborder' colspan="1"><i>The ESPA Bulk Downloader is available on <a href="https://github.com/USGS-EROS/espa-bulk-downloader">GitHub</a></i></td>
                             <td class='noborder'>
+                                {% if session['user'].email in order['orderid'] and session['user'].is_staff %}
+                                {% if order['status'] == 'ordered' %}
+                                <a class="ui-button ui-widget ui-corner-all cancellation" style="padding:3px;float: right;" id="cancel_order" href="#"><b>CANCEL</b></a>
+                                <div class="cancellation" id="cancellation_warning" style="display:none;">
+                                    All scenes ordered for processing will attempt immediate graceful cancellation. <br>
+                                    Any output data will be deleted from disk. <u>This action cannot be undone.</u>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                                {% if session['user'].is_staff %} <!--temporary feature testing-->
+                                <a class="ui-button ui-widget ui-corner-all show_json" style="padding:3px" id="show_order_json" href="#">Show JSON</a>
+                                {% endif %}
                                 {% if session['user'].is_staff and product_counts['error'] > 0 %}
+                                    <br /><br />
                                     <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_submitted" href="#">error to submitted</a>
                                     <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_unavailable" href="#">error to unavailable</a>
+                                    <br />
                                 {% endif %}
                             </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+
+            <div class="boxbody" style="display:none; margin: 0cm 5cm 1cm 5cm;" id="json_placeholder">
+                JSON message body for the <a href="https://github.com/USGS-EROS/espa-api#user-api">espa-api</a>:<br><br>
+                <pre id="order_json"></pre>
             </div>
 
             <div class="boxbody">
@@ -138,9 +158,9 @@
                             {% if s['name'] %}
                                 {% set rowclass = loop.cycle('evenrow', 'oddrow') %}
                                 <tr class="{{ rowclass }}">
-                                    <td class="{} product noborder">
+                                    <td class="product noborder">
                                         {% if session['user'].is_staff %}
-                                            {{ s['scene_id'] }} -
+                                            {{ s['id'] }} -
                                         {% endif %}
                                         {% if s['name'] == 'plot' %}
                                             Plotting & Statistics
@@ -199,6 +219,48 @@
                     });
                 })
             {% endif %}
+            {% if session['user'].email in order['orderid'] or session['user'].is_staff %}
+            {% if order['status'] == 'ordered' %}
+                $("#cancel_order").click(function(event){
+                    event.preventDefault();
+                    var orderid = "{{ order['orderid'] }}";
+                    $('#cancellation_warning').dialog({
+                        title: 'WARNING! Permanent Order Cancellation!',
+                        resizable: false,
+                        height: "auto",
+                        width: "auto",
+                        modal: true,
+                        open: function() {
+                            $(this).siblings('.ui-dialog-buttonpane').find("button:contains('back')").focus();
+                        },
+                        buttons: {
+                            "confirm": {
+                                text: 'Cancel all items!',
+                                class: 'ui-button ui-corner-all ui-widget confirm_cancellation_button',
+                                click: function() {
+                                    $( this ).dialog( "close" );
+                                    $('#cancel_order').hide();
+                                    $.ajax({method: 'PUT',
+                                                url: "/ordering/cancel_order/{{ order['orderid'] }}"
+                                            }).done(function() {
+                                                location.reload();
+                                            }).fail(function() {
+                                                alert('update appears to have failed. contact espa admin.');
+                                    });
+                                }
+                            },
+                            "back": {
+                                text: "Go back",
+                                class: 'ui-button ui-corner-all ui-widget abort_cancellation_button',
+                                click: function() {
+                                    $( this ).dialog( "close" );
+                                }
+                            }
+                        }
+                    });
+                });
+            {% endif %}
+            {% endif %}
 
             var source_products = {
                 'source_data': 'original input products',
@@ -206,20 +268,20 @@
                 'customized_source_data': 'input products'
             };
 
-            var products = {'sr': 'surface reflectance',
-                            'sr_toa':'top of atmosphere',
-                            'cfmask': 'cfmask',
-                            'lst': 'land surface temperature',
-                            'sr_thermal': 'brightness temperature',
-                            'statistics': 'plots & statistics',
-                            'dswe': 'dynamic surface water extent'};
-
             var customization = {'projection': 'reproject',
                                  'resize': 'resize',
                                  'image_extents': 'image extents',
                                  'format': 'output format'};
 
             var product_options = {{ product_opts }};
+
+            var str = JSON.stringify(product_options, null, 2);
+            $('#order_json').text(str);
+
+            $('.show_json').click(function(event) {
+                event.preventDefault();
+                $('#json_placeholder').toggle();
+            });
 
             function buildOutputFormatString() {
                 var s = '';
@@ -324,7 +386,7 @@
 
             function buildOrderedOptionString() {
                 var return_list = [];
-                var groups = [source_products, products, customization];
+                var groups = [source_products, customization];
 
                 for (g=0; g< groups.length; g++) {
                     for (var item in groups[g]) {

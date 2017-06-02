@@ -53,7 +53,6 @@ var meters = "meters";
 var show_hide_delay = 200;
 
 var statistics = "#include_statistics";
-var cfmask = "#include_cfmask";
 
 
 $(document).ready(function(){
@@ -84,23 +83,6 @@ $(document).ready(function(){
    *******************************************************************/
 
    $("input:radio[name='output_format']").filter("[value=gtiff]").click();
-
-
-
-   /*******************************************************************
-       TODO: Change this to disable cfmask completely
-   *******************************************************************/
-    $(cfmask).click(function(item) {
-        var cfmaskpopup="#cfmask_popup";
-        if ( $(cfmaskpopup).is(":hidden") && $(cfmask).is(':checked') ) {
-            $(cfmaskpopup).dialog({
-                height: 200, width: 500,
-                title: 'Notice of Upcoming CFMask Discontinuation'
-            });
-       } else {
-            $(cfmaskpopup).dialog('close')
-       }
-    });
 
    /*******************************************************************
        Event handling for displaying/hiding the available input product

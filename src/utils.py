@@ -1,14 +1,32 @@
 import collections
 
 
-class User(object):
+class APIObject(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.iteritems():
             self.__setattr__(k, v)
 
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class User(APIObject):
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+
     @property
     def is_staff(self):
         return 'staff' in self.roles
+
+
+class Order(APIObject):
+    def __init__(self, **kwargs):
+        super(Order, self).__init__(**kwargs)
+
+
+class Scene(APIObject):
+    def __init__(self, **kwargs):
+        super(Scene, self).__init__(**kwargs)
 
 
 def deep_update(source, overrides):
@@ -50,19 +68,24 @@ def gen_nested_dict(inlist, val):
     return _indict
 
 
-def format_errors(inerror):
+def format_messages(inmessages):
     outlist = []
-    if isinstance(inerror, dict):
-        for key in inerror:
+    if isinstance(inmessages, dict):
+        for key in inmessages:
             outlist.append(key+"<br/>")
-            if isinstance(inerror[key], basestring):
-                outlist.append(inerror[key])
+            if isinstance(inmessages[key], basestring):
+                outlist.append(inmessages[key])
             else:
-                for item in inerror[key]:
+                for item in inmessages[key]:
                     outlist.append("&#8594;"+item+"<br/>")
         return "".join(outlist)
+    elif isinstance(inmessages, list):
+        if all((isinstance(m, basestring) for m in inmessages)):
+            return "<br/>".join(inmessages)
+        else:
+            return "<br/>".join(format_messages(m) for m in inmessages)
     else:
-        return inerror
+        return inmessages
 
 conversions = {
     'products': {
@@ -70,6 +93,7 @@ conversions = {
          'swe': 'dynamic surface water extent',
          'sr_evi': 'sr_evi',
          'cloud': 'cfmask',
+         'pixel_qa': 'l2 pixel qa',
          'sr_savi': 'sr_savi',
          'sr_nbr2': 'sr_nbr2',
          'sr_nbr': 'sr_nbr',

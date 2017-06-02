@@ -1,72 +1,63 @@
-class JSpoof(object):
-    def __init__(self, indict):
-        self.value = indict
-
-    @property
-    def status_code(self):
-        return 200
-
-    def json(self):
-        return self.value
-
-
-def api_get_user(url, response_type='json', json=None, uauth=None):
+def api_up_user(url, response_type='json', json=None, uauth=None):
     return {'username': 'bob'}
 
 
-def api_get_user_fail(url, response_type='json', json=None, uauth=None):
-    return {'msg': 'user not found'}
+def api_up_user_fail(url, response_type='json', json=None, uauth=None):
+    return {'messages': {'errors': ['Invalid username/password']}}
 
 
-def api_get_list_orders(*args, **kwargs):
-    return [{'orderid': 'abc', 'products_ordered': 1,
-             'products_complete': 1, 'order_status': 'complete',
-             'order_note': 'comments'}]
+def api_up_list_orders(*args, **kwargs):
+    return []
 
 
-def api_get_order_status(*args):
-    if 'order' in args[0]:
-        orderid = args[0].split("/").pop()
+def api_up_order_status(*args):
+    url = args[0]
+    if 'order' in url:
+        orderid = url.split("/").pop()
         product_opts = {"etm7": {"inputs": ["LE70270292003144EDC00"],
-                                 "products": ["source_metadata", "l1", "sr_nbr2", "cloud", "toa"]},
+                                 "products": ["source_metadata", "l1", "sr_nbr2", "toa"]},
                         "format": "gtiff",
                         "resize": {"pixel_size": 1000, "pixel_size_units": "meters"},
                         "projection": {"utm": {"zone": 15, "zone_ns": "north"}},
                         "resampling_method": "nn"}
         return {'orderid': orderid, 'product_opts': product_opts}
-    else:
+    elif 'item-status' in url:
         # going after item-status
         return {'orderid': {'bob@google.com-12345-9876': [{'id': 4, 'status': 'complete'}]}}
 
 
-def api_post_order(*args):
-    if 'available-products' in args[0]:
-        avail_prods = {'tm4': {'inputs': ['LT42181092013069PFS00'],
-                                'products': ['source_metadata', 'l1', 'toa', 'bt', 'cloud',
+def api_post_order(*args, **kwargs):
+    url = args[0]
+    if 'available-products' in url:
+        if 'json' in kwargs and 'inputs' in kwargs.get('json', ''):
+            inputs = kwargs['json']['inputs']
+        else:
+            inputs = ['LT42181092013069PFS00']
+        avail_prods = {'tm4': {'inputs': inputs,
+                                'products': ['source_metadata', 'l1', 'toa', 'bt',
                                             'sr', 'swe', 'sr_ndvi', 'sr_evi', 'sr_msavi',
                                             'sr_ndmi', 'sr_nbr', 'sr_nbr2', 'stats']}}
-        ap = JSpoof(avail_prods)
-    else:
+        return avail_prods
+    elif '/order' in url:
         # test is posting an order
-        ap = JSpoof({'orderid': 'bob@google.com-03072016-085432'})
-    return ap
+        return {'orderid': 'bob@google.com-03072016-085432'}
 
 
-def api_get_system_config(*args):
+def api_up_system_config(*args):
     return {'retry.lta_soap_errors.timeout': '3600',
             'retry.retry_missing_l1.retries': '8',
             'url.dev.modis.datapool': 'e4ftl01.cr.usgs.gov'}
 
 
-def api_post_status(*args):
-    return JSpoof({'foo':'bar'})
+def api_post_status(*args, **kwargs):
+    return {'foo':'bar'}
 
 
 def update_status_details_true():
     return True
 
 
-def api_get_reports(*args):
+def api_up_reports(*args):
     return {u'backlog_input_product_types':
                 {u'query': u'',
                  u'display_name': u'Backlog - Input Types',
@@ -86,14 +77,14 @@ def api_get_reports(*args):
             }
 
 
-def api_get_stats_all(*args):
+def api_up_stats_all(*args):
     return {'stat_open_orders': 1,
             'stat_products_complete_24_hrs': 9,
             'stat_waiting_users': 99,
             'stat_backlog_depth': 100}
 
 
-def api_get_show_report(*args):
+def api_up_show_report(*args):
     return "[OrderedDict([('Total Orders', 11L), " \
            "('Complete', 1L), ('Open', 10L), ('Email', 'cgaustin@usgs.gov'), " \
            "('First Name', 'clay'), ('Last Name', 'austin')]), " \
@@ -107,16 +98,30 @@ def api_get_show_report(*args):
            "('Email', 'rdilley@usgs.gov'), ('First Name', 'Ron'), ('Last Name', 'Dilley')])]"
 
 
-def api_get_rss_feed(*args):
-    return {u'cgaustin@usgs.gov-04112016-120349':
-                {u'orderdate': u'2016-04-11 12:03:49.948294',
-                 u'scenes':
-                     [{u'status': u'complete',
-                       u'url': u'http://espa-dev.cr.usgs.gov/orders/cgaustin@usgs.gov-04112016-120349/LE70270292003144-SC20160411120638.tar.gz',
-                       u'name': u'LE70270292003144EDC00'}
-                      ]
-                 }
+def api_up_rss_feed(*args, **kwargs):
+    url = args[0]
+    if 'list-orders' in url:
+        return ['bob@google.com-03072016-085432']
+    elif 'item-status' in url:
+        return {'bob@google.com-03072016-085432': [
+                    {
+                        "cksum_download_url": "http://espa.cr.usgs.gov/.../orders/.../LC080270272016072201T1-SC20160728135757.md5",
+                        "completion_date": "2016-08-01T14:17:08.589621",
+                        "name": "LE07_L1TP_010028_20050420_20160925_01_T1",
+                        "note": "",
+                        "product_dload_url": "http://downloadserver.com/LE70270292003144-SC20160411120638.tar.gz",
+                        "status": "complete"
+                    }
+                ]
             }
+    elif 'order' in url:
+        return { "completion_date": "2016-08-01T14:47:08.589621",
+                  "note": "",
+                  "order_date": "2016-08-01T14:17:48.589621",
+                  "orderid": 'bob@google.com-03072016-085432',
+                  "priority": "normal",
+                  "status": "complete"
+                }
 
 
 form_order = {'projection|utm|zone_ns': 'north',
