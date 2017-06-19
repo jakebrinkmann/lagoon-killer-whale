@@ -71,4 +71,14 @@
             <a href="admin_console/config">Show Configuration Values</a>
         </div>
     </div>
+
+    <div style='margin:0 auto; text-align:center;margin-top:10px;'>
+	<form id="lookup_order" method="GET">
+		<label for="lookup" style="font-weight:bold">Lookup order:</label>
+	    <input id="lookup" type="search" placeholder="Order-ID" value="" 
+	    onchange="document.getElementById('lookup_order').action = '/ordering/order-status/' + this.value;"/>
+	        <button type="submit">Search</button>
+	</form>
+    </div>
 {% endblock %}
+
