@@ -1,4 +1,8 @@
 ## Change Notes
+###### June 2017
+* Added "cancel" button and JSON dropdown on View Order page
+* `Pixel_QA` stand-alone product
+
 ###### Version 2.9.6 (April 2016)
 * updated onlinecache.py to remove log files
 
