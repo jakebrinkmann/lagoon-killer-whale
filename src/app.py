@@ -514,7 +514,7 @@ def admin_console():
 
     # Data gaps appearing in 2016, only one data source for L8
     now = datetime.datetime.now()
-    years = [now.year] if now.year == 2016 else range(2016, now.year+1)
+    years = range(now.year, now.year+1)
 
     gap_dict = {'L8': {'lads': {}}, 'L17': {'toms': {}, 'ncep': {}}}
     for key in ['toms', 'ncep', 'lads']:
