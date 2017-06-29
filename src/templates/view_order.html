@@ -114,7 +114,7 @@
                         <tr class='noborder'>
                             <td class='noborder' colspan="1"><i>The ESPA Bulk Downloader is available on <a href="https://github.com/USGS-EROS/espa-bulk-downloader">GitHub</a></i></td>
                             <td class='noborder'>
-                                {% if session['user'].email in order['orderid'] and session['user'].is_staff %}
+                                {% if session['user'].email in order['orderid'] or session['user'].is_staff %}
                                 {% if order['status'] == 'ordered' %}
                                 <a class="ui-button ui-widget ui-corner-all cancellation" style="padding:3px;float: right;" id="cancel_order" href="#"><b>CANCEL</b></a>
                                 <div class="cancellation" id="cancellation_warning" style="display:none;">
@@ -123,9 +123,7 @@
                                 </div>
                                 {% endif %}
                                 {% endif %}
-                                {% if session['user'].is_staff %} <!--temporary feature testing-->
                                 <a class="ui-button ui-widget ui-corner-all show_json" style="padding:3px" id="show_order_json" href="#">Show JSON</a>
-                                {% endif %}
                                 {% if session['user'].is_staff and product_counts['error'] > 0 %}
                                     <br /><br />
                                     <a class="ui-button ui-widget ui-corner-all errTo" style="padding:3px" id="error_to_submitted" href="#">error to submitted</a>

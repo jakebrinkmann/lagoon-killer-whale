@@ -30,6 +30,7 @@ class ApplicationTestCase(unittest.TestCase):
             with c.session_transaction() as sess:
                 sess['logged_in'] = True
                 sess['user'] = self.user
+                sess['stat_backlog_depth'] = 1000
 
             self.client = c
 
