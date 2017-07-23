@@ -32,7 +32,8 @@ Session(espaweb)
 api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
                                                espaweb.config['APIPORT'],
                                                espaweb.config['APIVERSION'])
-cache = memcache.Client(['127.0.0.1:11211'], debug=0)  # Uses system cache
+memcache_hosts = os.getenv('ESPA_MEMCACHE_HOST', '127.0.0.1:11211').split(',')
+cache = memcache.Client(memcache_hosts, debug=0)  # Uses system cache
 
 
 def api_up(url, json=None, verb='get', uauth=None):
