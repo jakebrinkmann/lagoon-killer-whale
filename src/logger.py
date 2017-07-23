@@ -16,7 +16,10 @@ ilogger.setLevel(logging.DEBUG)
 ih = StreamHandler(stream=sys.stdout)
 eh = SMTPHandler(mailhost='localhost', fromaddr='espa@usgs.gov', toaddrs=os.getenv('ESPA_WEB_EMAIL_RECEIVE').split(','), subject='ESPA WEB ERROR')
 
-ih.setLevel(logging.DEBUG)
+if os.getenv('ESPA_ENV') == 'dev':
+    ih.setLevel(logging.DEBUG)
+else:
+    ih.setLevel(logging.INFO)
 eh.setLevel(logging.CRITICAL)
 
 for handler in [ih, dh, eh]:
