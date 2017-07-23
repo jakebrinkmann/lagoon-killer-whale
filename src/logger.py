@@ -22,12 +22,9 @@ else:
     ih.setLevel(logging.INFO)
 eh.setLevel(logging.CRITICAL)
 
-for handler in [ih, dh, eh]:
+for handler in [ih, eh]:
     ilogger.addHandler(handler)
 
     if isinstance(handler, logging.StreamHandler):
         handler.setFormatter(Formatter(LOG_FORMAT))
-
-    if handler.level == logging.DEBUG:
-        handler.addFilter(DbgFilter())
 
