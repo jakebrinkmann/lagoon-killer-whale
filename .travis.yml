@@ -8,7 +8,7 @@ env:
   - ESPA_ENV=dev
   - ESPA_MEMCACHE_HOST=localhost:30090
   - ESPAWEB_SETTINGS=${TRAVIS_BUILD_DIR}/run/config.ini
-  - ESPA_API_EMAIL_RECEIVE=someone@nowhere.com
+  - ESPA_WEB_EMAIL_RECEIVE=someone@nowhere.com
 before_install:
 - make docker-deps-up
 install: 
