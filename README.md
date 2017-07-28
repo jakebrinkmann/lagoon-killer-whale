@@ -17,13 +17,6 @@ Access the site at [`https://espa.cr.usgs.gov/login`](https://espa.cr.usgs.gov/l
 If you want to run this web interface locally, use the included Dockerfile to 
 help get started: 
 
-#### Environment
-```bash
-export ESPA_API_HOST='https://espa.cr.usgs.gov/api/v1'
-export ESPA_MEMCACHE_HOST='localhost:30090'
-export ESPAWEB_SETTINGS="${PWD}/run/config.ini"
-export ESPA_WEB_EMAIL_RECEIVE="{my email address}"
-```
 #### Services
 ```bash
 docker-compose -f setup/docker-compose.yml up -d
@@ -31,10 +24,15 @@ docker-compose -f setup/docker-compose.yml up -d
 #### Building/Running
 ```bash
 docker build -t espa-web .
-docker run -it -p 127.0.0.1:4004:4004 -p 127.0.0.1:30090:30090 espa-web
+docker run -it -p 127.0.0.1:4001:4001 \
+    --net setup_default --link setup_memcached_1 \
+    -e ESPA_API_HOST='https://espa.cr.usgs.gov/api/v1' \
+    -e ESPA_MEMCACHE_HOST='localhost:11211' \ 
+    -e ESPAWEB_SETTINGS='./run/config.ini' \
+    -e ESPA_WEB_EMAIL_RECEIVE="{my email address}" espa-web
 ```
 #### Testing
 ```bash
-docker run -it --entrypoint run/runtests espa-web
+docker exec -it {running container id} run/runtests
 ```
 
