@@ -29,9 +29,7 @@ espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=120)
 espaweb.config['SESSION_COOKIE_SECURE'] = True
 
 Session(espaweb)
-api_base_url = "http://{0}:{1}/api/{2}".format(espaweb.config['APIHOST'],
-                                               espaweb.config['APIPORT'],
-                                               espaweb.config['APIVERSION'])
+api_base_url = os.getenv('ESPA_API_HOST', 'http://localhost:4004/api/v1')
 memcache_hosts = os.getenv('ESPA_MEMCACHE_HOST', '127.0.0.1:11211').split(',')
 cache = memcache.Client(memcache_hosts, debug=0)  # Uses system cache
 

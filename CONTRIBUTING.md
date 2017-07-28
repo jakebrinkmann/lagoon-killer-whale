@@ -10,8 +10,6 @@
 ```
 DEBUG = False                                                                      
 SECRET_KEY='superS3cre+'                      
-APIHOST = 'espa.cr.usgs.gov'                                                    
-APIVERSION = 'v1'  
 ```
 
 ## Testing

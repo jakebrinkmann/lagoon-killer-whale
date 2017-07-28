@@ -6,11 +6,10 @@ WORKDIR /home/espadev/espa-web
 COPY setup/requirements.txt /home/espadev/espa-web
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN mkdir -p /home/espadev/.usgs/
-RUN ln -s /home/espadev/espa-web/run/config.ini /home/espadev/.usgs/.espa_web
-ENV ESPAWEB_SETTINGS=/home/espadev/.usgs/.espa_web
+ENV ESPAWEB_SETTINGS=/home/espadev/espa-web/run/config.ini
 ENV ESPA_ENV=dev
 ENV ESPA_WEB_EMAIL_RECEIVE="someone@somewhere.com"
+ENV ESPA_API_HOST="http://localhost:4004/api/v1"
 
 COPY . /home/espadev/espa-web
 
