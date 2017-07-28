@@ -1,4 +1,7 @@
 ## Change Notes
+###### August 2017
+* Add Continuous Integration testing via travis-ci
+
 ###### June 2017
 * Added "cancel" button and JSON dropdown on View Order page
 * `Pixel_QA` stand-alone product
