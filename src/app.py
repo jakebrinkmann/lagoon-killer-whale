@@ -97,24 +97,34 @@ def login_required(f):
     return decorated_function
 
 
+def espa_session_login(username, password):
+    cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
+    resp_json = cache.get(cache_key)
+    if (resp_json is None) or (isinstance(resp_json, dict) and resp_json.get('wurd') != password):
+        resp_json = api_up("/user", uauth=(username, password))
+
+    if 'username' in resp_json:
+        session['logged_in'] = True
+        resp_json['wurd'] = password
+        session['user'] = User(**resp_json)
+
+        two_hours = 7200  # seconds
+        cache.set(cache_key, resp_json, two_hours)
+
+        update_status_details()
+        logger.info("User %s logged in" % session['user'].username)
+        return True
+    else:
+        logger.info("**** Failed user login %s" % username)
+        return False
+
+
 @espaweb.route('/login', methods=['GET', 'POST'])
 def login():
     destination = request.args.get('next')
     if request.method == 'POST':
         username, password = request.form['username'], request.form['password']
-        cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
-        resp_json = cache.get(cache_key)
-        if (resp_json is None) or (isinstance(resp_json, dict) and resp_json.get('password') != password):
-            resp_json = api_up("/user", uauth=(username, password))
-
-        if 'username' in resp_json:
-            session['logged_in'] = True
-            resp_json['wurd'] = password
-            session['user'] = User(**resp_json)
-            two_hours = 7200  # seconds
-            cache.set(cache_key, resp_json, two_hours)
-            update_status_details()
-            logger.info("User %s logged in\n" % session['user'].username)
+        if espa_session_login(username, password):
             # send the user back to their
             # originally requested destination
             if destination and destination != 'None':
@@ -122,7 +132,6 @@ def login():
             else:
                 return redirect(url_for('index'))
         else:
-            logger.info("**** Failed user login %s \n" % username)
             _status = 401
     else:
         _status = 200
@@ -172,14 +181,7 @@ def new_external_order():
         try:
             scenelist = data['input_product_list']
             _u, _p = base64.b64decode(data['user']).split(':')
-            resp_json = api_up('/user', uauth=(_u, _p))
-            if 'username' in resp_json:
-                session['logged_in'] = True
-                resp_json['wurd'] = _p
-                session['user'] = User(**resp_json)
-            else:
-                logger.info('*** Failed external order user login: {}'.format(_u))
-                return jsonify({'msg': 'user auth failed'}), 401
+            espa_login(_u, _p)
         except KeyError:
             return jsonify({'error': "'input_product_list' and 'user' fields are required"}), 401
         except Exception as e:
