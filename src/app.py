@@ -4,6 +4,7 @@ from functools import wraps
 import json
 import os
 import base64
+import urlparse
 # OrderedDict is returned by the API reports (see `eval(response)` below)
 # leave this import
 from collections import OrderedDict
@@ -91,7 +92,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'logged_in' not in session or session['logged_in'] is not True:
-            return redirect(url_for('login', next=request.url))
+            return redirect(url_for('login', next=request.full_path))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -117,7 +118,7 @@ def login():
             # send the user back to their
             # originally requested destination
             if destination and destination != 'None':
-                return redirect(destination)
+                return redirect(urlparse.urlparse(destination).path)
             else:
                 return redirect(url_for('index'))
         else:
