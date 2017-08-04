@@ -181,7 +181,7 @@ def new_external_order():
         try:
             scenelist = data['input_product_list']
             _u, _p = base64.b64decode(data['user']).split(':')
-            espa_login(_u, _p)
+            espa_session_login(_u, _p)
         except KeyError:
             return jsonify({'error': "'input_product_list' and 'user' fields are required"}), 401
         except Exception as e:
