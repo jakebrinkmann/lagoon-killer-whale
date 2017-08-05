@@ -7,7 +7,9 @@
 
 {% block new_order_javascript %}
     $(document).ready(function(){
-        $('#reports').DataTable();
+        $('#reports').DataTable(
+	    {'scrollX': true}
+	);
       });  
 {% endblock %}
 
