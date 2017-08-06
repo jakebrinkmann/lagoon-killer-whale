@@ -42,6 +42,7 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
         self.assertIn('Ordering Interface </title>', result.data)
 
+    @patch('src.app.cache.get', lambda y: None)
     @patch('src.app.api_up', mock_app.api_up_user_fail)
     def test_login_post_fail(self):
         data_dict = {'username': self.user.username, 'password': self.user.wurd}
