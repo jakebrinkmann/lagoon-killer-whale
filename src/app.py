@@ -21,19 +21,20 @@ from utils import (conversions, deep_update, is_num, gen_nested_dict, User,
 from logger import ilogger as logger
 
 
+memcache_hosts = os.getenv('ESPA_MEMCACHE_HOST', '127.0.0.1:11211').split(',')
+cache = memcache.Client(memcache_hosts, debug=0)
+
 espaweb = Flask(__name__)
 espaweb.config.from_envvar('ESPAWEB_SETTINGS', silent=False)
 espaweb.secret_key = espaweb.config['SECRET_KEY']
 espaweb.config['SESSION_TYPE'] = 'memcached'
+espaweb.config['SESSION_MEMCACHED'] = cache
 espaweb.config['SESSION_PERMANENT'] = False
 espaweb.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=120)
 espaweb.config['SESSION_COOKIE_SECURE'] = True
 
 Session(espaweb)
 api_base_url = os.getenv('ESPA_API_HOST', 'http://localhost:4004/api/v1')
-memcache_hosts = os.getenv('ESPA_MEMCACHE_HOST', '127.0.0.1:11211').split(',')
-cache = memcache.Client(memcache_hosts, debug=0)  # Uses system cache
-
 
 def api_up(url, json=None, verb='get', uauth=None):
     headers = {'X-Forwarded-For': request.remote_addr}
