@@ -100,7 +100,7 @@ def staff_only(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        logged_in = (('logged_in' in session or session['logged_in'] is True)
+        logged_in = (('logged_in' in session and session['logged_in'] is True)
                      and request.cookies.get(SSO_COOKIE_NAME))
         if not logged_in:
             return redirect(url_for('index', next=request.full_path))
