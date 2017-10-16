@@ -1,16 +1,16 @@
-[![Build Status](https://travis-ci.org/USGS-EROS/espa-web.svg?branch=master)](https://travis-ci.org/USGS-EROS/espa-web)
 
-## espa-web
+## espa-web  [![build status][0]][1] [![Codecov branch][2]][3]
+
 This project serves up the espa website and provides all the job ordering &
 scheduling functions, by being a Graphical User Interface (GUI) for the [ESPA-API](https://github.com/USGS-EROS/espa-api). 
 This code is provided as reference only; internal EROS services are not externally available and their source code are not publicly available.
 
-Access the site at [`https://espa.cr.usgs.gov/login`](https://espa.cr.usgs.gov/login).
+Access the site at [`https://espa.cr.usgs.gov/`][4].
 
 ### Quick Links
-* [Home](https://espa.cr.usgs.gov/index)
-* [New Order](https://espa.cr.usgs.gov/ordering/new)
-* [Pending Orders](https://espa.cr.usgs.gov/ordering/status/)
+* [Home][5]
+* [New Order][6]
+* [Pending Orders][7]
 
 ## Developers
 
@@ -36,3 +36,12 @@ docker run -it -p 127.0.0.1:4001:4001 \
 docker exec -it {running container id} run/runtests
 ```
 
+
+[0]: https://img.shields.io/travis/USGS-EROS/espa-web/master.svg?style=flat-square
+[1]: https://travis-ci.org/USGS-EROS/espa-web
+[2]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-web/master.svg?style=flat-square
+[3]: https://codecov.io/gh/USGS-EROS/espa-web
+[4]: https://espa.cr.usgs.gov/
+[5]: https://espa.cr.usgs.gov/index
+[6]: https://espa.cr.usgs.gov/ordering/new
+[7]: https://espa.cr.usgs.gov/ordering/status/
