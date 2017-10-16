@@ -147,6 +147,7 @@ def logout():
     espa_session_clear()
     resp = make_response(redirect(url_for('index')))
     resp.set_cookie(SSO_COOKIE_NAME, '', expires=0, domain='usgs.gov')
+    resp.set_cookie(SSO_COOKIE_NAME.replace('_secure', ''), '', expires=0, domain='usgs.gov')
     return resp
 
 
