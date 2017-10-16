@@ -1,4 +1,7 @@
 ## Change Notes
+###### October 2017
+* Use EROS Registration System Single Sign On Cookie
+
 ###### August 2017
 * Add Continuous Integration testing via travis-ci
 
