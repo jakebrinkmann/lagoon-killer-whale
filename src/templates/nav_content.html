@@ -12,7 +12,7 @@
 {% if 'logged_in' in session.keys() and session['logged_in'] %}
     <span class="navitemright"><a href="logout">Logout</a></span>
 {% else %}
-    <span class="navitemright"><a href="login">Login</a></span>
+    <span class="navitemright"><a href="{{ session['EROS_REGISTRATION_SYSTEM'] }}/login">Login</a></span>
 {% endif %}
 {% if 'logged_in' in session.keys() and session['logged_in'] %}
     {% if session['user'].is_staff %}

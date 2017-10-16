@@ -5,6 +5,7 @@ import json
 import os
 import base64
 import urlparse
+import sys
 # OrderedDict is returned by the API reports (see `eval(response)` below)
 # leave this import
 from collections import OrderedDict
@@ -35,6 +36,13 @@ espaweb.config['SESSION_COOKIE_SECURE'] = True
 
 Session(espaweb)
 api_base_url = os.getenv('ESPA_API_HOST', 'http://localhost:4004/api/v1')
+
+if os.path.exists(espaweb.config.get('ERS_SSO_PYPATH')):
+    sys.path.insert(1, espaweb.config.get('ERS_SSO_PYPATH'))
+from ers import ErsSSO
+ers_cookie = ErsSSO(**espaweb.config)
+SSO_COOKIE_NAME = "EROS_SSO_{}_secure".format(espaweb.config.get('ERS_SSO_ENVIRONMENT'))
+
 
 def api_up(url, json=None, verb='get', uauth=None):
     headers = {'X-Forwarded-For': request.remote_addr}
@@ -92,8 +100,10 @@ def staff_only(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'logged_in' not in session or session['logged_in'] is not True:
-            return redirect(url_for('login', next=request.full_path))
+        logged_in = (('logged_in' in session or session['logged_in'] is True)
+                     and request.cookies.get(SSO_COOKIE_NAME))
+        if not logged_in:
+            return redirect(url_for('index', next=request.full_path))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -120,52 +130,40 @@ def espa_session_login(username, password):
         return False
 
 
-@espaweb.route('/login', methods=['GET', 'POST'])
-def login():
-    destination = request.args.get('next')
-    if request.method == 'POST':
-        username, password = request.form['username'], request.form['password']
-        if espa_session_login(username, password):
-            # send the user back to their
-            # originally requested destination
-            if destination and destination != 'None':
-                return redirect(urlparse.urlparse(destination).path)
-            else:
-                return redirect(url_for('index'))
-        else:
-            _status = 401
-    else:
-        _status = 200
-        if 'user' not in session:
-            session['user'] = None
-
-    explorer = espaweb.config.get('earth_explorer', 'https://earthexplorer.usgs.gov')
-    reg_host = espaweb.config.get('eros_registration_system', 'https://ers.cr.usgs.gov')
-
-    return render_template('login.html', next=destination,
-                           earthexplorer=explorer,
-                           register_user=reg_host+"/register",
-                           forgot_login=reg_host+"/password/request"), _status
+def espa_session_clear():
+    logger.info("Clearing out user session %s \n" % session['user'].username)
+    cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
+    cache.delete(cache_key)
+    for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
+                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
+        session.pop(item, None)
 
 
 @espaweb.route('/logout')
 def logout():
     if 'user' not in session:
         logger.info('No user session found.')
-        return redirect(url_for('login'))
-    logger.info("Logging out user %s \n" % session['user'].username)
-    cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
-    cache.delete(cache_key)
-    for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
-                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
-        session.pop(item, None)
-    return redirect(url_for('login'))
+        return redirect(url_for('index'))
+    espa_session_clear()
+    resp = make_response(redirect(url_for('index')))
+    resp.set_cookie(SSO_COOKIE_NAME, '', expires=0)
+    return resp
 
 
 @espaweb.route('/')
 @espaweb.route('/index/')
-@login_required
 def index():
+    if 'EROS_REGISTRATION_SYSTEM' not in session:
+        session['EROS_REGISTRATION_SYSTEM'] = espaweb.config.get('EROS_REGISTRATION_SYSTEM', 'https://ers.cr.usgs.gov/')
+
+    if request.cookies.get(SSO_COOKIE_NAME):
+        if espa_session_login(*ers_cookie.user(request.cookies.get(SSO_COOKIE_NAME), 'cookie')):
+            # send the user back to their
+            # originally requested destination
+            destination = request.args.get('next')
+            if destination and destination != 'None':
+                return redirect(urlparse.urlparse(destination).path)
+
     return render_template('index.html')
 
 
@@ -173,28 +171,6 @@ def index():
 @login_required
 def new_order():
     return render_template('new_order.html', form_action=url_for('submit_order'))
-
-
-@espaweb.route('/ordering/new_external/', methods=['GET','POST'])
-def new_external_order():
-    if request.method == 'POST':
-        data = request.form.to_dict()
-        try:
-            scenelist = data['input_product_list']
-            _u, _p = base64.b64decode(data['user']).split(':')
-            espa_session_login(_u, _p)
-        except KeyError:
-            return jsonify({'error': "'input_product_list' and 'user' fields are required"}), 401
-        except Exception as e:
-            logger.info("*** espa-web exception - problem parsing external order request. message: {}".format(e.message))
-            return jsonify({'error': 'problem parsing request'}), 400
-    else:
-        # GET redirect from ESPA after order validation
-        scenelist = session['ipl']
-
-    return render_template('new_order.html',
-                           form_action=url_for('submit_order'),
-                           scenelist=scenelist)
 
 
 @espaweb.route('/ordering/submit/', methods=['POST'])
