@@ -3,6 +3,13 @@ version: "2"
 services:
     memcached:
       image: memcached:1.4.39
+      hostname: memcached
+      container_name: memcached
       ports:
         - "127.0.0.1:30090:11211"
+
+networks:
+  default:
+    external:
+      name: backend
 
