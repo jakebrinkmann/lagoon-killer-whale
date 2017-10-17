@@ -27,6 +27,7 @@ class ApplicationTestCase(unittest.TestCase):
         self.user = User(**user_parms)
 
         with espaweb.test_client() as c:
+            c.set_cookie(app.config['HTTP_HOST'], 'EROS_SSO_None_secure', 'TestingTesting')
             with c.session_transaction() as sess:
                 sess['logged_in'] = True
                 sess['user'] = self.user
@@ -37,10 +38,24 @@ class ApplicationTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_login_get(self):
+    def test_login_get_fail(self):
         result = self.app.get('/login')
+        self.assertEqual(result.status_code, 404)
+
+    def test_index_get_public(self):
+        result = self.app.get('/index')
         self.assertEqual(result.status_code, 200)
-        self.assertIn('Ordering Interface </title>', result.data)
+        self.assertIn('Login', result.data)
+        
+    def test_index_get_cookie(self):
+        result = self.cilent.get('/index')
+        self.assertEqual(result.status_code, 200)
+        self.assertIn('Logout', result.data)
+
+    def test_get_index(self):
+        result = self.client.get('/index/')
+        self.assertIn("<title>ESPA - LSRD</title>", result.data)
+        self.assertEqual(result.status_code, 200)
 
     @patch('src.app.cache.get', lambda y: None)
     @patch('src.app.api_up', mock_app.api_up_user_fail)
@@ -64,11 +79,6 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 302)
         self.assertIn('Location', result.headers)
         self.assertIn('index', result.headers['Location'])
-
-    def test_get_index(self):
-        result = self.client.get('/index/')
-        self.assertIn("<title>ESPA - LSRD</title>", result.data)
-        self.assertEqual(result.status_code, 200)
 
     def test_get_new_order(self):
         result = self.client.get("/ordering/new/")

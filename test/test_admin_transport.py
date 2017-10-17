@@ -39,10 +39,9 @@ class ApplicationTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_login_get(self):
+    def test_login_get_fail(self):
         result = self.app.get('/login')
-        self.assertEqual(result.status_code, 200)
-        self.assertIn('Ordering Interface </title>', result.data)
+        self.assertEqual(result.status_code, 404)
 
     @patch('src.app.api_up', mock_app.api_up_show_report)
     def test_get_show_report(self):
