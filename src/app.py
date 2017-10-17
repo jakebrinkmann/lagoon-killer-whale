@@ -37,9 +37,16 @@ espaweb.config['SESSION_COOKIE_SECURE'] = True
 Session(espaweb)
 api_base_url = os.getenv('ESPA_API_HOST', 'http://localhost:4004/api/v1')
 
+
+# Note: ERS SSO provides the governing decryption algorithm used in operations
+class ErsSSO(object):
+    def user(self, *args, **kwargs):
+        return 'user name'.split()
+
 if os.path.exists(espaweb.config.get('ERS_SSO_PYPATH', '')):
     sys.path.insert(1, espaweb.config.get('ERS_SSO_PYPATH'))
-from ers import ErsSSO
+    from ers import ErsSSO
+
 ers_cookie = ErsSSO(**espaweb.config)
 SSO_COOKIE_NAME = "EROS_SSO_{}_secure".format(espaweb.config.get('ERS_SSO_ENVIRONMENT'))
 
