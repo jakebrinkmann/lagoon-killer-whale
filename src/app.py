@@ -43,7 +43,7 @@ class ErsSSO(object):
     def __init__(self, *args, **kwargs):
         pass
     def user(self, *args, **kwargs):
-        return (0, 1)
+        return ('0', '1')
 
 if os.path.exists(espaweb.config.get('ERS_SSO_PYPATH', '')):
     sys.path.insert(1, espaweb.config.get('ERS_SSO_PYPATH'))
@@ -109,12 +109,16 @@ def staff_only(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        logged_in = (('logged_in' in session and session['logged_in'] is True)
-                     and request.cookies.get(SSO_COOKIE_NAME))
+        logged_in = ('logged_in' in session and session['logged_in'] is True)
         if not logged_in:
-            flash('Login Required', 'login')
-            return redirect(url_for('index', next=request.full_path))
-        return f(*args, **kwargs)
+            if request.cookies.get(SSO_COOKIE_NAME):
+                if espa_session_login(*ers_cookie.user(request.cookies.get(SSO_COOKIE_NAME), 'cookie')):
+                    return f(*args, **kwargs)
+            else:
+                flash('Login Required', 'login')
+                return redirect(url_for('index', next=request.full_path))
+        else:
+            return f(*args, **kwargs)
     return decorated_function
 
 
