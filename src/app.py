@@ -112,7 +112,7 @@ def login_required(f):
         logged_in = (('logged_in' in session and session['logged_in'] is True)
                      and request.cookies.get(SSO_COOKIE_NAME))
         if not logged_in:
-            flash(format_messages('Login Required', 'error')
+            flash('Login Required', 'error')
             return redirect(url_for('index', next=request.full_path))
         return f(*args, **kwargs)
     return decorated_function
