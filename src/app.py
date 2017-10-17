@@ -40,8 +40,10 @@ api_base_url = os.getenv('ESPA_API_HOST', 'http://localhost:4004/api/v1')
 
 # Note: ERS SSO provides the governing decryption algorithm used in operations
 class ErsSSO(object):
+    def __init__(self, *args, **kwargs):
+        pass
     def user(self, *args, **kwargs):
-        return 'user name'.split()
+        return (0, 1)
 
 if os.path.exists(espaweb.config.get('ERS_SSO_PYPATH', '')):
     sys.path.insert(1, espaweb.config.get('ERS_SSO_PYPATH'))
