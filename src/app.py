@@ -574,6 +574,7 @@ def page_not_found(e):
 
 @espaweb.errorhandler(500)
 def internal_error(e):
+    logger.error('Internal Server Error: {}'.format(e))
     message = {'500 Internal Server Error': ['Sorry, something went wrong.',
                                              'A programming error has caused '
                                              'the page to fail rendering.',
