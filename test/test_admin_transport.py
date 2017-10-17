@@ -29,7 +29,7 @@ class ApplicationTestCase(unittest.TestCase):
         self.user = User(**user_parms)
 
         with espaweb.test_client() as c:
-            c.set_cookie(app.config['HTTP_HOST'], 'EROS_SSO_None_secure', 'TestingTesting')
+            c.set_cookie(self.app.config['HTTP_HOST'], 'EROS_SSO_None_secure', 'TestingTesting')
             with c.session_transaction() as sess:
                 sess['logged_in'] = True
                 sess['user'] = self.user
