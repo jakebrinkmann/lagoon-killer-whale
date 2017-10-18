@@ -65,6 +65,8 @@ def api_up(url, json=None, verb='get', uauth=None):
         logger.error('+! Unable to contact API !+')
         flash('Critical error contacting ESPA-API', 'error')
     if isinstance(retdata, dict):
+        if 'message' in retdata and retdata.get('message') == 'Internal Server Error':
+            flash('Critical error contacting ESPA-API, admins have been notified.', 'error')
         messages = retdata.pop('messages', dict())
         if 'errors' in messages:
             flash(format_messages(messages.get('errors')), 'error')
