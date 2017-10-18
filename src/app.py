@@ -111,6 +111,9 @@ def staff_only(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if not request.cookies.get(SSO_COOKIE_NAME):
+            espa_session_clear()
+
         logged_in = ('logged_in' in session and session['logged_in'] is True)
         if not logged_in:
             if request.cookies.get(SSO_COOKIE_NAME):
@@ -172,6 +175,9 @@ def logout():
 def index():
     if 'EROS_REGISTRATION_SYSTEM' not in session:
         session['EROS_REGISTRATION_SYSTEM'] = espaweb.config.get('EROS_REGISTRATION_SYSTEM', 'https://ers.cr.usgs.gov/')
+
+    if not request.cookies.get(SSO_COOKIE_NAME):
+        espa_session_clear()
 
     if request.cookies.get(SSO_COOKIE_NAME):
         if espa_session_login(*ers_cookie.user(request.cookies.get(SSO_COOKIE_NAME), 'cookie')):
