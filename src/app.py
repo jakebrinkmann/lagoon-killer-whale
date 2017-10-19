@@ -6,6 +6,7 @@ import os
 import base64
 import urlparse
 import sys
+import traceback
 # OrderedDict is returned by the API reports (see `eval(response)` below)
 # leave this import
 from collections import OrderedDict
@@ -586,7 +587,7 @@ def page_not_found(e):
 
 @espaweb.errorhandler(500)
 def internal_error(e):
-    logger.error('Internal Server Error: {}'.format(e))
+    logger.error('Internal Server Error: {}\n\n'.format(traceback.format_exc()))
     message = {'500 Internal Server Error': ['Sorry, something went wrong.',
                                              'A programming error has caused '
                                              'the page to fail rendering.',
