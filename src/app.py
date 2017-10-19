@@ -95,39 +95,6 @@ def update_status_details(force=False):
     session[item] = stat_resp
 
 
-def staff_only(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        is_staff = False
-        if 'user' in session and session.get('user', None):
-            is_staff = session['user'].is_staff
-
-        if is_staff is False:
-            flash('staff only', 'error')
-            return redirect(url_for('index'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not request.cookies.get(SSO_COOKIE_NAME):
-            espa_session_clear()
-
-        logged_in = ('logged_in' in session and session['logged_in'] is True)
-        if not logged_in:
-            if request.cookies.get(SSO_COOKIE_NAME):
-                if espa_session_login(*ers_cookie.user(request.cookies.get(SSO_COOKIE_NAME), 'cookie')):
-                    return f(*args, **kwargs)
-            else:
-                flash('Login Required', 'login')
-                return redirect(url_for('index', next=request.full_path))
-        else:
-            return f(*args, **kwargs)
-    return decorated_function
-
-
 def espa_session_login(username, password):
     cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
     resp_json = cache.get(cache_key)
@@ -151,6 +118,8 @@ def espa_session_login(username, password):
 
 
 def espa_session_clear():
+    if 'user' not in session:
+        return 
     logger.info("Clearing out user session %s \n" % session['user'].username)
     cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
     cache.delete(cache_key)
@@ -158,13 +127,49 @@ def espa_session_clear():
                  'stat_products_complete_24_hrs', 'stat_backlog_depth']:
         session.pop(item, None)
 
+@espaweb.before_request
+def check_ers_session():
+    if 'EROS_REGISTRATION_SYSTEM' not in session:
+        session['EROS_REGISTRATION_SYSTEM'] = espaweb.config.get('EROS_REGISTRATION_SYSTEM', 'https://ers.cr.usgs.gov/')
+
+    if not request.cookies.get(SSO_COOKIE_NAME):
+        espa_session_clear()
+    elif 'user' not in session:
+        espa_session_login(*ers_cookie.user(request.cookies.get(SSO_COOKIE_NAME), 'cookie'))
+
+
+def staff_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        is_staff = False
+        if 'user' in session and session.get('user', None):
+            is_staff = session['user'].is_staff
+
+        if is_staff is False:
+            flash('staff only', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        logged_in = ('logged_in' in session and session['logged_in'] is True)
+        if not logged_in:
+            flash('Login Required', 'login')
+            return redirect(url_for('index', next=request.full_path))
+        else:
+            return f(*args, **kwargs)
+    return decorated_function
+
 
 @espaweb.route('/logout')
 def logout():
     if 'user' not in session:
         logger.info('No user session found.')
         return redirect(url_for('index'))
-    espa_session_clear()
+
     resp = make_response(redirect(url_for('index')))
     resp.set_cookie(SSO_COOKIE_NAME, '', expires=0, domain='usgs.gov')
     resp.set_cookie(SSO_COOKIE_NAME.replace('_secure', ''), '', expires=0, domain='usgs.gov')
@@ -174,19 +179,12 @@ def logout():
 @espaweb.route('/')
 @espaweb.route('/index/')
 def index():
-    if 'EROS_REGISTRATION_SYSTEM' not in session:
-        session['EROS_REGISTRATION_SYSTEM'] = espaweb.config.get('EROS_REGISTRATION_SYSTEM', 'https://ers.cr.usgs.gov/')
-
-    if not request.cookies.get(SSO_COOKIE_NAME):
-        espa_session_clear()
-
-    if request.cookies.get(SSO_COOKIE_NAME):
-        if espa_session_login(*ers_cookie.user(request.cookies.get(SSO_COOKIE_NAME), 'cookie')):
-            # send the user back to their
-            # originally requested destination
-            destination = request.args.get('next')
-            if destination and destination != 'None':
-                return redirect(urlparse.urlparse(destination).path)
+    if ('logged_in' in session and session['logged_in'] is True):
+        # send the user back to their
+        # originally requested destination
+        destination = request.args.get('next')
+        if destination and destination != 'None':
+            return redirect(urlparse.urlparse(destination).path)
 
     return render_template('index.html')
 
@@ -473,8 +471,8 @@ def cancel_order(orderid):
 
 
 @espaweb.route('/logfile/<orderid>/<sceneid>')
-@staff_only
 @login_required
+@staff_only
 def cat_logfile(orderid, sceneid):
     scenes_resp = api_up("/item-status/{}/{}".format(orderid, sceneid))
     scene = scenes_resp[orderid].pop()
@@ -482,16 +480,16 @@ def cat_logfile(orderid, sceneid):
 
 
 @espaweb.route('/reports/')
-@staff_only
 @login_required
+@staff_only
 def list_reports():
     res_data = api_up("/reports/")
     return render_template('list_reports.html', reports=res_data)
 
 
 @espaweb.route('/reports/<name>/')
-@staff_only
 @login_required
+@staff_only
 def show_report(name):
     response = api_up("/reports/{0}/".format(name))
     res_data = eval(response)
@@ -504,8 +502,8 @@ def show_report(name):
 
 
 @espaweb.route('/admin_console', methods=['GET'])
-@staff_only
 @login_required
+@staff_only
 def admin_console():
     data = api_up("/statistics/all")
     stats = {'Open Orders': data['stat_open_orders'],
@@ -536,8 +534,8 @@ def admin_console():
 
 
 @espaweb.route('/admin_console/statusmsg', methods=['GET', 'POST'])
-@staff_only
 @login_required
+@staff_only
 def statusmsg():
     if request.method == 'POST':
         dsm = 'True' if 'display_system_message' in request.form else 'False'
@@ -561,8 +559,8 @@ def statusmsg():
 
 
 @espaweb.route('/admin_console/config', methods=['GET'])
-@staff_only
 @login_required
+@staff_only
 def console_config():
     config_data = api_up("/system/config")
     sorted_keys = sorted(config_data)
@@ -570,8 +568,8 @@ def console_config():
 
 
 @espaweb.route('/adm/<action>/<orderid>', methods=['PUT'])
-@staff_only
 @login_required
+@staff_only
 def admin_update(action, orderid):
     return api_up('/{}/{}'.format(action, orderid), {}, 'put')
 
