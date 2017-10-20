@@ -173,13 +173,3 @@ th, td {
     border-style: solid;
     border-color: #bcbddc;
 }
-
-.all_backlog_warning {
-    font-weight: bold;
-    color: #ffff99;
-}
-
-.user_backlog_warning {
-    font-weight: bold;
-    color: #de2d26;
-}

@@ -24,7 +24,7 @@
 <span class="navitemright">|</span>
 <span class="navitemright">{{ session['user'].username}} ({{ session['user'].email }})</span>
 <span class="navitemright">|</span>
-<span class="navitemright {% if session['stat_backlog_depth'] > 100000 %}all_backlog_warning{% endif %}">
+<span class="navitemright">
 Total Product Backlog: {{ session['stat_backlog_depth'] }}
 </span>
 {% endif %}
