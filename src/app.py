@@ -124,7 +124,7 @@ def espa_session_clear():
     cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
     cache.delete(cache_key)
     for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
-                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
+                 'stat_products_complete_24_hrs', 'stat_backlog_depth', 'sso_cookie']:
         session.pop(item, None)
 
 @espaweb.before_request
@@ -134,8 +134,9 @@ def check_ers_session():
 
     if not request.cookies.get(SSO_COOKIE_NAME):
         espa_session_clear()
-    elif 'user' not in session:
-        espa_session_login(*ers_cookie.user(request.cookies.get(SSO_COOKIE_NAME), 'cookie'))
+    elif session.get('sso_cookie', '') != request.cookies.get(SSO_COOKIE_NAME):
+        session['sso_cookie'] = request.cookies.get(SSO_COOKIE_NAME)
+        espa_session_login(*ers_cookie.user(session['sso_cookie'], 'cookie'))
 
 
 def staff_only(f):
