@@ -377,7 +377,7 @@ def list_orders_feed(email):
         uauth = tuple(auth_header_dec.split(":"))
     else:
         if 'logged_in' not in session or session['logged_in'] is not True:
-            return redirect(url_for('login', next=request.url))
+            return redirect(url_for('index', next=request.url))
         else:
             uauth = (session['user'].username, session['user'].wurd)
     orders = api_up("/list-orders/{}".format(email), uauth=uauth,
