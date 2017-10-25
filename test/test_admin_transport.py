@@ -34,6 +34,7 @@ class ApplicationTestCase(unittest.TestCase):
                 sess['logged_in'] = True
                 sess['user'] = self.user
                 sess['stat_backlog_depth'] = 1000
+                sess['sso_cookie'] = 'TestingTesting'
 
             self.client = c
 
