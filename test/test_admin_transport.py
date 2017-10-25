@@ -29,20 +29,21 @@ class ApplicationTestCase(unittest.TestCase):
         self.user = User(**user_parms)
 
         with espaweb.test_client() as c:
+            c.set_cookie('usgs.gov', 'EROS_SSO_None_secure', 'TestingTesting')
             with c.session_transaction() as sess:
                 sess['logged_in'] = True
                 sess['user'] = self.user
                 sess['stat_backlog_depth'] = 1000
+                sess['sso_cookie'] = 'TestingTesting'
 
             self.client = c
 
     def tearDown(self):
         pass
 
-    def test_login_get(self):
+    def test_login_get_fail(self):
         result = self.app.get('/login')
-        self.assertEqual(result.status_code, 200)
-        self.assertIn('Ordering Interface </title>', result.data)
+        self.assertIn('404: Not Found', result.data)
 
     @patch('src.app.api_up', mock_app.api_up_show_report)
     def test_get_show_report(self):

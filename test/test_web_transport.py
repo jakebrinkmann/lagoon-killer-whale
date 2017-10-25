@@ -27,47 +27,52 @@ class ApplicationTestCase(unittest.TestCase):
         self.user = User(**user_parms)
 
         with espaweb.test_client() as c:
+            c.set_cookie('usgs.gov', 'EROS_SSO_None_secure', 'TestingTesting')
             with c.session_transaction() as sess:
                 sess['logged_in'] = True
                 sess['user'] = self.user
                 sess['stat_backlog_depth'] = 1000
+                sess['sso_cookie'] = 'TestingTesting'
 
             self.client = c
 
     def tearDown(self):
         pass
 
-    def test_login_get(self):
+    def test_login_get_fail(self):
         result = self.app.get('/login')
-        self.assertEqual(result.status_code, 200)
-        self.assertIn('Ordering Interface </title>', result.data)
+        self.assertIn('404: Not Found', result.data)
 
-    @patch('src.app.cache.get', lambda y: None)
-    @patch('src.app.api_up', mock_app.api_up_user_fail)
-    def test_login_post_fail(self):
-        data_dict = {'username': self.user.username, 'password': self.user.wurd}
-        result = self.client.post('/login', data=data_dict)
-        self.assertEqual(result.status_code, 401)
+    def test_index_get_public(self):
+        result = self.app.get('/index/')
+        self.assertEqual(result.status_code, 200)
+        self.assertIn('Login', result.data)
+        
+    def test_index_get_cookie(self):
+        result = self.client.get('/index/')
+        self.assertEqual(result.status_code, 200)
+        self.assertIn('Logout', result.data)
+
+    def test_get_index(self):
+        result = self.client.get('/index/')
+        self.assertIn("<title>ESPA - LSRD</title>", result.data)
+        self.assertEqual(result.status_code, 200)
 
     @patch('src.app.api_up', mock_app.api_up_user)
     @patch('src.app.update_status_details', mock_app.update_status_details_true)
     def test_get_logout(self):
         result = self.client.get('/logout')
-        # results in a redirect to the login page
-        self.assertIn(">/login</a>", result.data)
-        self.assertEqual(result.status_code, 302)
-        self.assertIn('login', result.headers['Location'])
-        data_dict = {'username': self.user.username, 'password': self.user.wurd}
-        result = self.client.post('/login', data=data_dict)
-        # successful login redirects to /index
+        # results in a redirect to the home page
         self.assertIn(">/index/</a>", result.data)
         self.assertEqual(result.status_code, 302)
-        self.assertIn('Location', result.headers)
         self.assertIn('index', result.headers['Location'])
-
-    def test_get_index(self):
-        result = self.client.get('/index/')
-        self.assertIn("<title>ESPA - LSRD</title>", result.data)
+        # login by setting the ERS SSO cookie
+        self.client.set_cookie('usgs.gov', 'EROS_SSO_None_secure', 'TestingTesting')
+        with self.client.session_transaction() as sess:
+            sess['stat_backlog_depth'] = 1000
+        # cookie-based login will set user session if login required
+        result = self.client.get('/ordering/new/')
+        self.assertIn('Total Product Backlog: 1000', result.data)
         self.assertEqual(result.status_code, 200)
 
     def test_get_new_order(self):

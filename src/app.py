@@ -5,6 +5,8 @@ import json
 import os
 import base64
 import urlparse
+import sys
+import traceback
 # OrderedDict is returned by the API reports (see `eval(response)` below)
 # leave this import
 from collections import OrderedDict
@@ -36,6 +38,22 @@ espaweb.config['SESSION_COOKIE_SECURE'] = True
 Session(espaweb)
 api_base_url = os.getenv('ESPA_API_HOST', 'http://localhost:4004/api/v1')
 
+
+# Note: ERS SSO provides the governing decryption algorithm used in operations
+class ErsSSO(object):
+    def __init__(self, *args, **kwargs):
+        pass
+    def user(self, *args, **kwargs):
+        return ('0', '1')
+
+if os.path.exists(espaweb.config.get('ERS_SSO_PYPATH', '')):
+    sys.path.insert(1, espaweb.config.get('ERS_SSO_PYPATH'))
+    from ers import ErsSSO
+
+ers_cookie = ErsSSO(**espaweb.config)
+SSO_COOKIE_NAME = "EROS_SSO_{}_secure".format(espaweb.config.get('ERS_SSO_ENVIRONMENT'))
+
+
 def api_up(url, json=None, verb='get', uauth=None):
     headers = {'X-Forwarded-For': request.remote_addr}
     auth_tup = uauth if uauth else (session['user'].username, session['user'].wurd)
@@ -48,6 +66,8 @@ def api_up(url, json=None, verb='get', uauth=None):
         logger.error('+! Unable to contact API !+')
         flash('Critical error contacting ESPA-API', 'error')
     if isinstance(retdata, dict):
+        if 'message' in retdata and retdata.get('message') == 'Internal Server Error':
+            flash('Critical error contacting ESPA-API, admins have been notified.', 'error')
         messages = retdata.pop('messages', dict())
         if 'errors' in messages:
             flash(format_messages(messages.get('errors')), 'error')
@@ -75,29 +95,6 @@ def update_status_details(force=False):
     session[item] = stat_resp
 
 
-def staff_only(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        is_staff = False
-        if 'user' in session and session.get('user', None):
-            is_staff = session['user'].is_staff
-
-        if is_staff is False:
-            flash('staff only', 'error')
-            return redirect(url_for('index'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'logged_in' not in session or session['logged_in'] is not True:
-            return redirect(url_for('login', next=request.full_path))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
 def espa_session_login(username, password):
     cache_key = '{}_web_credentials'.format(username.replace(' ', '_'))
     resp_json = cache.get(cache_key)
@@ -120,52 +117,76 @@ def espa_session_login(username, password):
         return False
 
 
-@espaweb.route('/login', methods=['GET', 'POST'])
-def login():
-    destination = request.args.get('next')
-    if request.method == 'POST':
-        username, password = request.form['username'], request.form['password']
-        if espa_session_login(username, password):
-            # send the user back to their
-            # originally requested destination
-            if destination and destination != 'None':
-                return redirect(urlparse.urlparse(destination).path)
-            else:
-                return redirect(url_for('index'))
+def espa_session_clear():
+    if 'user' not in session:
+        return 
+    logger.info("Clearing out user session %s \n" % session['user'].username)
+    cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
+    cache.delete(cache_key)
+    for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
+                 'stat_products_complete_24_hrs', 'stat_backlog_depth', 'sso_cookie']:
+        session.pop(item, None)
+
+@espaweb.before_request
+def check_ers_session():
+    if 'EROS_REGISTRATION_SYSTEM' not in session:
+        session['EROS_REGISTRATION_SYSTEM'] = espaweb.config.get('EROS_REGISTRATION_SYSTEM', 'https://ers.cr.usgs.gov/')
+
+    if not request.cookies.get(SSO_COOKIE_NAME):
+        espa_session_clear()
+    elif session.get('sso_cookie', '') != request.cookies.get(SSO_COOKIE_NAME):
+        session['sso_cookie'] = request.cookies.get(SSO_COOKIE_NAME)
+        espa_session_login(*ers_cookie.user(session['sso_cookie'], 'cookie'))
+
+
+def staff_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        is_staff = False
+        if 'user' in session and session.get('user', None):
+            is_staff = session['user'].is_staff
+
+        if is_staff is False:
+            flash('staff only', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        logged_in = ('logged_in' in session and session['logged_in'] is True)
+        if not logged_in:
+            flash('Login Required', 'login')
+            return redirect(url_for('index', next=request.full_path))
         else:
-            _status = 401
-    else:
-        _status = 200
-        if 'user' not in session:
-            session['user'] = None
-
-    explorer = espaweb.config.get('earth_explorer', 'https://earthexplorer.usgs.gov')
-    reg_host = espaweb.config.get('eros_registration_system', 'https://ers.cr.usgs.gov')
-
-    return render_template('login.html', next=destination,
-                           earthexplorer=explorer,
-                           register_user=reg_host+"/register",
-                           forgot_login=reg_host+"/password/request"), _status
+            return f(*args, **kwargs)
+    return decorated_function
 
 
 @espaweb.route('/logout')
 def logout():
     if 'user' not in session:
         logger.info('No user session found.')
-        return redirect(url_for('login'))
-    logger.info("Logging out user %s \n" % session['user'].username)
-    cache_key = '{}_web_credentials'.format(session['user'].username.replace(' ', '_'))
-    cache.delete(cache_key)
-    for item in ['logged_in', 'user', 'system_message_body', 'system_message_title',
-                 'stat_products_complete_24_hrs', 'stat_backlog_depth']:
-        session.pop(item, None)
-    return redirect(url_for('login'))
+        return redirect(url_for('index'))
+
+    resp = make_response(redirect(url_for('index')))
+    resp.set_cookie(SSO_COOKIE_NAME, '', expires=0, domain='usgs.gov')
+    resp.set_cookie(SSO_COOKIE_NAME.replace('_secure', ''), '', expires=0, domain='usgs.gov')
+    return resp
 
 
 @espaweb.route('/')
 @espaweb.route('/index/')
-@login_required
 def index():
+    if ('logged_in' in session and session['logged_in'] is True):
+        # send the user back to their
+        # originally requested destination
+        destination = request.args.get('next')
+        if destination and destination != 'None':
+            return redirect(urlparse.urlparse(destination).path)
+
     return render_template('index.html')
 
 
@@ -173,28 +194,6 @@ def index():
 @login_required
 def new_order():
     return render_template('new_order.html', form_action=url_for('submit_order'))
-
-
-@espaweb.route('/ordering/new_external/', methods=['GET','POST'])
-def new_external_order():
-    if request.method == 'POST':
-        data = request.form.to_dict()
-        try:
-            scenelist = data['input_product_list']
-            _u, _p = base64.b64decode(data['user']).split(':')
-            espa_session_login(_u, _p)
-        except KeyError:
-            return jsonify({'error': "'input_product_list' and 'user' fields are required"}), 401
-        except Exception as e:
-            logger.info("*** espa-web exception - problem parsing external order request. message: {}".format(e.message))
-            return jsonify({'error': 'problem parsing request'}), 400
-    else:
-        # GET redirect from ESPA after order validation
-        scenelist = session['ipl']
-
-    return render_template('new_order.html',
-                           form_action=url_for('submit_order'),
-                           scenelist=scenelist)
 
 
 @espaweb.route('/ordering/submit/', methods=['POST'])
@@ -473,8 +472,8 @@ def cancel_order(orderid):
 
 
 @espaweb.route('/logfile/<orderid>/<sceneid>')
-@staff_only
 @login_required
+@staff_only
 def cat_logfile(orderid, sceneid):
     scenes_resp = api_up("/item-status/{}/{}".format(orderid, sceneid))
     scene = scenes_resp[orderid].pop()
@@ -482,16 +481,16 @@ def cat_logfile(orderid, sceneid):
 
 
 @espaweb.route('/reports/')
-@staff_only
 @login_required
+@staff_only
 def list_reports():
     res_data = api_up("/reports/")
     return render_template('list_reports.html', reports=res_data)
 
 
 @espaweb.route('/reports/<name>/')
-@staff_only
 @login_required
+@staff_only
 def show_report(name):
     response = api_up("/reports/{0}/".format(name))
     res_data = eval(response)
@@ -504,8 +503,8 @@ def show_report(name):
 
 
 @espaweb.route('/admin_console', methods=['GET'])
-@staff_only
 @login_required
+@staff_only
 def admin_console():
     data = api_up("/statistics/all")
     stats = {'Open Orders': data['stat_open_orders'],
@@ -536,8 +535,8 @@ def admin_console():
 
 
 @espaweb.route('/admin_console/statusmsg', methods=['GET', 'POST'])
-@staff_only
 @login_required
+@staff_only
 def statusmsg():
     if request.method == 'POST':
         dsm = 'True' if 'display_system_message' in request.form else 'False'
@@ -561,8 +560,8 @@ def statusmsg():
 
 
 @espaweb.route('/admin_console/config', methods=['GET'])
-@staff_only
 @login_required
+@staff_only
 def console_config():
     config_data = api_up("/system/config")
     sorted_keys = sorted(config_data)
@@ -570,8 +569,8 @@ def console_config():
 
 
 @espaweb.route('/adm/<action>/<orderid>', methods=['PUT'])
-@staff_only
 @login_required
+@staff_only
 def admin_update(action, orderid):
     return api_up('/{}/{}'.format(action, orderid), {}, 'put')
 
@@ -587,6 +586,7 @@ def page_not_found(e):
 
 @espaweb.errorhandler(500)
 def internal_error(e):
+    logger.error('Internal Server Error: {}\n\n'.format(traceback.format_exc()))
     message = {'500 Internal Server Error': ['Sorry, something went wrong.',
                                              'A programming error has caused '
                                              'the page to fail rendering.',
