@@ -100,7 +100,7 @@ conversions = {
          'sr_ndmi': 'sr_ndmi',
          'sr': 'surface reflectance',
          'sr_msavi': 'sr_msavi',
-         'lst': 'land surface temperature',
+         'st': 'surface temperature',
          'source_metadata': 'original input metadata',
          'bt': 'brightness temperature',
          'toa': 'top of atmosphere',
