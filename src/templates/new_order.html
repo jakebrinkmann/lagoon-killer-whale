@@ -37,7 +37,7 @@
 				<td>&nbsp;</td>
 			</tr>
 			<tr>
-				<td>Climate Data Records</td>
+				<td>Level-2 Products</td>
 				<td>X</td>
 				<td>&nbsp;</td>
 			</tr>
@@ -88,61 +88,38 @@
 			Source Products
 			</div>
 			<div class="product_boxbody">
-			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_customized_source_data" name="l1">
-				<label class="tooltip" title="Input Products (as ESPA product)">Input Products</label>
-			</div>
+				<div class="inputitem">
+					<input class="product custom_product" type="checkbox" id="include_customized_source_data" name="l1">
+					<label class="tooltip" title="Input Products (as ESPA product)">Input Products</label>
+				</div>
 
-			<div class="inputitem">
-				<input class="product" type="checkbox" id="include_source_metadata" name="source_metadata">
-				<label class="tooltip" title="Deliver Unmodified Input Product Metadata">Input Product Metadata</label>
-			</div>
-
-
+				<div class="inputitem">
+					<input class="product" type="checkbox" id="include_source_metadata" name="source_metadata">
+					<label class="tooltip" title="Deliver Unmodified Input Product Metadata">Input Product Metadata</label>
+				</div>
 			</div>
 		</div>
 
 		<h4 class="inlineb new_order_section_label">Additional Processing (Landsat Only)</h4>
-
+		
 		<div class="product_box">
 			<div class="product_boxheader">
-			Climate Data Records
+			Level-2 Products
 			</div>
 			<div class="product_boxbody">
 
-			<div class="inputitem">
-				<input class="product custom_product" type="checkbox" id="include_sr" name="sr"></input>
-				<label class="tooltip" title="Surface Reflectance" for="surface_reflectance">Surface Reflectance</label>
-			</div>
+				<div class="inputitem">
+					<input class="product custom_product" type="checkbox" id="include_sr" name="sr"></input>
+					<label class="tooltip" title="Surface Reflectance" for="surface_reflectance">Surface Reflectance</label>
+				</div>
 
-					{% if session['user'].is_staff %}
-						<div class="inputitem">
-							<input class="product custom_product" type="checkbox" id="include_st" name="st"></input>
-							<label class="tooltip" title="Surface Temperature" for="include_st">Surface Temperature</label>
-						</div>
-					{% endif %}
-			</div>
-		</div>
-
-		{% if session['user'].is_staff %}
-		<div class="product_box">
-			<div class="product_boxheader">
-			Essential Climate Variables
-			</div>
-			<div class="product_boxbody">
-			<div class="inputitem">
-				   <input class="product custom_product" type="checkbox" id="include_dswe" name="swe"></input>
-				<label class="tooltip" title="Dynamic Surface Water Extent" for="include_dwse">Dynamic Surface Water Extent</label>
-			   </div>
-			</div>
-		</div>
-		{% endif %}
-
-		<div class="product_box">
-			<div class="product_boxheader">
-			Other Landsat Level-2 Products
-			</div>
-			<div class="product_boxbody">
+				{% if session['user'].is_staff %}
+					<div class="inputitem">
+						<input class="product custom_product" type="checkbox" id="include_st" name="st"></input>
+						<label class="tooltip" title="Surface Temperature" for="include_st">Surface Temperature</label>
+					</div>
+				{% endif %}
+						
 				<div class="inputitem">
 					<input class="product custom_product" type="checkbox" id="include_sr_toa" name="toa"></input>
 					<label class="tooltip" title="Top of Atmosphere Reflectance " for="toa_reflectance">Top of Atmosphere Reflectance</label>
@@ -179,6 +156,20 @@
 				</div>
 			</div>
 		</div>
+	
+		{% if session['user'].is_staff %}
+		<div class="product_box">
+			<div class="product_boxheader">
+			Level-3 Products
+			</div>
+			<div class="product_boxbody">
+			<div class="inputitem">
+					<input class="product custom_product" type="checkbox" id="include_dswe" name="swe"></input>
+				<label class="tooltip" title="Dynamic Surface Water Extent" for="include_dwse">Dynamic Surface Water Extent</label>
+				</div>
+			</div>
+		</div>
+		{% endif %}
 
 		<h4 class="inlineb new_order_section_label">Customize Outputs</h4>
 
