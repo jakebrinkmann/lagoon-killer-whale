@@ -1,4 +1,7 @@
 ## Change Notes
+###### November 2017
+* Change ST terminology (staff only)
+
 ###### October 2017
 * Use EROS Registration System Single Sign On Cookie
 
