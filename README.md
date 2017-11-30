@@ -37,6 +37,15 @@ docker exec -it {running container id} run/runtests
 ```
 
 
+#### Support Information
+
+This project is unsupported software provided by the U.S. Geological Survey (USGS) Earth Resources Observation and Science (EROS) Land Satellite Data Systems (LSDS) Project. For questions regarding products produced by this source code, please contact the [Landsat Contact Us][8] page and specify USGS Level-2 in the "Regarding" section.
+
+#### Disclaimer
+
+This software is preliminary or provisional and is subject to revision. It is being provided to meet the need for timely best science. The software has not received final approval by the U.S. Geological Survey (USGS). No warranty, expressed or implied, is made by the USGS or the U.S. Government as to the functionality of the software and related material nor shall the fact of release constitute any such warranty. The software is provided on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from the authorized or unauthorized use of the software.
+    
+
 [0]: https://img.shields.io/travis/USGS-EROS/espa-web/master.svg?style=flat-square
 [1]: https://travis-ci.org/USGS-EROS/espa-web
 [2]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-web/master.svg?style=flat-square
@@ -45,3 +54,5 @@ docker exec -it {running container id} run/runtests
 [5]: https://espa.cr.usgs.gov/index
 [6]: https://espa.cr.usgs.gov/ordering/new
 [7]: https://espa.cr.usgs.gov/ordering/status/
+[8]: https://landsat.usgs.gov/contact
+
