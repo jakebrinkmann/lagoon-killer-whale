@@ -226,19 +226,26 @@ def submit_order():
         return redirect(url_for('new_order'))
     finally:
         # These are errors, and the API will not recognize them on validation
-        errors = []
-        error_lookup = {'not_implemented': "Unknown IDs",
-                        'date_restricted': "Missing Auxillary Data",
-                        'ordering_restricted': "Pre-Collection unavailable"}
-        for key in error_lookup:
-            if key in scene_dict_all_prods:
-                remove = scene_dict_all_prods.get(key)
-                if isinstance(remove, dict):  # Must be date_restricted products
-                    uniques = list(set([u for _, v in remove.items() for u in v]))
-                    remove = '{}: {}'.format(json.dumps(remove.keys()),
-                                             json.dumps(uniques))
-                errors.append('{}. Invalid IDs must be removed: {}'
-                              .format(error_lookup[key], remove))
+        remove = dict()
+
+        not_implemented = scene_dict_all_prods.get('not_implemented')
+        if not_implemented:
+            remove['Unknown IDs'] = not_implemented
+
+        ordering_restricted = scene_dict_all_prods.get('ordering_restricted')
+        if ordering_restricted:
+            unique_ids = map(str, set([u for v in ordering_restricted.values() for u in v]))
+            remove['Pre-Collection unavailable'] = unique_ids
+
+        date_restricted = scene_dict_all_prods.pop('date_restricted', None)
+        if date_restricted:
+            products = map(str, set(date_restricted.keys()) & set(data.keys()))
+            unique_ids = map(str, set([u for v in date_restricted.values() for u in v]))
+            if len(products):
+                remove['Missing Auxillary Data for %s' % products] = unique_ids
+
+        errors = ['{}. Invalid IDs must be removed: {}'
+                  .format(key, values) for key, values in remove.items()]
         if errors:
             flash(format_messages(errors), category='error')
             return redirect(url_for('new_order'))
