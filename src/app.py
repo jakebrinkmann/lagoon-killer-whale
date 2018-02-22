@@ -232,11 +232,6 @@ def submit_order():
         if not_implemented:
             remove['Unknown IDs'] = not_implemented
 
-        ordering_restricted = scene_dict_all_prods.get('ordering_restricted')
-        if ordering_restricted:
-            unique_ids = map(str, set([u for v in ordering_restricted.values() for u in v]))
-            remove['Pre-Collection unavailable'] = unique_ids
-
         date_restricted = scene_dict_all_prods.pop('date_restricted', None)
         if date_restricted:
             products = map(str, set(date_restricted.keys()) & set(data.keys()))
