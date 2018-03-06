@@ -142,5 +142,4 @@ form_order = {'projection|utm|zone_ns': 'north',
               'resize': 'on',
               'image_extents|units': 'dd',
               'toa': 'on',
-              'cloud': 'on',
               'image_extents|north': ''}

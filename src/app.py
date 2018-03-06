@@ -135,8 +135,9 @@ def check_ers_session():
     if not request.cookies.get(SSO_COOKIE_NAME):
         espa_session_clear()
     elif session.get('sso_cookie', '') != request.cookies.get(SSO_COOKIE_NAME):
-        session['sso_cookie'] = request.cookies.get(SSO_COOKIE_NAME)
-        espa_session_login(*ers_cookie.user(session['sso_cookie'], 'cookie'))
+        cookie = request.cookies.get(SSO_COOKIE_NAME)
+        if espa_session_login(*ers_cookie.user(cookie, 'cookie')):
+            session['sso_cookie'] = cookie
 
 
 def staff_only(f):
@@ -231,11 +232,6 @@ def submit_order():
         not_implemented = scene_dict_all_prods.get('not_implemented')
         if not_implemented:
             remove['Unknown IDs'] = not_implemented
-
-        ordering_restricted = scene_dict_all_prods.get('ordering_restricted')
-        if ordering_restricted:
-            unique_ids = map(str, set([u for v in ordering_restricted.values() for u in v]))
-            remove['Pre-Collection unavailable'] = unique_ids
 
         date_restricted = scene_dict_all_prods.pop('date_restricted', None)
         if date_restricted:
