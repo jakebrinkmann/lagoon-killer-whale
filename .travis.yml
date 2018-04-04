@@ -1,23 +1,21 @@
-language: python
-python:
-- '2.7'
+language: node_js
+node_js:
+  - "9"
 services: docker
 env:
-  global:
-  - COMMIT=${TRAVIS_COMMIT::8}
-  - ESPA_ENV=dev
-  - ESPA_MEMCACHE_HOST=localhost:30090
-  - ESPAWEB_SETTINGS=${TRAVIS_BUILD_DIR}/run/config.ini
-  - ESPA_WEB_EMAIL_RECEIVE=someone@nowhere.com
+  global: []
 before_install:
-- make docker-deps-up
-install: 
-- pip install -r setup/requirements.txt
-- pip install codecov
+- cd frontend
+install:
+- npm install
+- npm install codecov
+cache:
+  directories:
+    - "node_modules"
 script:
 #- "travis_wait 30 sleep 1800 &"
-- "run/runtests"
+- "npm run test --coverage"
 after_success:
 #- "/bin/bash deploy"
-- make docker-deps-down
+#- make docker-deps-down
 - codecov
