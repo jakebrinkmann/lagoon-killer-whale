@@ -34,3 +34,10 @@ RUN envsubst < /etc/nginx/conf.d/mysite.template > /etc/nginx/conf.d/default.con
 # ` Production Server
 EXPOSE 8787
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
+
+# ==========+ Unit testing dependencies +==========
+FROM node:9.10-alpine  as tester
+COPY --from=frontend /usr/share/web-vue /usr/share/web-vue/
+WORKDIR /usr/share/web-vue
+
+ENTRYPOINT ["npm", "run", "test", "--coverage"]
