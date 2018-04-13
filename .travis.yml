@@ -21,9 +21,17 @@ cache:
   directories:
     - "node_modules"
 script:
-#- "travis_wait 30 sleep 1800 &"
 - "npm run test --coverage"
 after_success:
-#- "/bin/bash deploy"
-#- make docker-deps-down
 - codecov
+deploy:
+  - provider: script
+    script: make docker-deploy
+    on:
+      branch:
+        - master
+        - devel
+notifications:
+  email:
+    on_success: never
+    on_failure: change
