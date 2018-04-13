@@ -26,7 +26,7 @@ after_success:
 - codecov
 deploy:
   - provider: script
-    script: make docker-deploy
+    script: cd .. && make docker-deploy
     on:
       branch:
         - master
